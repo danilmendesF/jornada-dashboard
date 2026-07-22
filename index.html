@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Jornada Dashboard — Registro de Jogos</title>
-  <meta name="description" content="Dashboard de estatísticas e análise de winrate dos decks da Jornada." />
+  <title>Jornada TCG Team — Dashboard Regional</title>
+  <meta name="description" content="Dashboard de análise de winrate, matchups e performance do Team Jornada TCG para regionais." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <link rel="stylesheet" href="style.css" />
 </head>
@@ -17,18 +17,20 @@
   <header class="header">
     <div class="header-inner">
       <div class="logo">
-        <div class="logo-icon">⚔️</div>
+        <div class="logo-icon">
+          <img src="logo.png" alt="Jornada TCG Team" class="logo-img" />
+        </div>
         <div>
           <h1 class="logo-title">Jornada Dashboard</h1>
-          <p class="logo-sub">Registro &amp; Análise de Partidas</p>
+          <p class="logo-sub">TCG Team &middot; Análise Regional</p>
         </div>
       </div>
       <div class="header-actions">
         <button class="manager-btn" id="btnOpenSync" style="display: inline-flex; align-items: center; gap: .4rem;">
           <span id="headerSyncDot" style="width: 8px; height: 8px; border-radius: 50%; background: var(--text2); display: inline-block;"></span>
-          <span>🌐 Sincronizar</span>
+          <span>&#x26A1; Sincronizar</span>
         </button>
-        <button class="manager-btn" id="btnOpenManager">🃏 Gerenciar</button>
+        <button class="manager-btn" id="btnOpenManager">&#x1F4CB; Gerenciar</button>
         <div class="last-update" id="lastUpdate">Aguardando dados…</div>
       </div>
     </div>
@@ -73,10 +75,17 @@
       <div class="quick-log-card">
         <div class="quick-log-header">
           <div style="display:flex;align-items:center;gap:.5rem">
-            <span style="font-size:1.2rem">⚡</span>
+            <!-- Pokeball SVG icon -->
+            <svg width="22" height="22" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0">
+              <circle cx="16" cy="16" r="15" stroke="var(--accent2)" stroke-width="2" fill="none"/>
+              <path d="M1 16 Q1 16 31 16" stroke="var(--accent2)" stroke-width="2"/>
+              <circle cx="16" cy="16" r="5" fill="var(--bg3)" stroke="var(--accent2)" stroke-width="2"/>
+              <circle cx="16" cy="16" r="2.5" fill="var(--accent2)"/>
+              <path d="M1 14 Q8 4 16 4" stroke="var(--accent)" stroke-width="1.5" fill="none" opacity="0.5"/>
+            </svg>
             <div>
-              <h3 class="quick-log-title">Registro Rápido</h3>
-              <span class="quick-log-sub">Registre um jogo com apenas 1 clique</span>
+              <h3 class="quick-log-title">Registrar Partida</h3>
+              <span class="quick-log-sub">Log rápido — 1 clique por resultado</span>
             </div>
           </div>
           <button class="icon-btn sm" id="btnToggleQuickLog">▼ Recolher</button>
@@ -111,9 +120,9 @@
             </div>
           </div>
           <div class="quick-log-actions">
-            <button class="quick-log-btn win" id="btnQuickWin">🏆 Vitória</button>
-            <button class="quick-log-btn draw" id="btnQuickDraw">🤝 Empate</button>
-            <button class="quick-log-btn loss" id="btnQuickLoss">❌ Derrota</button>
+            <button class="quick-log-btn win" id="btnQuickWin">🏆 VITÓRIA</button>
+            <button class="quick-log-btn draw" id="btnQuickDraw">🤝 EMPATE</button>
+            <button class="quick-log-btn loss" id="btnQuickLoss">❌ DERROTA</button>
           </div>
         </div>
       </div>
@@ -122,42 +131,93 @@
     <!-- KPI Cards -->
     <section class="kpi-grid" id="kpiGrid">
       <div class="kpi-card">
-        <div class="kpi-icon">🎮</div>
+        <!-- Pokeball -->
+        <div class="kpi-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="9"/>
+            <path d="M3 12h18"/>
+            <circle cx="12" cy="12" r="3" fill="var(--bg2)"/>
+          </svg>
+        </div>
         <div class="kpi-info">
           <div class="kpi-value" id="kpiTotal">—</div>
           <div class="kpi-label">Partidas Totais</div>
         </div>
       </div>
+
       <div class="kpi-card">
-        <div class="kpi-icon">🏆</div>
+        <!-- Vitórias: Troféu -->
+        <div class="kpi-icon" style="color:var(--green)">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/>
+            <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/>
+            <path d="M4 22h16"/>
+            <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/>
+            <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/>
+            <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/>
+          </svg>
+        </div>
         <div class="kpi-info">
           <div class="kpi-value green" id="kpiWin">—</div>
           <div class="kpi-label">Vitórias</div>
         </div>
       </div>
+
       <div class="kpi-card">
-        <div class="kpi-icon">🤝</div>
+        <!-- Empates: Balança / Equilíbrio -->
+        <div class="kpi-icon" style="color:var(--yellow)">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/>
+            <path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/>
+            <path d="M7 21h10"/>
+            <path d="M12 3v18"/>
+            <path d="M3 7h18"/>
+          </svg>
+        </div>
         <div class="kpi-info">
           <div class="kpi-value yellow" id="kpiDraw">—</div>
           <div class="kpi-label">Empates</div>
         </div>
       </div>
+
       <div class="kpi-card">
-        <div class="kpi-icon">💀</div>
+        <!-- Derrotas: X-Circle -->
+        <div class="kpi-icon" style="color:var(--red)">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="m15 9-6 6"/>
+            <path d="m9 9 6 6"/>
+          </svg>
+        </div>
         <div class="kpi-info">
           <div class="kpi-value red" id="kpiLoss">—</div>
           <div class="kpi-label">Derrotas</div>
         </div>
       </div>
+
       <div class="kpi-card">
-        <div class="kpi-icon">📈</div>
+        <!-- Win Rate: TrendingUp -->
+        <div class="kpi-icon" style="color:var(--cyan)">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/>
+            <polyline points="16 7 22 7 22 13"/>
+          </svg>
+        </div>
         <div class="kpi-info">
-          <div class="kpi-value purple" id="kpiWR">—</div>
+          <div class="kpi-value cyan" id="kpiWR">—</div>
           <div class="kpi-label">Win Rate</div>
         </div>
       </div>
+
       <div class="kpi-card">
-        <div class="kpi-icon">💥</div>
+        <!-- Brick: Alerta -->
+        <div class="kpi-icon" style="color:var(--red)">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+        </div>
         <div class="kpi-info">
           <div class="kpi-value red" id="kpiBrick">—</div>
           <div class="kpi-label">% Brick</div>
@@ -170,14 +230,14 @@
       <div class="chart-card">
         <div class="chart-header">
           <h2 class="chart-title">🃏 Win Rate por Deck</h2>
-          <span class="chart-sub">Porcentagem de vitórias por deck</span>
+          <span class="chart-sub">Porcentagem de vitórias por deck do time</span>
         </div>
         <div class="chart-wrap"><canvas id="chartDeckWR"></canvas></div>
       </div>
       <div class="chart-card">
         <div class="chart-header">
-          <h2 class="chart-title">👤 Desempenho por Player</h2>
-          <span class="chart-sub">Vitórias, empates e derrotas</span>
+          <h2 class="chart-title">🧢 Performance por Treinador</h2>
+          <span class="chart-sub">Vitórias, empates e derrotas por jogador</span>
         </div>
         <div class="chart-wrap"><canvas id="chartPlayerPerf"></canvas></div>
       </div>
@@ -187,22 +247,22 @@
     <section class="charts-grid three-col">
       <div class="chart-card">
         <div class="chart-header">
-          <h2 class="chart-title">🥧 Resultado Geral</h2>
-          <span class="chart-sub">Distribuição total de resultados</span>
+          <h2 class="chart-title">📊 Resultados Gerais</h2>
+          <span class="chart-sub">Distribuição total de vitórias, empates e derrotas</span>
         </div>
         <div class="chart-wrap chart-wrap-sm"><canvas id="chartResultPie"></canvas></div>
       </div>
       <div class="chart-card">
         <div class="chart-header">
-          <h2 class="chart-title">📍 Jogos por Local</h2>
-          <span class="chart-sub">Frequência de jogos por local</span>
+          <h2 class="chart-title">🏟️ Torneios &amp; Locais</h2>
+          <span class="chart-sub">Frequência de jogos presenciais e online</span>
         </div>
         <div class="chart-wrap chart-wrap-sm"><canvas id="chartLocal"></canvas></div>
       </div>
       <div class="chart-card">
         <div class="chart-header">
-          <h2 class="chart-title">⚙️ Formato</h2>
-          <span class="chart-sub">Distribuição MD1 vs MD3</span>
+          <h2 class="chart-title">⚔️ Formato das Partidas</h2>
+          <span class="chart-sub">Distribuição de jogos MD1 vs MD3</span>
         </div>
         <div class="chart-wrap chart-wrap-sm"><canvas id="chartFormato"></canvas></div>
       </div>
@@ -212,15 +272,15 @@
     <section class="charts-grid two-col">
       <div class="chart-card">
         <div class="chart-header">
-          <h2 class="chart-title">🎯 Win Rate vs Oponente</h2>
-          <span class="chart-sub">Taxa de vitória contra cada adversário</span>
+          <h2 class="chart-title">🎯 Performance vs Deck Oponente</h2>
+          <span class="chart-sub">Taxa de vitória contra cada deck adversário</span>
         </div>
         <div class="chart-wrap"><canvas id="chartOppWR"></canvas></div>
       </div>
       <div class="chart-card">
         <div class="chart-header">
-          <h2 class="chart-title">🔢 Partidas por Deck</h2>
-          <span class="chart-sub">Quantidade total de jogos</span>
+          <h2 class="chart-title">🃏 Volume de Jogos por Deck</h2>
+          <span class="chart-sub">Quantidade total de partidas registradas</span>
         </div>
         <div class="chart-wrap"><canvas id="chartDeckCount"></canvas></div>
       </div>
@@ -230,15 +290,15 @@
     <section class="charts-grid two-col">
       <div class="chart-card">
         <div class="chart-header">
-          <h2 class="chart-title">🚀 Win Rate: 1º vs 2º</h2>
-          <span class="chart-sub">Impacto da posição inicial no resultado</span>
+          <h2 class="chart-title">🪙 1º vs 2º a Jogar (Moeda)</h2>
+          <span class="chart-sub">Impacto de começar jogando no resultado final</span>
         </div>
         <div class="chart-wrap"><canvas id="chartStart"></canvas></div>
       </div>
       <div class="chart-card">
         <div class="chart-header">
-          <h2 class="chart-title">💥 Brick Analysis por Deck</h2>
-          <span class="chart-sub">% de partidas com e sem brick por deck</span>
+          <h2 class="chart-title">🧱 Brick Analysis por Deck</h2>
+          <span class="chart-sub">Porcentagem de mãos ruins / zoadas por deck</span>
         </div>
         <div class="chart-wrap"><canvas id="chartBrick"></canvas></div>
       </div>
@@ -248,18 +308,18 @@
     <section class="chart-card matchup-section">
       <div class="matchup-header">
         <div>
-          <h2 class="chart-title">⚔️ Matchup Win Rate</h2>
-          <span class="chart-sub">Taxa de vitória por confronto de decks — clique em uma célula para ver os detalhes</span>
+          <h2 class="chart-title">⚔️ Matriz de Matchups (Deck vs Deck)</h2>
+          <span class="chart-sub">Taxa de vitória em confrontos diretos — clique em uma célula para ver o raio-x</span>
         </div>
         <div class="matchup-controls">
           <div class="filter-group">
-            <label class="filter-label">Perspectiva</label>
+            <label class="filter-label">Treinador</label>
             <select id="matchupPlayer" class="filter-select">
-              <option value="">Todos os Players</option>
+              <option value="">Todos os Treinadores</option>
             </select>
           </div>
           <div class="matchup-view-toggle">
-            <button class="toggle-btn active" id="btnViewMatrix" data-view="matrix">🔲 Matrix</button>
+            <button class="toggle-btn active" id="btnViewMatrix" data-view="matrix">🔲 Matriz</button>
             <button class="toggle-btn" id="btnViewBar" data-view="bar">📊 Ranking</button>
           </div>
         </div>
@@ -297,8 +357,8 @@
     <!-- Match History Table -->
     <section class="table-section">
       <div class="table-header">
-        <h2 class="chart-title">📋 Histórico de Partidas</h2>
-        <input type="search" id="tableSearch" class="table-search" placeholder="Buscar na tabela…" />
+        <h2 class="chart-title">📋 Registro de Partidas</h2>
+        <input type="search" id="tableSearch" class="table-search" placeholder="🔍 Buscar player, deck, placar…" />
       </div>
       <div class="table-wrap">
         <table id="matchTable">
@@ -328,12 +388,18 @@
   </main>
 
   <footer class="footer">
-    <p>Jornada Dashboard · Dados persistidos localmente · <span id="footerCount"></span></p>
+    <p>&#x1F30A; Jornada TCG Team &middot; Dados sincronizados &middot; <span id="footerCount"></span></p>
   </footer>
 
   <!-- ===== FAB: REGISTRAR PARTIDA ===== -->
   <button class="fab" id="fabBtn" title="Registrar Partida">
-    <span class="fab-icon">+</span>
+    <!-- Custom Pokeball + symbol -->
+    <svg width="22" height="22" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0">
+      <circle cx="16" cy="16" r="14" stroke="white" stroke-width="2" fill="none" opacity="0.7"/>
+      <path d="M2 16 H30" stroke="white" stroke-width="2" opacity="0.7"/>
+      <circle cx="16" cy="16" r="5" fill="rgba(0,0,0,0.3)" stroke="white" stroke-width="2"/>
+      <path d="M16 12 V20 M12 16 H20" stroke="white" stroke-width="2" stroke-linecap="round"/>
+    </svg>
     <span class="fab-label">Registrar Partida</span>
   </button>
 
@@ -342,8 +408,8 @@
        =================================================== -->
   <div class="manager-panel" id="managerPanel">
     <div class="manager-header">
-      <h2>🃏 Gerenciador</h2>
-      <button class="icon-btn" id="btnCloseManager">✕</button>
+      <h2>&#x1F4CB; Gerenciador de Dados</h2>
+      <button class="icon-btn" id="btnCloseManager">&times;</button>
     </div>
 
     <!-- Tabs -->
