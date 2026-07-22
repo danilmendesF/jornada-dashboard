@@ -20,14 +20,36 @@ export default async function handler(req, res) {
   const url = process.env.KV_REST_API_URL;
   const auth = process.env.KV_REST_API_TOKEN;
 
-  if (!url || !auth) {
-    return res.status(500).json({ 
-      error: 'Vercel KV not configured. Please link a KV database to this project in the Vercel Dashboard.' 
-    });
-  }
-
   // Sanitized key
   const key = `jornada_sync_${token.replace(/[^a-zA-Z0-9_-]/g, '')}`;
+
+  // If Vercel KV is not configured, fallback to proxying keyvalue.xyz
+  if (!url || !auth) {
+    try {
+      if (req.method === 'GET') {
+        const proxyRes = await fetch(`https://keyvalue.xyz/v1/${key}`);
+        if (proxyRes.status === 404) {
+          return res.status(404).json({ error: 'Not found' });
+        }
+        if (!proxyRes.ok) throw new Error('Proxy GET failed');
+        const data = await proxyRes.json();
+        return res.status(200).json(data);
+      }
+      if (req.method === 'POST') {
+        const proxyRes = await fetch(`https://keyvalue.xyz/v1/${key}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(req.body)
+        });
+        if (!proxyRes.ok) throw new Error('Proxy POST failed');
+        return res.status(200).json({ success: true });
+      }
+    } catch (proxyErr) {
+      console.error('Proxy Error:', proxyErr);
+      return res.status(500).json({ error: 'Sync fallback proxy error: ' + proxyErr.message });
+    }
+    return;
+  }
 
   try {
     if (req.method === 'GET') {

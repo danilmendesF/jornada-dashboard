@@ -770,6 +770,7 @@ function initSyncUI() {
 window.addEventListener('DOMContentLoaded', () => {
   window.loadManual  = loadManual;
   window.showToast   = showToast;
+  window.triggerSyncPush = triggerSyncPush;
 
   populatePlayerSelects();
   populateDeckSelects();
@@ -920,7 +921,6 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-// ── BACKUP HELPER FUNCTIONS ──────────────────────────────────────────────────
 window.exportBackup = function() {
   const payload = {
     decks: loadDecks(),

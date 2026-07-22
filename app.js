@@ -5,28 +5,12 @@
 
 'use strict';
 
-// ── 1. DEMO DATA (extracted from the provided Excel) ─────────────────────────
-const DEMO_DATA = [
-  { id:"demo_1", Data:"2026-07-19", Player:"Guivaz",  Deck:"Zoroark",       Adversario:"GreatBall", DeckAdv:"Draga Puro",      Luck:4, Formato:"MD3", Start:"1º", Resultado:"Vitória",  Pontos:1,   Placar:"2-1", Local:"Caverna",         Brick:"Médio",   BrickOp:"Pequeno" },
-  { id:"demo_2", Data:"2026-07-19", Player:"Trevas",  Deck:"Greninja Duns", Adversario:"GreatBall", DeckAdv:"Alaka Duns",      Luck:3, Formato:"MD3", Start:"1º", Resultado:"Vitória",  Pontos:1,   Placar:"2-1", Local:"Spell",           Brick:"Pequeno", BrickOp:"Nenhum"  },
-  { id:"demo_3", Data:"2026-07-19", Player:"Guivaz",  Deck:"Alaka Duns",    Adversario:"GreatBall", DeckAdv:"Zoroark",         Luck:3, Formato:"MD3", Start:"1º", Resultado:"Vitória",  Pontos:1,   Placar:"2-1", Local:"Spell",           Brick:"Médio",   BrickOp:"Médio"   },
-  { id:"demo_4", Data:"2026-07-19", Player:"Leleco",  Deck:"Draga Dusk",    Adversario:"UltraBall", DeckAdv:"Zoroark",         Luck:4, Formato:"MD3", Start:"1º", Resultado:"Empate",   Pontos:0.5, Placar:"1-1", Local:"Leitura RioMar",  Brick:"Médio",   BrickOp:"Médio"   },
-  { id:"demo_5", Data:"2026-07-19", Player:"Trevas",  Deck:"Zoroark",       Adversario:"UltraBall", DeckAdv:"Draga Blaziken",  Luck:2, Formato:"MD3", Start:"1º", Resultado:"Vitória",  Pontos:1,   Placar:"2-1", Local:"Leitura RioMar",  Brick:"Médio",   BrickOp:"Pequeno" },
-  { id:"demo_6", Data:"2026-07-19", Player:"Trevas",  Deck:"Zoroark",       Adversario:"UltraBall", DeckAdv:"Draga Blaziken",  Luck:1, Formato:"MD3", Start:"1º", Resultado:"Empate",   Pontos:0.5, Placar:"1-1", Local:"Spell",           Brick:"Médio",   BrickOp:"Grande"  },
-  { id:"demo_7", Data:"2026-07-19", Player:"Trevas",  Deck:"Zoroark",       Adversario:"UltraBall", DeckAdv:"Draga Puro",      Luck:4, Formato:"MD1", Start:"1º", Resultado:"Vitória",  Pontos:1,   Placar:"2-0", Local:"Leitura RioMar",  Brick:"Médio",   BrickOp:"Pequeno" },
-  { id:"demo_8", Data:"2026-07-19", Player:"Trevas",  Deck:"Draga Puro",    Adversario:"UltraBall", DeckAdv:"Zoroark",         Luck:4, Formato:"MD1", Start:"2º", Resultado:"Vitória",  Pontos:1,   Placar:"2-1", Local:"Spell",           Brick:"Médio",   BrickOp:"Médio"   },
-  { id:"demo_9", Data:"2026-07-19", Player:"Braz",    Deck:"Draga Puro",    Adversario:"Arceus",    DeckAdv:"Alaka Duns",      Luck:3, Formato:"MD1", Start:"2º", Resultado:"Derrota",  Pontos:0,   Placar:"0-1", Local:"Leitura RioMar",  Brick:"Nenhum",  BrickOp:"Pequeno" },
-  { id:"demo_10", Data:"2026-07-19", Player:"Guivaz",  Deck:"Zoroark",       Adversario:"GreatBall", DeckAdv:"Greninja Duns",   Luck:2, Formato:"MD1", Start:"2º", Resultado:"Empate",   Pontos:0.5, Placar:"1-1", Local:"Leitura RioMar",  Brick:"Médio",   BrickOp:"Pequeno" },
-  { id:"demo_11", Data:"2026-07-19", Player:"Guivaz",  Deck:"Draga Puro",    Adversario:"GreatBall", DeckAdv:"Alaka Duns",      Luck:3, Formato:"MD1", Start:"2º", Resultado:"Vitória",  Pontos:1,   Placar:"1-0", Local:"Leitura Tacaruna",Brick:"Médio",   BrickOp:"Médio"   },
-  { id:"demo_12", Data:"2026-07-19", Player:"Guivaz",  Deck:"Draga Puro",    Adversario:"GreatBall", DeckAdv:"Alaka Duns",      Luck:3, Formato:"MD1", Start:"2º", Resultado:"Vitória",  Pontos:1,   Placar:"1-0", Local:"Leitura Tacaruna",Brick:"Médio",   BrickOp:"Médio"   },
-];
-
 // ── 2. STATE ─────────────────────────────────────────────────────────────────
 let allData    = [];
 let filtered   = [];
 let charts     = {};
 
-// Helper to apply overrides, deletes, and manual matches
+// Helper to apply overrides, deletes, and edits
 function applyDataOverrides(rawData) {
   let baseData = [...rawData];
 
@@ -37,21 +21,12 @@ function applyDataOverrides(rawData) {
     baseData = baseData.map(d => edits[d.id] ? edits[d.id] : d);
   }
 
-  if (typeof loadManual === 'function') {
-    const manual = loadManual();
-    const deleted = (typeof loadDeleted === 'function') ? loadDeleted() : new Set();
-    const manualFiltered = manual.filter(m => !deleted.has(m.id));
-    const ids = new Set(baseData.map(d => d.id));
-    manualFiltered.forEach(m => {
-      if (!ids.has(m.id)) baseData.push(m);
-    });
-  }
-
   return baseData;
 }
 
 function initializeData() {
-  allData = applyDataOverrides(DEMO_DATA);
+  const manual = (typeof loadManual === 'function') ? loadManual() : [];
+  allData = applyDataOverrides(manual);
   filtered = [...allData];
 }
 
@@ -991,11 +966,19 @@ async function handleFile(file) {
 
     if (parsed.length === 0) throw new Error('Nenhum dado válido encontrado na planilha.');
 
+    // Save parsed Excel games to localStorage for persistence
+    localStorage.setItem('jornada_excel_matches', JSON.stringify(parsed));
+
     // Process all parsed records through deletes, edits, and manual matches merging
     allData  = applyDataOverrides(parsed);
     filtered = [...allData];
     populateFilters();
     applyFilters();
+
+    // Trigger online synchronization push
+    if (typeof triggerSyncPush === 'function') {
+      triggerSyncPush();
+    }
 
     const now = new Date().toLocaleString('pt-BR');
     document.getElementById('lastUpdate').textContent = `📊 ${parsed.length} registros • ${now}`;
