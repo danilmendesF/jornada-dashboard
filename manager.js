@@ -9,6 +9,7 @@
 const KEY_DECKS   = 'jornada_decks';
 const KEY_MATCHES = 'jornada_manual_matches';
 const KEY_PLAYERS = 'jornada_players';
+const KEY_LOCAIS  = 'jornada_locais';
 const KEY_DELETED = 'jornada_deleted_ids';
 const KEY_EDITS   = 'jornada_edited_matches';
 
@@ -16,10 +17,12 @@ const KEY_EDITS   = 'jornada_edited_matches';
 function loadDecks()   { try { return JSON.parse(localStorage.getItem(KEY_DECKS))   || []; } catch { return []; } }
 function loadManual()  { try { return JSON.parse(localStorage.getItem(KEY_MATCHES)) || []; } catch { return []; } }
 function loadPlayers() { try { return JSON.parse(localStorage.getItem(KEY_PLAYERS)) || ['Guivaz','Trevas','Braz','Leleco']; } catch { return ['Guivaz','Trevas','Braz','Leleco']; } }
+function loadLocais()  { try { return JSON.parse(localStorage.getItem(KEY_LOCAIS))  || ['Regional SP','Regional Curitiba','League Cup','Treino Interno','TCG Live Online']; } catch { return ['Regional SP','Regional Curitiba','League Cup','Treino Interno','TCG Live Online']; } }
 
 function saveDecks(d)   { localStorage.setItem(KEY_DECKS,   JSON.stringify(d)); triggerSyncPush(); }
 function saveManual(m)  { localStorage.setItem(KEY_MATCHES, JSON.stringify(m)); triggerSyncPush(); }
 function savePlayers(p) { localStorage.setItem(KEY_PLAYERS, JSON.stringify(p)); triggerSyncPush(); }
+function saveLocais(l)  { localStorage.setItem(KEY_LOCAIS,  JSON.stringify(l)); triggerSyncPush(); }
 function loadDeleted()  { try { return new Set(JSON.parse(localStorage.getItem(KEY_DELETED)) || []); } catch { return new Set(); } }
 function loadEdits()    { try { return JSON.parse(localStorage.getItem(KEY_EDITS)) || {}; } catch { return {}; } }
 function saveDeleted(s) { localStorage.setItem(KEY_DELETED, JSON.stringify([...s])); triggerSyncPush(); }
@@ -28,6 +31,7 @@ function saveEdits(e)   { localStorage.setItem(KEY_EDITS,   JSON.stringify(e)); 
 // Exposed state
 let decks   = loadDecks();
 let players = loadPlayers();
+let locais  = loadLocais();
 
 // ── PTCGL PARSER ─────────────────────────────────────────────────────────────
 function parsePTCGL(raw) {
@@ -78,16 +82,16 @@ function populatePlayerSelects() {
     const sel = document.getElementById(id);
     if (!sel) return;
     const cur = sel.value;
-    // Keep first option (placeholder or "Todos")
     const first = sel.options[0];
     sel.innerHTML = '';
-    sel.appendChild(first);
+    if (first) sel.appendChild(first);
     players.forEach(p => {
       const o = document.createElement('option');
       o.value = p; o.textContent = p;
       sel.appendChild(o);
     });
     sel.value = cur;
+    if (sel.syncSearchableSelect) sel.syncSearchableSelect();
   });
   if (typeof populateQuickLogDropdowns === 'function') populateQuickLogDropdowns();
 }
@@ -107,7 +111,6 @@ function populateDeckSelects() {
     const cur = sel.value;
     sel.innerHTML = `<option value="">${selInfo.placeholder}</option>`;
     
-    // Sort decks alphabetically by name
     const sortedDecks = [...decks].sort((a, b) => a.name.localeCompare(b.name));
     
     sortedDecks.forEach(d => {
@@ -118,6 +121,7 @@ function populateDeckSelects() {
     });
     
     sel.value = cur;
+    if (sel.syncSearchableSelect) sel.syncSearchableSelect();
   });
 }
 
@@ -251,10 +255,16 @@ window.openEditDeck = function(deckId) {
 
 window.deleteDeck = function(deckId) {
   if (!confirm('Tem certeza que deseja excluir este deck?')) return;
+  const targetDeck = decks.find(d => d.id === deckId);
   decks = decks.filter(d => d.id !== deckId);
   saveDecks(decks);
   populateDeckSelects();
   renderDecksList();
+  if (targetDeck && typeof selectedDecks !== 'undefined') {
+    selectedDecks.delete(targetDeck.name);
+  }
+  if (typeof populateFilters === 'function') populateFilters();
+  if (typeof applyFilters    === 'function') applyFilters();
 };
 
 function updateCardCounter() {
@@ -457,6 +467,8 @@ function addPlayer() {
   savePlayers(players);
   populatePlayerSelects();
   renderPlayersList();
+  if (typeof populateFilters === 'function') populateFilters();
+  if (typeof applyFilters    === 'function') applyFilters();
   input.value = '';
   showToast(`👤 Player "${name}" adicionado!`);
 }
@@ -467,6 +479,9 @@ function deletePlayer(name) {
   savePlayers(players);
   populatePlayerSelects();
   renderPlayersList();
+  if (typeof populateFilters === 'function') populateFilters();
+  if (typeof applyFilters    === 'function') applyFilters();
+  showToast(`🗑️ Player "${name}" removido.`);
 }
 
 function renderPlayersList() {
@@ -478,6 +493,62 @@ function renderPlayersList() {
       <button class="icon-btn danger sm" onclick="deletePlayer('${p}')">✕</button>
     </div>
   `).join('');
+}
+
+// ── LOCAL MANAGEMENT ──────────────────────────────────────────────────────────
+function addLocal() {
+  const input = document.getElementById('newLocalName');
+  const name  = input?.value.trim();
+  if (!name) return;
+  if (locais.some(l => l.toLowerCase() === name.toLowerCase())) { showToast('⚠️ Local já existe.'); return; }
+  locais.push(name);
+  saveLocais(locais);
+  renderLocaisList();
+  populateLocalSelects();
+  if (typeof populateFilters === 'function') populateFilters();
+  if (typeof applyFilters    === 'function') applyFilters();
+  input.value = '';
+  showToast(`📍 Local "${name}" adicionado!`);
+}
+
+function deleteLocal(name) {
+  if (!confirm(`Remover local "${name}"?`)) return;
+  locais = locais.filter(l => l !== name);
+  saveLocais(locais);
+  renderLocaisList();
+  populateLocalSelects();
+  if (typeof populateFilters === 'function') populateFilters();
+  if (typeof applyFilters    === 'function') applyFilters();
+  showToast(`🗑️ Local "${name}" removido.`);
+}
+
+function renderLocaisList() {
+  const el = document.getElementById('locaisList');
+  if (!el) return;
+  el.innerHTML = locais.map(l => `
+    <div class="player-tag">
+      <span>📍 ${l}</span>
+      <button class="icon-btn danger sm" onclick="deleteLocal('${l.replace(/'/g, "\\'")}')">✕</button>
+    </div>
+  `).join('');
+}
+
+function populateLocalSelects() {
+  const select = document.getElementById('formMatchLocal');
+  if (!select) return;
+  const cur = select.value;
+  select.innerHTML = '<option value="">Selecione…</option>';
+  locais.forEach(l => {
+    const o = document.createElement('option');
+    o.value = l;
+    o.textContent = l;
+    select.appendChild(o);
+  });
+  const outroOpt = document.createElement('option');
+  outroOpt.value = '__outro__';
+  outroOpt.textContent = 'Outro…';
+  select.appendChild(outroOpt);
+  select.value = cur;
 }
 
 // ── TOAST ─────────────────────────────────────────────────────────────────────
@@ -503,6 +574,7 @@ function populateQuickLogDropdowns() {
   const curP = qPlayer.value;
   qPlayer.innerHTML = players.map(p => `<option value="${p}">👤 ${p}</option>`).join('');
   if (curP && players.includes(curP)) qPlayer.value = curP;
+  if (qPlayer.syncSearchableSelect) qPlayer.syncSearchableSelect();
 }
 
 window.quickLogMatch = function(resultado) {
@@ -927,6 +999,12 @@ window.addEventListener('DOMContentLoaded', () => {
     if (e.key === 'Enter') addPlayer();
   });
 
+  // Event: add local
+  document.getElementById('btnAddLocal')?.addEventListener('click', addLocal);
+  document.getElementById('newLocalName')?.addEventListener('keydown', e => {
+    if (e.key === 'Enter') addLocal();
+  });
+
   // Event: quick log buttons
   document.getElementById('btnQuickWin')?.addEventListener('click', () => quickLogMatch('Vitória'));
   document.getElementById('btnQuickDraw')?.addEventListener('click', () => quickLogMatch('Empate'));
@@ -967,57 +1045,11 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('managerPanel').classList.toggle('open');
     renderDecksList();
     renderPlayersList();
+    renderLocaisList();
   });
   document.getElementById('btnCloseManager')?.addEventListener('click', () => {
     document.getElementById('managerPanel').classList.remove('open');
   });
-
-  // Brick toggle handlers
-  function initBrickToggles(groupId, hiddenId) {
-    const group = document.getElementById(groupId);
-    if (!group) return;
-    group.querySelectorAll('.brick-toggle').forEach(btn => {
-      btn.addEventListener('click', () => {
-        group.querySelectorAll('.brick-toggle').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        const hidden = document.getElementById(hiddenId);
-        if (hidden) hidden.value = btn.dataset.value;
-      });
-    });
-  }
-  initBrickToggles('brickToggleGroup',   'formMatchBrick');
-  initBrickToggles('brickOpToggleGroup', 'formMatchBrickOp');
-
-  // Reset toggles when match form opens
-  const origOpenMatchForm = window.openMatchForm;
-  window.openMatchForm = function(matchData) {
-    if (typeof origOpenMatchForm === 'function') origOpenMatchForm(matchData);
-    // Reset brick toggles to correct value
-    const brickVal = matchData?.Brick || 'Não';
-    const brickOpVal = matchData?.BrickOp || 'Não';
-    const isOldBrick = v => v && v !== 'Nenhum' && v !== 'Não';
-
-    const bv = isOldBrick(brickVal) ? 'Sim' : 'Não';
-    const bov = isOldBrick(brickOpVal) ? 'Sim' : 'Não';
-
-    const bg = document.getElementById('brickToggleGroup');
-    if (bg) {
-      bg.querySelectorAll('.brick-toggle').forEach(b => {
-        b.classList.toggle('active', b.dataset.value === bv);
-      });
-    }
-    const bog = document.getElementById('brickOpToggleGroup');
-    if (bog) {
-      bog.querySelectorAll('.brick-toggle').forEach(b => {
-        b.classList.toggle('active', b.dataset.value === bov);
-      });
-    }
-
-    const bh = document.getElementById('formMatchBrick');
-    const bo = document.getElementById('formMatchBrickOp');
-    if (bh) bh.value = bv;
-    if (bo) bo.value = bov;
-  };
 
   // Backup events
   document.getElementById('btnExportBackup')?.addEventListener('click', () => window.exportBackup());
@@ -1040,6 +1072,7 @@ window.exportBackup = function() {
     decks: loadDecks(),
     manualMatches: loadManual(),
     players: loadPlayers(),
+    locais: loadLocais(),
     deletedIds: [...loadDeleted()],
     editedMatches: loadEdits()
   };

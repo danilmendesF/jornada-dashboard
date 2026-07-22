@@ -63,21 +63,463 @@ function destroyChart(id) {
   if (charts[id]) { charts[id].destroy(); delete charts[id]; }
 }
 
-// ── 5. POPULATE FILTERS ──────────────────────────────────────────────────────
-function populateFilters() {
-  const players  = [...new Set(allData.map(d => d.Player))].sort();
-  const decks    = [...new Set(allData.map(d => d.Deck))].sort();
-  const formatos = [...new Set(allData.map(d => d.Formato))].sort();
-  const locais   = [...new Set(allData.map(d => d.Local))].sort();
+// ── SEARCHABLE SELECT ENHANCER ───────────────────────────────────────────────
+function makeSearchableSelect(selectEl) {
+  if (!selectEl || selectEl.dataset.searchableInit) {
+    if (selectEl && selectEl.syncSearchableSelect) selectEl.syncSearchableSelect();
+    return;
+  }
+  selectEl.dataset.searchableInit = "true";
+  selectEl.style.display = "none";
 
-  fillSelect('filterPlayer',  players);
-  fillSelect('filterDeck',    decks);
+  const wrap = document.createElement("div");
+  wrap.className = "searchable-select-wrap";
+
+  const input = document.createElement("input");
+  input.type = "text";
+  input.className = "searchable-select-input";
+  input.autocomplete = "off";
+
+  const dropdown = document.createElement("div");
+  dropdown.className = "searchable-select-dropdown";
+
+  wrap.appendChild(input);
+  wrap.appendChild(dropdown);
+  selectEl.parentNode.insertBefore(wrap, selectEl.nextSibling);
+
+  let focusedIndex = -1;
+
+  function updateInputFromSelect() {
+    const selectedOpt = selectEl.options[selectEl.selectedIndex];
+    if (selectedOpt) {
+      input.value = selectedOpt.text;
+    } else {
+      input.value = "Todos";
+    }
+  }
+
+  function renderOptions(filterText = "") {
+    dropdown.innerHTML = "";
+    focusedIndex = -1;
+    const query = filterText.toLowerCase().trim();
+    let count = 0;
+
+    Array.from(selectEl.options).forEach((opt, idx) => {
+      const text = opt.text;
+      const value = opt.value;
+      if (query && !text.toLowerCase().includes(query) && value !== "") return;
+
+      count++;
+      const div = document.createElement("div");
+      div.className = "searchable-option";
+      if (opt.selected) div.classList.add("selected");
+      div.textContent = text;
+      div.dataset.value = value;
+
+      div.addEventListener("mousedown", (e) => {
+        e.preventDefault();
+        selectOption(value, text);
+      });
+
+      dropdown.appendChild(div);
+    });
+
+    if (count === 0) {
+      const noRes = document.createElement("div");
+      noRes.className = "searchable-no-results";
+      noRes.textContent = 'Nenhum resultado para "' + filterText + '"';
+      dropdown.appendChild(noRes);
+    }
+  }
+
+  function selectOption(val, text) {
+    selectEl.value = val;
+    updateInputFromSelect();
+    closeDropdown();
+    input.blur();
+    selectEl.dispatchEvent(new Event("change", { bubbles: true }));
+  }
+
+  function openDropdown() {
+    document.querySelectorAll(".searchable-select-wrap.open").forEach((el) => {
+      if (el !== wrap) el.classList.remove("open");
+    });
+    wrap.classList.add("open");
+    renderOptions(input.value === (selectEl.options[selectEl.selectedIndex]?.text || "") ? "" : input.value);
+  }
+
+  function closeDropdown() {
+    wrap.classList.remove("open");
+    updateInputFromSelect();
+    input.blur();
+  }
+
+  input.addEventListener("focus", () => {
+    input.select();
+    openDropdown();
+  });
+
+  input.addEventListener("input", () => {
+    openDropdown();
+    renderOptions(input.value);
+  });
+
+  input.addEventListener("keydown", (e) => {
+    const opts = dropdown.querySelectorAll(".searchable-option");
+    if (!wrap.classList.contains("open")) {
+      if (e.key === "ArrowDown" || e.key === "Enter") openDropdown();
+      return;
+    }
+
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      focusedIndex = Math.min(focusedIndex + 1, opts.length - 1);
+      highlightOption(opts);
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      focusedIndex = Math.max(focusedIndex - 1, 0);
+      highlightOption(opts);
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      if (focusedIndex >= 0 && opts[focusedIndex]) {
+        opts[focusedIndex].dispatchEvent(new MouseEvent("mousedown"));
+      } else if (opts.length > 0) {
+        opts[0].dispatchEvent(new MouseEvent("mousedown"));
+      }
+    } else if (e.key === "Escape" || e.key === "Tab") {
+      closeDropdown();
+    }
+  });
+
+  function highlightOption(opts) {
+    opts.forEach((o, i) => {
+      if (i === focusedIndex) {
+        o.classList.add("focused");
+        o.scrollIntoView({ block: "nearest" });
+      } else {
+        o.classList.remove("focused");
+      }
+    });
+  }
+
+  document.addEventListener("click", (e) => {
+    if (!wrap.contains(e.target) && e.target !== selectEl) {
+      closeDropdown();
+    }
+  });
+
+  selectEl.addEventListener("change", updateInputFromSelect);
+  updateInputFromSelect();
+  selectEl.syncSearchableSelect = updateInputFromSelect;
+}
+
+function initAllSearchableSelects() {
+  const ids = [
+    'filterPlayer', 'filterDeck', 'filterFormato', 'filterLocal',
+    'quickLogPlayer', 'quickLogDeck', 'quickLogDeckAdv',
+    'matchupPlayer', 'formMatchPlayer', 'formMatchDeck',
+    'formMatchDeckAdv', 'formDeckPlayer'
+  ];
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) makeSearchableSelect(el);
+  });
+}
+
+// ── 5a. MULTI-PLAYER FILTER LOGIC ─────────────────────────────────────────────
+let selectedPlayers = new Set();
+let isExplicitPlayerSelection = false;
+let allAvailablePlayers = [];
+
+function populateMultiPlayerFilter() {
+  const listEl = document.getElementById('multiPlayerList');
+  if (!listEl) return;
+
+  const dataPlayers    = allData.map(d => d.Player).filter(Boolean);
+  const managerPlayers = (typeof players !== 'undefined') ? players : [];
+  
+  allAvailablePlayers = [...new Set([...dataPlayers, ...managerPlayers])].sort((a, b) => a.localeCompare(b));
+
+  if (!isExplicitPlayerSelection) {
+    selectedPlayers = new Set(allAvailablePlayers);
+  } else {
+    selectedPlayers = new Set([...selectedPlayers].filter(p => allAvailablePlayers.includes(p)));
+  }
+
+  renderMultiPlayerItems(allAvailablePlayers);
+  updateMultiPlayerBtnText();
+  initMultiPlayerEvents();
+}
+
+function renderMultiPlayerItems(playerList) {
+  const listEl = document.getElementById('multiPlayerList');
+  if (!listEl) return;
+
+  if (playerList.length === 0) {
+    listEl.innerHTML = `<div class="searchable-no-results">Nenhum player encontrado</div>`;
+    return;
+  }
+
+  listEl.innerHTML = playerList.map(pName => {
+    const isChecked = selectedPlayers.has(pName);
+    return `<label class="multi-deck-item">
+      <input type="checkbox" class="multi-player-checkbox" value="${pName}" ${isChecked ? 'checked' : ''} />
+      <span class="multi-deck-name">👤 ${pName}</span>
+    </label>`;
+  }).join('');
+
+  listEl.querySelectorAll('.multi-player-checkbox').forEach(cb => {
+    cb.addEventListener('change', () => {
+      isExplicitPlayerSelection = true;
+      const val = cb.value;
+      if (cb.checked) {
+        selectedPlayers.add(val);
+      } else {
+        selectedPlayers.delete(val);
+      }
+      updateMultiPlayerBtnText();
+      isExplicitSelection = false;
+      populateMultiDeckFilter();
+      applyFilters();
+    });
+  });
+}
+
+function updateMultiPlayerBtnText() {
+  const btnText = document.getElementById('multiPlayerBtnText');
+  if (!btnText) return;
+
+  if (allAvailablePlayers.length === 0) {
+    btnText.textContent = 'Sem players';
+  } else if (selectedPlayers.size === 0) {
+    btnText.textContent = 'Nenhum Player Selecionado';
+  } else if (selectedPlayers.size === allAvailablePlayers.length) {
+    btnText.textContent = `Todos os Players (${allAvailablePlayers.length})`;
+  } else if (selectedPlayers.size === 1) {
+    btnText.textContent = Array.from(selectedPlayers)[0];
+  } else {
+    btnText.textContent = `${selectedPlayers.size} Players Selecionados`;
+  }
+}
+
+function initMultiPlayerEvents() {
+  const toggleBtn = document.getElementById('btnMultiPlayerToggle');
+  const wrap = document.getElementById('multiPlayerWrap');
+  const searchInput = document.getElementById('multiPlayerSearch');
+  const selectAllBtn = document.getElementById('btnMultiPlayerSelectAll');
+  const clearAllBtn = document.getElementById('btnMultiPlayerClearAll');
+
+  if (toggleBtn && wrap && !toggleBtn.dataset.init) {
+    toggleBtn.dataset.init = "true";
+
+    toggleBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      wrap.classList.toggle('open');
+      if (wrap.classList.contains('open') && searchInput) {
+        searchInput.focus();
+      }
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!wrap.contains(e.target)) {
+        wrap.classList.remove('open');
+      }
+    });
+
+    if (searchInput) {
+      searchInput.addEventListener('input', () => {
+        const q = searchInput.value.toLowerCase().trim();
+        const filtered = allAvailablePlayers.filter(p => p.toLowerCase().includes(q));
+        renderMultiPlayerItems(filtered);
+      });
+    }
+
+    if (selectAllBtn) {
+      selectAllBtn.addEventListener('click', () => {
+        isExplicitPlayerSelection = false;
+        selectedPlayers = new Set(allAvailablePlayers);
+        renderMultiPlayerItems(allAvailablePlayers);
+        updateMultiPlayerBtnText();
+        isExplicitSelection = false;
+        populateMultiDeckFilter();
+        applyFilters();
+      });
+    }
+
+    if (clearAllBtn) {
+      clearAllBtn.addEventListener('click', () => {
+        isExplicitPlayerSelection = true;
+        selectedPlayers.clear();
+        renderMultiPlayerItems(allAvailablePlayers);
+        updateMultiPlayerBtnText();
+        isExplicitSelection = false;
+        populateMultiDeckFilter();
+        applyFilters();
+      });
+    }
+  }
+}
+
+// ── 5b. MULTI-DECK FILTER LOGIC ───────────────────────────────────────────────
+let selectedDecks = new Set();
+let isExplicitSelection = false;
+let allAvailableDecks = [];
+
+function populateMultiDeckFilter() {
+  const listEl = document.getElementById('multiDeckList');
+  if (!listEl) return;
+
+  const relevantData = selectedPlayers.size > 0
+    ? allData.filter(d => d.Player && selectedPlayers.has(d.Player))
+    : allData;
+
+  const dataDecks    = relevantData.map(d => d.Deck).filter(Boolean);
+  const oppDecks     = relevantData.map(d => d.DeckAdv).filter(Boolean);
+  const managerDecks = (typeof decks !== 'undefined') ? decks.filter(d => selectedPlayers.size === 0 || selectedPlayers.has(d.player)).map(d => d.name) : [];
+  
+  allAvailableDecks = [...new Set([...dataDecks, ...oppDecks, ...managerDecks])].sort((a, b) => a.localeCompare(b));
+
+  if (!isExplicitSelection) {
+    selectedDecks = new Set(allAvailableDecks);
+  } else {
+    selectedDecks = new Set([...selectedDecks].filter(d => allAvailableDecks.includes(d)));
+  }
+
+  renderMultiDeckItems(allAvailableDecks);
+  updateMultiDeckBtnText();
+  initMultiDeckEvents();
+}
+
+function renderMultiDeckItems(deckList) {
+  const listEl = document.getElementById('multiDeckList');
+  if (!listEl) return;
+
+  if (deckList.length === 0) {
+    listEl.innerHTML = `<div class="searchable-no-results">Nenhum deck encontrado</div>`;
+    return;
+  }
+
+  listEl.innerHTML = deckList.map(deckName => {
+    const isChecked = selectedDecks.has(deckName);
+    return `<label class="multi-deck-item">
+      <input type="checkbox" class="multi-deck-checkbox" value="${deckName}" ${isChecked ? 'checked' : ''} />
+      <span class="multi-deck-name">${deckName}</span>
+    </label>`;
+  }).join('');
+
+  listEl.querySelectorAll('.multi-deck-checkbox').forEach(cb => {
+    cb.addEventListener('change', () => {
+      isExplicitSelection = true;
+      const val = cb.value;
+      if (cb.checked) {
+        selectedDecks.add(val);
+      } else {
+        selectedDecks.delete(val);
+      }
+      updateMultiDeckBtnText();
+      applyFilters();
+    });
+  });
+}
+
+function updateMultiDeckBtnText() {
+  const btnText = document.getElementById('multiDeckBtnText');
+  if (!btnText) return;
+
+  if (allAvailableDecks.length === 0) {
+    btnText.textContent = 'Sem decks';
+  } else if (selectedDecks.size === 0) {
+    btnText.textContent = 'Nenhum Deck Selecionado';
+  } else if (selectedDecks.size === allAvailableDecks.length) {
+    btnText.textContent = `Todos os Decks (${allAvailableDecks.length})`;
+  } else if (selectedDecks.size === 1) {
+    btnText.textContent = Array.from(selectedDecks)[0];
+  } else {
+    btnText.textContent = `${selectedDecks.size} Decks Selecionados`;
+  }
+}
+
+function initMultiDeckEvents() {
+  const toggleBtn = document.getElementById('btnMultiDeckToggle');
+  const wrap = document.getElementById('multiDeckWrap');
+  const searchInput = document.getElementById('multiDeckSearch');
+  const selectAllBtn = document.getElementById('btnMultiDeckSelectAll');
+  const clearAllBtn = document.getElementById('btnMultiDeckClearAll');
+
+  if (toggleBtn && wrap && !toggleBtn.dataset.init) {
+    toggleBtn.dataset.init = "true";
+
+    toggleBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      wrap.classList.toggle('open');
+      if (wrap.classList.contains('open') && searchInput) {
+        searchInput.focus();
+      }
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!wrap.contains(e.target)) {
+        wrap.classList.remove('open');
+      }
+    });
+
+    if (searchInput) {
+      searchInput.addEventListener('input', () => {
+        const q = searchInput.value.toLowerCase().trim();
+        const filtered = allAvailableDecks.filter(d => d.toLowerCase().includes(q));
+        renderMultiDeckItems(filtered);
+      });
+    }
+
+    if (selectAllBtn) {
+      selectAllBtn.addEventListener('click', () => {
+        isExplicitSelection = false;
+        selectedDecks = new Set(allAvailableDecks);
+        renderMultiDeckItems(allAvailableDecks);
+        updateMultiDeckBtnText();
+        applyFilters();
+      });
+    }
+
+    if (clearAllBtn) {
+      clearAllBtn.addEventListener('click', () => {
+        isExplicitSelection = true;
+        selectedDecks.clear();
+        renderMultiDeckItems(allAvailableDecks);
+        updateMultiDeckBtnText();
+        applyFilters();
+      });
+    }
+  }
+}
+
+// ── POPULATE FILTERS ──────────────────────────────────────────────────────────
+function populateFilters() {
+  const customLocais = (typeof loadLocais === 'function') ? loadLocais() : [];
+  const dataLocais   = allData.map(d => d.Local).filter(Boolean);
+  const locais       = [...new Set([...customLocais, ...dataLocais])].sort((a, b) => a.localeCompare(b));
+
+  const formatos = [...new Set(allData.map(d => d.Formato))].sort();
+
   fillSelect('filterFormato', formatos);
   fillSelect('filterLocal',   locais);
+  populateMultiPlayerFilter();
+  populateMultiDeckFilter();
+  initAllSearchableSelects();
+
+  // Attach change handlers to Formato and Local
+  ['filterFormato', 'filterLocal'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el && !el.dataset.filterHandler) {
+      el.dataset.filterHandler = "true";
+      el.addEventListener('change', applyFilters);
+    }
+  });
 }
 
 function fillSelect(id, values) {
   const sel = document.getElementById(id);
+  if (!sel) return;
   const cur = sel.value;
   sel.innerHTML = '<option value="">Todos</option>';
   values.forEach(v => {
@@ -86,21 +528,26 @@ function fillSelect(id, values) {
     sel.appendChild(o);
   });
   sel.value = cur;
+  if (sel.syncSearchableSelect) sel.syncSearchableSelect();
 }
 
 // ── 6. FILTER LOGIC ──────────────────────────────────────────────────────────
 function applyFilters() {
-  const player  = document.getElementById('filterPlayer').value;
-  const deck    = document.getElementById('filterDeck').value;
-  const formato = document.getElementById('filterFormato').value;
-  const local   = document.getElementById('filterLocal').value;
+  const formato = (document.getElementById('filterFormato')?.value || '').trim().toLowerCase();
+  const local   = (document.getElementById('filterLocal')?.value || '').trim().toLowerCase();
 
-  filtered = allData.filter(d =>
-    (!player  || d.Player  === player) &&
-    (!deck    || d.Deck    === deck)   &&
-    (!formato || d.Formato === formato) &&
-    (!local   || d.Local   === local)
-  );
+  filtered = allData.filter(d => {
+    const pName        = (d.Player || '').trim();
+    const fName        = (d.Formato || '').trim().toLowerCase();
+    const lName        = (d.Local || '').trim().toLowerCase();
+
+    const matchPlayer  = selectedPlayers.has(pName);
+    const matchFormato = !formato || fName === formato;
+    const matchLocal   = !local   || lName === local;
+    const matchDeck    = selectedDecks.has(d.Deck);
+
+    return matchPlayer && matchFormato && matchLocal && matchDeck;
+  });
 
   renderAll();
 }
@@ -688,14 +1135,14 @@ function wrColor(wr, alpha = 1) {
 }
 
 function renderMatchup() {
-  const playerSel = document.getElementById('matchupPlayer')?.value || '';
+  const matchupData = buildMatchupData(filtered);
+  let myDecks  = [...new Set(filtered.map(d => d.Deck).filter(Boolean))].sort();
+  let oppDecks = [...new Set(filtered.map(d => d.DeckAdv).filter(Boolean))].sort();
 
-  // Filter data by matchup player selector (independent of main filters)
-  let baseData = allData.filter(d => !playerSel || d.Player === playerSel);
-
-  const matchupData = buildMatchupData(baseData);
-  const myDecks  = [...new Set(baseData.map(d => d.Deck).filter(Boolean))].sort();
-  const oppDecks = [...new Set(baseData.map(d => d.DeckAdv).filter(Boolean))].sort();
+  if (selectedDecks.size > 0) {
+    myDecks  = myDecks.filter(d => selectedDecks.has(d));
+    oppDecks = oppDecks.filter(d => selectedDecks.has(d));
+  }
 
   if (matchupCurrentView === 'matrix') {
     renderMatchupMatrix(matchupData, myDecks, oppDecks);
@@ -884,15 +1331,16 @@ window.showMatchupDetail = function(myDeck, oppDeck) {
 function populateMatchupPlayerSelect() {
   const sel = document.getElementById('matchupPlayer');
   if (!sel) return;
-  const cur = sel.value;
-  sel.innerHTML = '<option value="">Todos os Players</option>';
+  const mainPlayer = document.getElementById('filterPlayer')?.value || '';
+  sel.innerHTML = '<option value="">Todos os Treinadores (Consolidado)</option>';
   const ps = [...new Set(allData.map(d => d.Player).filter(Boolean))].sort();
   ps.forEach(p => {
     const o = document.createElement('option');
     o.value = p; o.textContent = p;
     sel.appendChild(o);
   });
-  sel.value = cur;
+  sel.value = mainPlayer;
+  if (sel.syncSearchableSelect) sel.syncSearchableSelect();
 }
 
 // ── 18b. VIEW TOGGLE ──────────────────────────────────────────────────────────
@@ -910,9 +1358,13 @@ function initMatchupToggle() {
     });
   });
 
-  document.getElementById('matchupPlayer')?.addEventListener('change', () => {
-    document.getElementById('matchupDetail').style.display = 'none';
-    renderMatchup();
+  document.getElementById('matchupPlayer')?.addEventListener('change', (e) => {
+    const mainP = document.getElementById('filterPlayer');
+    if (mainP && mainP.value !== e.target.value) {
+      mainP.value = e.target.value;
+      if (mainP.syncSearchableSelect) mainP.syncSearchableSelect();
+      applyFilters();
+    }
   });
 }
 
@@ -1051,36 +1503,66 @@ async function handleFile(file) {
   }
 }
 
-// ── 20. EVENT LISTENERS ──────────────────────────────────────────────────────
-document.getElementById('fileInput').addEventListener('change', e => {
-  if (e.target.files[0]) handleFile(e.target.files[0]);
-});
-
-['filterPlayer','filterDeck','filterFormato','filterLocal'].forEach(id => {
-  document.getElementById(id).addEventListener('change', applyFilters);
-});
-
-document.getElementById('resetFilters').addEventListener('click', () => {
-  ['filterPlayer','filterDeck','filterFormato','filterLocal'].forEach(id => {
-    document.getElementById(id).value = '';
+// ── 20. GLOBAL RESET FUNCTION ────────────────────────────────────────────────
+window.resetAllFilters = function() {
+  // 1. Reset Formato and Local selects
+  ['filterFormato','filterLocal'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.selectedIndex = 0;
+      el.value = '';
+      if (el.syncSearchableSelect) el.syncSearchableSelect();
+    }
   });
+
+  // 2. Reset Multi-Player: select ALL players
+  isExplicitPlayerSelection = false;
+  const dataPlayers    = allData.map(d => d.Player).filter(Boolean);
+  const managerPlayers = (typeof players !== 'undefined') ? players : [];
+  allAvailablePlayers = [...new Set([...dataPlayers, ...managerPlayers])].sort((a, b) => a.localeCompare(b));
+  selectedPlayers = new Set(allAvailablePlayers);
+  renderMultiPlayerItems(allAvailablePlayers);
+  updateMultiPlayerBtnText();
+
+  // 3. Reset Multi-Deck: select ALL decks
+  isExplicitSelection = false;
+  const dataDecks    = allData.map(d => d.Deck).filter(Boolean);
+  const oppDecks     = allData.map(d => d.DeckAdv).filter(Boolean);
+  const managerDecks = (typeof decks !== 'undefined') ? decks.map(d => d.name) : [];
+  allAvailableDecks = [...new Set([...dataDecks, ...oppDecks, ...managerDecks])].sort((a, b) => a.localeCompare(b));
+  selectedDecks = new Set(allAvailableDecks);
+  renderMultiDeckItems(allAvailableDecks);
+  updateMultiDeckBtnText();
+
+  // 4. Clear table search
+  const searchInput = document.getElementById('tableSearch');
+  if (searchInput) searchInput.value = '';
+
+  // 5. Reapply filters
   applyFilters();
-});
+};
 
-document.getElementById('tableSearch').addEventListener('input', () => {
-  renderTable(filtered, true);
-});
-
-// Drag & drop on body
-document.body.addEventListener('dragover', e => e.preventDefault());
-document.body.addEventListener('drop', e => {
-  e.preventDefault();
-  const file = e.dataTransfer?.files?.[0];
-  if (file && file.name.match(/\.xlsx?$|\.xlsm$/i)) handleFile(file);
-});
-
-// ── 21. INIT ──────────────────────────────────────────────────────────
+// ── 21. INIT ──────────────────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', () => {
+  // File input
+  document.getElementById('fileInput').addEventListener('change', e => {
+    if (e.target.files[0]) handleFile(e.target.files[0]);
+  });
+
+  // Table search
+  document.getElementById('tableSearch').addEventListener('input', () => {
+    renderTable(filtered, true);
+  });
+
+  // Drag & drop on body
+  document.body.addEventListener('dragover', e => e.preventDefault());
+  document.body.addEventListener('drop', e => {
+    e.preventDefault();
+    const file = e.dataTransfer?.files?.[0];
+    if (file && file.name.match(/\.xlsx?$|\.xlsm$/i)) handleFile(file);
+  });
+
+  // Initialize data
   initializeData();
   populateFilters();
   initMatchupToggle();

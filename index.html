@@ -42,16 +42,42 @@
   <section class="filters-bar">
     <div class="filters-inner">
       <div class="filter-group">
-        <label class="filter-label">Player</label>
-        <select id="filterPlayer" class="filter-select">
-          <option value="">Todos</option>
-        </select>
+        <label class="filter-label">Player (Multi-Seleção)</label>
+        <div class="multi-deck-wrap" id="multiPlayerWrap">
+          <button type="button" class="multi-deck-btn" id="btnMultiPlayerToggle">
+            <span id="multiPlayerBtnText">Todos os Players</span>
+            <span class="multi-deck-arrow">▾</span>
+          </button>
+          <div class="multi-deck-dropdown" id="multiPlayerDropdown">
+            <div class="multi-deck-header">
+              <input type="text" id="multiPlayerSearch" class="multi-deck-search" placeholder="🔍 Buscar player…" />
+              <div class="multi-deck-actions">
+                <button type="button" class="multi-deck-act-btn" id="btnMultiPlayerSelectAll">Marcar Todos</button>
+                <button type="button" class="multi-deck-act-btn" id="btnMultiPlayerClearAll">Desmarcar</button>
+              </div>
+            </div>
+            <div class="multi-deck-list" id="multiPlayerList"></div>
+          </div>
+        </div>
       </div>
       <div class="filter-group">
-        <label class="filter-label">Deck</label>
-        <select id="filterDeck" class="filter-select">
-          <option value="">Todos</option>
-        </select>
+        <label class="filter-label">Decks (Multi-Seleção)</label>
+        <div class="multi-deck-wrap" id="multiDeckWrap">
+          <button type="button" class="multi-deck-btn" id="btnMultiDeckToggle">
+            <span id="multiDeckBtnText">Todos os Decks</span>
+            <span class="multi-deck-arrow">▾</span>
+          </button>
+          <div class="multi-deck-dropdown" id="multiDeckDropdown">
+            <div class="multi-deck-header">
+              <input type="text" id="multiDeckSearch" class="multi-deck-search" placeholder="🔍 Buscar deck…" />
+              <div class="multi-deck-actions">
+                <button type="button" class="multi-deck-act-btn" id="btnMultiDeckSelectAll">Marcar Todos</button>
+                <button type="button" class="multi-deck-act-btn" id="btnMultiDeckClearAll">Desmarcar</button>
+              </div>
+            </div>
+            <div class="multi-deck-list" id="multiDeckList"></div>
+          </div>
+        </div>
       </div>
       <div class="filter-group">
         <label class="filter-label">Formato</label>
@@ -65,7 +91,7 @@
           <option value="">Todos</option>
         </select>
       </div>
-      <button class="reset-btn" id="resetFilters">↺ Limpar</button>
+      <button class="reset-btn" id="resetFilters" onclick="resetAllFilters()">↺ Limpar</button>
     </div>
   </section>
 
@@ -423,6 +449,7 @@
     <div class="tab-bar">
       <button class="tab-btn active" data-tab="tabDecks">Decks</button>
       <button class="tab-btn" data-tab="tabPlayers">Players</button>
+      <button class="tab-btn" data-tab="tabLocais">Locais</button>
       <button class="tab-btn" data-tab="tabBackup">Backup</button>
     </div>
 
@@ -441,6 +468,15 @@
         <button class="action-btn" id="btnAddPlayer">+ Adicionar</button>
       </div>
       <div id="playersList" class="players-list"></div>
+    </div>
+
+    <!-- Tab: Locais -->
+    <div class="tab-pane" id="tabLocais">
+      <div class="add-player-row">
+        <input type="text" id="newLocalName" class="filter-select" placeholder="Nome do local (ex: Regional SP)…" />
+        <button class="action-btn" id="btnAddLocal">+ Adicionar</button>
+      </div>
+      <div id="locaisList" class="players-list"></div>
     </div>
 
     <!-- Tab: Backup -->
