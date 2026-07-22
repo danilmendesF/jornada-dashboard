@@ -731,6 +731,20 @@ function stopSyncInterval() {
   }
 }
 
+// Smart Polling: Pause sync requests when tab is inactive (in background or device locked)
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    console.log('💤 Sync: Aba em segundo plano. Pausando consultas automáticas para economizar requisições no banco...');
+    stopSyncInterval();
+  } else {
+    const token = localStorage.getItem('jornada_sync_token');
+    if (token) {
+      console.log('⚡ Sync: Aba reativada. Retomando consultas automáticas...');
+      startSyncInterval();
+    }
+  }
+});
+
 function initSyncUI() {
   const tokenInput = document.getElementById('syncTokenInput');
   const btnEnable = document.getElementById('btnEnableSync');
