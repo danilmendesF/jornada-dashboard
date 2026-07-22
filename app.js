@@ -520,11 +520,21 @@ function renderBrick() {
   });
 }
 
-// ── 17. TABLE ───────────────────────────────────────────────────────────────
+// ── 17. TABLE & PAGINATION ───────────────────────────────────────────────────
 let tableRows = [];
+let currentPage = 1;
+const PAGE_SIZE = 10;
 
-function renderTable(rows) {
+function changePage(page) {
+  currentPage = page;
+  renderTable(tableRows, false);
+}
+window.changePage = changePage;
+
+function renderTable(rows, resetPage = false) {
   tableRows = rows;
+  if (resetPage) currentPage = 1;
+
   const tbody = document.getElementById('tableBody');
   const search = (document.getElementById('tableSearch').value || '').toLowerCase();
   const toRender = rows.filter(r =>
@@ -532,62 +542,115 @@ function renderTable(rows) {
   );
 
   const reversed = [...toRender].reverse();
+  const totalItems = reversed.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / PAGE_SIZE));
 
-  tbody.innerHTML = reversed.map((r, i) => {
-    const badgeClass = r.Resultado === 'Vitória' ? 'badge-win' :
-                       r.Resultado === 'Empate'  ? 'badge-draw' : 'badge-loss';
-    const emoji = r.Resultado === 'Vitória' ? '✅' : r.Resultado === 'Empate' ? '🤝' : '❌';
+  if (currentPage > totalPages) currentPage = totalPages;
+  if (currentPage < 1) currentPage = 1;
 
-    // Find matching deck for player's deck and opponent's deck
-    const myDeckObj = (typeof decks !== 'undefined')
-      ? decks.find(d => d.name === r.Deck)
-      : null;
-    const oppDeckObj = (typeof decks !== 'undefined')
-      ? decks.find(d => d.name === r.DeckAdv)
-      : null;
+  const startIdx = (currentPage - 1) * PAGE_SIZE;
+  const endIdx = Math.min(startIdx + PAGE_SIZE, totalItems);
+  const pagedRows = reversed.slice(startIdx, endIdx);
 
-    let myBtn = myDeckObj 
-      ? `<button class="list-peek-btn" onclick="openDeckList('${myDeckObj.id}')" title="Ver lista do Player">Meu</button>` 
-      : '';
-    let oppBtn = oppDeckObj 
-      ? `<button class="list-peek-btn opp-btn" onclick="openDeckList('${oppDeckObj.id}')" title="Ver lista do Oponente">Opo</button>` 
-      : '';
+  if (pagedRows.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="14" style="text-align:center;padding:2rem;color:var(--text2)">Nenhuma partida encontrada</td></tr>`;
+  } else {
+    tbody.innerHTML = pagedRows.map((r, i) => {
+      const globalRowNumber = totalItems - (startIdx + i);
+      const badgeClass = r.Resultado === 'Vitória' ? 'badge-win' :
+                         r.Resultado === 'Empate'  ? 'badge-draw' : 'badge-loss';
+      const emoji = r.Resultado === 'Vitória' ? '✅' : r.Resultado === 'Empate' ? '🤝' : '❌';
 
-    const listasCol = (myBtn || oppBtn) 
-      ? `<div style="display:flex;gap:4px;justify-content:center">${myBtn}${oppBtn}</div>` 
-      : '<span style="color:var(--text2);font-size:.75rem">—</span>';
+      const myDeckObj = (typeof decks !== 'undefined') ? decks.find(d => d.name === r.Deck) : null;
+      const oppDeckObj = (typeof decks !== 'undefined') ? decks.find(d => d.name === r.DeckAdv) : null;
 
-    const brickVal = (r.Brick === 'Sim' || (r.Brick && r.Brick !== 'Nenhum' && r.Brick !== 'Não'))
-      ? '💥 Sim' : '✅ Não';
+      let myBtn = myDeckObj ? `<button class="list-peek-btn" onclick="openDeckList('${myDeckObj.id}')" title="Ver lista do Player">Meu</button>` : '';
+      let oppBtn = oppDeckObj ? `<button class="list-peek-btn opp-btn" onclick="openDeckList('${oppDeckObj.id}')" title="Ver lista do Oponente">Opo</button>` : '';
 
-    const actionsCol = `
-      <div style="display:flex;gap:4px;justify-content:center">
-        <button class="icon-btn sm" onclick="editMatch('${r.id}')" title="Editar partida">✏️</button>
-        <button class="icon-btn danger sm" onclick="deleteMatch('${r.id}')" title="Deletar partida">🗑️</button>
-      </div>
-    `;
+      const listasCol = (myBtn || oppBtn) 
+        ? `<div style="display:flex;gap:4px;justify-content:center">${myBtn}${oppBtn}</div>` 
+        : '<span style="color:var(--text2);font-size:.75rem">—</span>';
 
-    return `<tr>
-      <td>${reversed.length - i}</td>
-      <td>${r.Data}</td>
-      <td>${r.Player}</td>
-      <td><strong>${r.Deck}</strong></td>
-      <td>${r.Adversario}</td>
-      <td>${r.DeckAdv}</td>
-      <td>${r.Formato}</td>
-      <td>${r.Start}</td>
-      <td>${r.Placar}</td>
-      <td><span class="badge ${badgeClass}">${emoji} ${r.Resultado}</span></td>
-      <td>${brickVal}</td>
-      <td>${r.Local}</td>
-      <td>${listasCol}</td>
-      <td>${actionsCol}</td>
-    </tr>`;
-  }).join('');
+      const brickVal = (r.Brick === 'Sim' || (r.Brick && r.Brick !== 'Nenhum' && r.Brick !== 'Não')) ? '💥 Sim' : '✅ Não';
+
+      const actionsCol = `
+        <div style="display:flex;gap:4px;justify-content:center">
+          <button class="icon-btn sm" onclick="editMatch('${r.id}')" title="Editar partida">✏️</button>
+          <button class="icon-btn danger sm" onclick="deleteMatch('${r.id}')" title="Deletar partida">🗑️</button>
+        </div>
+      `;
+
+      return `<tr>
+        <td>${globalRowNumber}</td>
+        <td>${r.Data}</td>
+        <td>${r.Player}</td>
+        <td><strong>${r.Deck}</strong></td>
+        <td>${r.Adversario}</td>
+        <td>${r.DeckAdv}</td>
+        <td>${r.Formato}</td>
+        <td>${r.Start}</td>
+        <td>${r.Placar}</td>
+        <td><span class="badge ${badgeClass}">${emoji} ${r.Resultado}</span></td>
+        <td>${brickVal}</td>
+        <td>${r.Local}</td>
+        <td>${listasCol}</td>
+        <td>${actionsCol}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  // Update Pagination Controls
+  renderPaginationControls(totalItems, startIdx, endIdx, totalPages);
 
   // Update footer count
   const fc = document.getElementById('footerCount');
   if (fc) fc.textContent = `${allData.length} partidas registradas`;
+}
+
+function renderPaginationControls(totalItems, startIdx, endIdx, totalPages) {
+  const info = document.getElementById('paginationInfo');
+  const ctrl = document.getElementById('paginationControls');
+  if (!info || !ctrl) return;
+
+  if (totalItems === 0) {
+    info.textContent = 'Mostrando 0 de 0 partidas';
+    ctrl.innerHTML = '';
+    return;
+  }
+
+  info.textContent = `Mostrando ${startIdx + 1}–${endIdx} de ${totalItems} partidas`;
+
+  let btns = [];
+  
+  // Previous button
+  btns.push(`<button class="page-btn" ${currentPage === 1 ? 'disabled' : ''} onclick="changePage(${currentPage - 1})">‹ Ant</button>`);
+
+  // Page numbers logic (show max 5 buttons around current page)
+  let startP = Math.max(1, currentPage - 2);
+  let endP = Math.min(totalPages, startP + 4);
+  if (endP - startP < 4) {
+    startP = Math.max(1, endP - 4);
+  }
+
+  if (startP > 1) {
+    btns.push(`<button class="page-btn" onclick="changePage(1)">1</button>`);
+    if (startP > 2) btns.push(`<span style="color:var(--text2);font-size:.8rem">…</span>`);
+  }
+
+  for (let p = startP; p <= endP; p++) {
+    const active = p === currentPage ? 'active' : '';
+    btns.push(`<button class="page-btn ${active}" onclick="changePage(${p})">${p}</button>`);
+  }
+
+  if (endP < totalPages) {
+    if (endP < totalPages - 1) btns.push(`<span style="color:var(--text2);font-size:.8rem">…</span>`);
+    btns.push(`<button class="page-btn" onclick="changePage(${totalPages})">${totalPages}</button>`);
+  }
+
+  // Next button
+  btns.push(`<button class="page-btn" ${currentPage === totalPages ? 'disabled' : ''} onclick="changePage(${currentPage + 1})">Próx ›</button>`);
+
+  ctrl.innerHTML = btns.join('');
 }
 
 // ── 18. MATCHUP WIN RATE ─────────────────────────────────────────────────────
@@ -1005,7 +1068,7 @@ document.getElementById('resetFilters').addEventListener('click', () => {
 });
 
 document.getElementById('tableSearch').addEventListener('input', () => {
-  renderTable(filtered);
+  renderTable(filtered, true);
 });
 
 // Drag & drop on body

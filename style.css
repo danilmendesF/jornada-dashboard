@@ -469,6 +469,56 @@ tbody tr:last-child td { border-bottom: none; }
 .badge-draw { background: rgba(245,200,66,0.14);  color: var(--yellow); }
 .badge-loss { background: rgba(240,80,80,0.14);    color: var(--red); }
 
+/* ---------- Table Pagination ---------- */
+.table-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 1rem;
+  margin-top: 0.8rem;
+  border-top: 1px solid var(--border);
+  flex-wrap: wrap;
+  gap: 0.8rem;
+}
+.pagination-info {
+  font-size: 0.78rem;
+  color: var(--text2);
+}
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+.page-btn {
+  padding: 0.35rem 0.65rem;
+  background: var(--bg3);
+  border: 1px solid var(--glass-bd);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-width: 32px;
+  text-align: center;
+}
+.page-btn:hover:not(:disabled) {
+  background: rgba(26,127,255,0.18);
+  border-color: var(--accent2);
+  color: var(--accent2);
+}
+.page-btn.active {
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 2px 8px rgba(26,127,255,0.35);
+}
+.page-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
 /* ---------- Footer ---------- */
 .footer {
   position: relative;
