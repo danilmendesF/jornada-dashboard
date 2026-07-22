@@ -904,6 +904,12 @@ window.addEventListener('DOMContentLoaded', () => {
     if (bo) bo.value = bov;
   };
 
+  // Backup events
+  document.getElementById('btnExportBackup')?.addEventListener('click', () => window.exportBackup());
+  document.getElementById('backupFileInput')?.addEventListener('change', e => {
+    if (e.target.files[0]) window.importBackup(e.target.files[0]);
+  });
+
   // Merge manual matches into allData
   const manual = loadManual();
   if (manual.length && typeof allData !== 'undefined') {
@@ -913,5 +919,68 @@ window.addEventListener('DOMContentLoaded', () => {
     if (typeof applyFilters    === 'function') applyFilters();
   }
 });
+
+// ── BACKUP HELPER FUNCTIONS ──────────────────────────────────────────────────
+window.exportBackup = function() {
+  const payload = {
+    decks: loadDecks(),
+    manualMatches: loadManual(),
+    players: loadPlayers(),
+    deletedIds: [...loadDeleted()],
+    editedMatches: loadEdits()
+  };
+  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(payload, null, 2));
+  const downloadAnchor = document.createElement('a');
+  downloadAnchor.setAttribute("href", dataStr);
+  downloadAnchor.setAttribute("download", `jornada_backup_${new Date().toISOString().slice(0,10)}.json`);
+  document.body.appendChild(downloadAnchor);
+  downloadAnchor.click();
+  downloadAnchor.remove();
+  showToast('📥 Backup baixado com sucesso!');
+};
+
+window.importBackup = function(file) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (data && typeof data === 'object') {
+        if (!data.decks && !data.manualMatches && !data.players) {
+          throw new Error('Formato de backup inválido.');
+        }
+
+        localStorage.setItem(KEY_DECKS, JSON.stringify(data.decks || []));
+        localStorage.setItem(KEY_MATCHES, JSON.stringify(data.manualMatches || []));
+        localStorage.setItem(KEY_PLAYERS, JSON.stringify(data.players || []));
+        localStorage.setItem(KEY_DELETED, JSON.stringify(data.deletedIds || []));
+        localStorage.setItem(KEY_EDITS, JSON.stringify(data.editedMatches || {}));
+
+        decks = data.decks || [];
+        players = data.players || [];
+
+        if (typeof initializeData === 'function') initializeData();
+        if (typeof populateFilters === 'function') populateFilters();
+        if (typeof applyFilters === 'function') applyFilters();
+        if (typeof populatePlayerSelects === 'function') populatePlayerSelects();
+        if (typeof populateDeckSelects === 'function') populateDeckSelects();
+        if (typeof renderDecksList === 'function') renderDecksList();
+        if (typeof renderPlayersList === 'function') renderPlayersList();
+        if (typeof populateQuickLogDropdowns === 'function') populateQuickLogDropdowns();
+
+        triggerSyncPush();
+        showToast('📤 Backup restaurado com sucesso!');
+        
+        const el = document.getElementById('backupFileInput');
+        if (el) el.value = '';
+      }
+    } catch (err) {
+      alert('Erro ao importar backup: ' + err.message);
+      console.error(err);
+    }
+  };
+  reader.readAsText(file);
+};
+
 
 
