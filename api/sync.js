@@ -28,34 +28,46 @@ export default async function handler(req, res) {
   // Sanitized key
   const key = `jornada_sync_${token.replace(/[^a-zA-Z0-9_-]/g, '')}`;
 
+  console.log(`[Serverless Sync] Method: ${req.method} | Key: ${key}`);
+
   // If Vercel KV is not configured, fallback to proxying keyvalue.xyz
   if (!url || !auth) {
+    console.log(`[Serverless Sync] Vercel KV env vars not found. Falling back to keyvalue.xyz proxy...`);
     try {
       if (req.method === 'GET') {
         const proxyRes = await fetch(`https://keyvalue.xyz/v1/${key}`);
         if (proxyRes.status === 404) {
+          console.log(`[Serverless Sync] Proxy GET: Key not found (404)`);
           return res.status(404).json({ error: 'Not found' });
         }
         if (!proxyRes.ok) throw new Error('Proxy GET failed');
         const data = await proxyRes.json();
+        console.log(`[Serverless Sync] Proxy GET: Successful data retrieve`);
         return res.status(200).json(data);
       }
       if (req.method === 'POST') {
+        console.log(`[Serverless Sync] Proxy POST payload type: ${typeof req.body}`);
         const proxyRes = await fetch(`https://keyvalue.xyz/v1/${key}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(req.body)
         });
-        if (!proxyRes.ok) throw new Error('Proxy POST failed');
+        if (!proxyRes.ok) {
+          const errText = await proxyRes.text();
+          console.error(`[Serverless Sync] Proxy POST failed. Status: ${proxyRes.status} | Body: ${errText}`);
+          throw new Error(`Proxy POST failed with status ${proxyRes.status}: ${errText}`);
+        }
+        console.log(`[Serverless Sync] Proxy POST: Successful data save`);
         return res.status(200).json({ success: true });
       }
     } catch (proxyErr) {
-      console.error('Proxy Error:', proxyErr);
+      console.error('[Serverless Sync] Proxy Error:', proxyErr);
       return res.status(500).json({ error: 'Sync fallback proxy error: ' + proxyErr.message });
     }
     return;
   }
 
+  console.log(`[Serverless Sync] Connecting to Vercel KV Redis...`);
   try {
     if (req.method === 'GET') {
       const kvRes = await fetch(`${url}/get/${key}`, {
@@ -67,10 +79,12 @@ export default async function handler(req, res) {
       
       // Upstash returns { result: "stringified_value" }
       if (!kvData || kvData.result === null) {
+        console.log(`[Serverless Sync] Vercel KV GET: Key not found (404)`);
         return res.status(404).json({ error: 'Not found' });
       }
       
       const payload = JSON.parse(kvData.result);
+      console.log(`[Serverless Sync] Vercel KV GET: Successfully retrieved data`);
       return res.status(200).json(payload);
     }
 
@@ -79,6 +93,12 @@ export default async function handler(req, res) {
       if (!payload || typeof payload !== 'object') {
         return res.status(400).json({ error: 'Invalid payload' });
       }
+
+      console.log(`[Serverless Sync] Vercel KV POST: Saving data...`, {
+        decksCount: payload.decks?.length,
+        matchesCount: payload.manualMatches?.length,
+        playersCount: payload.players?.length
+      });
 
       const kvRes = await fetch(`${url}/set/${key}`, {
         method: 'POST',
@@ -92,6 +112,7 @@ export default async function handler(req, res) {
       if (!kvRes.ok) throw new Error('Failed to save to Vercel KV');
       const kvData = await kvRes.json();
       
+      console.log(`[Serverless Sync] Vercel KV POST: Successfully saved data. Response:`, kvData.result);
       return res.status(200).json({ success: true, result: kvData.result });
     }
 

@@ -590,17 +590,22 @@ async function pullFromCloud(quiet = false) {
   if (!token) return;
 
   try {
-    if (!quiet) setSyncStatus('connecting', 'Conectando…');
+    if (!quiet) {
+      console.log(`🌐 Sync [Pull]: Iniciando consulta na nuvem para o token...`);
+      setSyncStatus('connecting', 'Conectando…');
+    }
+    
     const res = await fetch(getSyncUrl(token));
     if (!res.ok) {
       if (res.status === 404) {
-        // Token exists but cloud has no data, push initial local data
+        console.warn('⚠️ Sync [Pull]: Chave inexistente ou sem dados na nuvem. Enviando dados locais iniciais...');
         await pushToCloud();
         setSyncStatus('connected', 'Sincronizado');
         return;
       }
       throw new Error('Server error');
     }
+    
     const data = await res.json();
     if (data && typeof data === 'object') {
       const localDecks = localStorage.getItem(KEY_DECKS) || '[]';
@@ -619,6 +624,8 @@ async function pullFromCloud(quiet = false) {
           localPlayers !== cloudPlayers || localDeleted !== cloudDeleted || 
           localEdits !== cloudEdits) {
         
+        console.log('🔄 Sync [Pull]: Novos dados encontrados! Atualizando banco de dados local...');
+        
         localStorage.setItem(KEY_DECKS, cloudDecks);
         localStorage.setItem(KEY_MATCHES, cloudMatches);
         localStorage.setItem(KEY_PLAYERS, cloudPlayers);
@@ -636,11 +643,13 @@ async function pullFromCloud(quiet = false) {
         if (typeof renderDecksList === 'function') renderDecksList();
         if (typeof renderPlayersList === 'function') renderPlayersList();
         populateQuickLogDropdowns();
+      } else {
+        if (!quiet) console.log('🟢 Sync [Pull]: Dados locais estão totalmente atualizados com a nuvem.');
       }
       setSyncStatus('connected', 'Sincronizado');
     }
   } catch (err) {
-    console.error('Sync pull error:', err);
+    console.error('❌ Sync [Pull] Error:', err);
     setSyncStatus('error', 'Erro de Conexão');
   }
 }
@@ -657,15 +666,26 @@ async function pushToCloud() {
       deletedIds: [...loadDeleted()],
       editedMatches: loadEdits()
     };
+    
+    console.log(`🌐 Sync [Push]: Enviando dados locais para o banco na nuvem...`, {
+      decksCount: payload.decks.length,
+      matchesCount: payload.manualMatches.length,
+      playersCount: payload.players.length,
+      deletedCount: payload.deletedIds.length
+    });
+
     const res = await fetch(getSyncUrl(token), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
+    
     if (!res.ok) throw new Error('Push failed');
+    
+    console.log('🟢 Sync [Push]: Sucesso! Dados salvos e propagados no banco de dados da nuvem.');
     setSyncStatus('connected', 'Sincronizado');
   } catch (err) {
-    console.error('Sync push error:', err);
+    console.error('❌ Sync [Push] Error:', err);
     setSyncStatus('error', 'Erro ao enviar');
   }
 }
