@@ -575,19 +575,33 @@ function initQuickLogToggle() {
 // ── ONLINE SYNC FUNCTIONALITY ───────────────────────────────────────────────
 let syncInterval = null;
 let isSyncing = false;
+let lastWriteTime = 0;
 
 function getSyncUrl(token) {
   const isLocalFile = window.location.protocol === 'file:';
   const cleanToken = token.replace(/[^a-zA-Z0-9_-]/g, '');
+  const ts = Date.now();
   // Ensure both local file and Vercel proxy hit the exact same key name: jornada_sync_<token>
+  // Added timestamp parameter to completely bypass browser caching
   return isLocalFile 
-    ? `https://keyvalue.xyz/v1/jornada_sync_${cleanToken}` 
-    : `/api/sync?token=${cleanToken}`;
+    ? `https://keyvalue.xyz/v1/jornada_sync_${cleanToken}?_t=${ts}` 
+    : `/api/sync?token=${cleanToken}&_t=${ts}`;
 }
 
 async function pullFromCloud(quiet = false) {
   const token = localStorage.getItem('jornada_sync_token');
   if (!token) return;
+
+  // Skip pull if we are actively pushing or if a local write occurred recently (< 6 seconds ago)
+  // This prevents race conditions where old cloud data overwrites new local changes
+  if (isSyncing) {
+    if (!quiet) console.log('⏳ Sync [Pull]: Pulado pois uma gravação (Push) está ativa.');
+    return;
+  }
+  if (Date.now() - lastWriteTime < 6000) {
+    if (!quiet) console.log('⏳ Sync [Pull]: Pulado para evitar colisão com uma gravação local recente.');
+    return;
+  }
 
   try {
     if (!quiet) {
@@ -657,7 +671,12 @@ async function pullFromCloud(quiet = false) {
 async function pushToCloud() {
   const token = localStorage.getItem('jornada_sync_token');
   if (!token) return;
+  if (isSyncing) {
+    console.log('⏳ Sync [Push]: Envio pulado pois já existe um push em andamento.');
+    return;
+  }
 
+  isSyncing = true;
   try {
     const payload = {
       decks: loadDecks(),
@@ -687,10 +706,13 @@ async function pushToCloud() {
   } catch (err) {
     console.error('❌ Sync [Push] Error:', err);
     setSyncStatus('error', 'Erro ao enviar');
+  } finally {
+    isSyncing = false;
   }
 }
 
 function triggerSyncPush() {
+  lastWriteTime = Date.now();
   const token = localStorage.getItem('jornada_sync_token');
   if (token) {
     pushToCloud();
