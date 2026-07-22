@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Jornada Dashboard — Registro de Jogos</title>
+  <meta name="description" content="Dashboard de estatísticas e análise de winrate dos decks da Jornada." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ===== HEADER ===== -->
+  <header class="header">
+    <div class="header-inner">
+      <div class="logo">
+        <div class="logo-icon">⚔️</div>
+        <div>
+          <h1 class="logo-title">Jornada Dashboard</h1>
+          <p class="logo-sub">Registro &amp; Análise de Partidas</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button class="manager-btn" id="btnOpenSync" style="display: inline-flex; align-items: center; gap: .4rem;">
+          <span id="headerSyncDot" style="width: 8px; height: 8px; border-radius: 50%; background: var(--text2); display: inline-block;"></span>
+          <span>🌐 Sincronizar</span>
+        </button>
+        <button class="manager-btn" id="btnOpenManager">🃏 Gerenciar</button>
+        <label class="file-btn" for="fileInput" title="Carregar arquivo Excel">
+          <span>📂 Excel</span>
+          <input type="file" id="fileInput" accept=".xlsx,.xlsm,.xls" style="display:none" />
+        </label>
+        <div class="last-update" id="lastUpdate">Dados de demonstração carregados</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===== FILTERS ===== -->
+  <section class="filters-bar">
+    <div class="filters-inner">
+      <div class="filter-group">
+        <label class="filter-label">Player</label>
+        <select id="filterPlayer" class="filter-select">
+          <option value="">Todos</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label class="filter-label">Deck</label>
+        <select id="filterDeck" class="filter-select">
+          <option value="">Todos</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label class="filter-label">Formato</label>
+        <select id="filterFormato" class="filter-select">
+          <option value="">Todos</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label class="filter-label">Local</label>
+        <select id="filterLocal" class="filter-select">
+          <option value="">Todos</option>
+        </select>
+      </div>
+      <button class="reset-btn" id="resetFilters">↺ Limpar</button>
+    </div>
+  </section>
+
+  <!-- ===== MAIN ===== -->
+  <main class="main">
+
+    <!-- ===== QUICK LOG PANEL ===== -->
+    <section class="quick-log-section">
+      <div class="quick-log-card">
+        <div class="quick-log-header">
+          <div style="display:flex;align-items:center;gap:.5rem">
+            <span style="font-size:1.2rem">⚡</span>
+            <div>
+              <h3 class="quick-log-title">Registro Rápido</h3>
+              <span class="quick-log-sub">Registre um jogo com apenas 1 clique</span>
+            </div>
+          </div>
+          <button class="icon-btn sm" id="btnToggleQuickLog">▼ Recolher</button>
+        </div>
+        <div class="quick-log-body" id="quickLogBody">
+          <div class="quick-log-form-row">
+            <div class="form-group">
+              <label class="form-label">Meu Player</label>
+              <select id="quickLogPlayer" class="form-input"></select>
+            </div>
+            <div class="form-group">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <label class="form-label">Meu Deck</label>
+                <button type="button" class="icon-btn sm" id="btnQuickAddDeckOwn" style="font-size: .65rem; padding: 2px 6px;" title="Cadastrar novo deck">+</button>
+              </div>
+              <select id="quickLogDeck" class="form-input">
+                <option value="">Selecione…</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Oponente</label>
+              <input type="text" id="quickLogAdvName" class="form-input" placeholder="Ex: GreatBall" value="Oponente" />
+            </div>
+            <div class="form-group">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <label class="form-label">Deck Oponente</label>
+                <button type="button" class="icon-btn sm" id="btnQuickAddDeckAdv" style="font-size: .65rem; padding: 2px 6px;" title="Cadastrar novo deck">+</button>
+              </div>
+              <select id="quickLogDeckAdv" class="form-input">
+                <option value="">Selecione…</option>
+              </select>
+            </div>
+          </div>
+          <div class="quick-log-actions">
+            <button class="quick-log-btn win" id="btnQuickWin">🏆 Vitória</button>
+            <button class="quick-log-btn draw" id="btnQuickDraw">🤝 Empate</button>
+            <button class="quick-log-btn loss" id="btnQuickLoss">❌ Derrota</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- KPI Cards -->
+    <section class="kpi-grid" id="kpiGrid">
+      <div class="kpi-card">
+        <div class="kpi-icon">🎮</div>
+        <div class="kpi-info">
+          <div class="kpi-value" id="kpiTotal">—</div>
+          <div class="kpi-label">Partidas Totais</div>
+        </div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon">🏆</div>
+        <div class="kpi-info">
+          <div class="kpi-value green" id="kpiWin">—</div>
+          <div class="kpi-label">Vitórias</div>
+        </div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon">🤝</div>
+        <div class="kpi-info">
+          <div class="kpi-value yellow" id="kpiDraw">—</div>
+          <div class="kpi-label">Empates</div>
+        </div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon">💀</div>
+        <div class="kpi-info">
+          <div class="kpi-value red" id="kpiLoss">—</div>
+          <div class="kpi-label">Derrotas</div>
+        </div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon">📈</div>
+        <div class="kpi-info">
+          <div class="kpi-value purple" id="kpiWR">—</div>
+          <div class="kpi-label">Win Rate</div>
+        </div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon">💥</div>
+        <div class="kpi-info">
+          <div class="kpi-value red" id="kpiBrick">—</div>
+          <div class="kpi-label">% Brick</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Charts Row 1 -->
+    <section class="charts-grid two-col">
+      <div class="chart-card">
+        <div class="chart-header">
+          <h2 class="chart-title">🃏 Win Rate por Deck</h2>
+          <span class="chart-sub">Porcentagem de vitórias por deck</span>
+        </div>
+        <div class="chart-wrap"><canvas id="chartDeckWR"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-header">
+          <h2 class="chart-title">👤 Desempenho por Player</h2>
+          <span class="chart-sub">Vitórias, empates e derrotas</span>
+        </div>
+        <div class="chart-wrap"><canvas id="chartPlayerPerf"></canvas></div>
+      </div>
+    </section>
+
+    <!-- Charts Row 2 -->
+    <section class="charts-grid three-col">
+      <div class="chart-card">
+        <div class="chart-header">
+          <h2 class="chart-title">🥧 Resultado Geral</h2>
+          <span class="chart-sub">Distribuição total de resultados</span>
+        </div>
+        <div class="chart-wrap chart-wrap-sm"><canvas id="chartResultPie"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-header">
+          <h2 class="chart-title">📍 Jogos por Local</h2>
+          <span class="chart-sub">Frequência de jogos por local</span>
+        </div>
+        <div class="chart-wrap chart-wrap-sm"><canvas id="chartLocal"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-header">
+          <h2 class="chart-title">⚙️ Formato</h2>
+          <span class="chart-sub">Distribuição MD1 vs MD3</span>
+        </div>
+        <div class="chart-wrap chart-wrap-sm"><canvas id="chartFormato"></canvas></div>
+      </div>
+    </section>
+
+    <!-- Charts Row 3 -->
+    <section class="charts-grid two-col">
+      <div class="chart-card">
+        <div class="chart-header">
+          <h2 class="chart-title">🎯 Win Rate vs Oponente</h2>
+          <span class="chart-sub">Taxa de vitória contra cada adversário</span>
+        </div>
+        <div class="chart-wrap"><canvas id="chartOppWR"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-header">
+          <h2 class="chart-title">🔢 Partidas por Deck</h2>
+          <span class="chart-sub">Quantidade total de jogos</span>
+        </div>
+        <div class="chart-wrap"><canvas id="chartDeckCount"></canvas></div>
+      </div>
+    </section>
+
+    <!-- Charts Row 4 -->
+    <section class="charts-grid two-col">
+      <div class="chart-card">
+        <div class="chart-header">
+          <h2 class="chart-title">🚀 Win Rate: 1º vs 2º</h2>
+          <span class="chart-sub">Impacto da posição inicial no resultado</span>
+        </div>
+        <div class="chart-wrap"><canvas id="chartStart"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-header">
+          <h2 class="chart-title">💥 Brick Analysis por Deck</h2>
+          <span class="chart-sub">% de partidas com e sem brick por deck</span>
+        </div>
+        <div class="chart-wrap"><canvas id="chartBrick"></canvas></div>
+      </div>
+    </section>
+
+    <!-- ===== MATCHUP WIN RATE ===== -->
+    <section class="chart-card matchup-section">
+      <div class="matchup-header">
+        <div>
+          <h2 class="chart-title">⚔️ Matchup Win Rate</h2>
+          <span class="chart-sub">Taxa de vitória por confronto de decks — clique em uma célula para ver os detalhes</span>
+        </div>
+        <div class="matchup-controls">
+          <div class="filter-group">
+            <label class="filter-label">Perspectiva</label>
+            <select id="matchupPlayer" class="filter-select">
+              <option value="">Todos os Players</option>
+            </select>
+          </div>
+          <div class="matchup-view-toggle">
+            <button class="toggle-btn active" id="btnViewMatrix" data-view="matrix">🔲 Matrix</button>
+            <button class="toggle-btn" id="btnViewBar" data-view="bar">📊 Ranking</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Matrix view -->
+      <div id="matchupMatrixView" class="matchup-view">
+        <div class="matrix-legend">
+          <div class="legend-gradient"></div>
+          <div class="legend-labels"><span>0%</span><span>50%</span><span>100%</span></div>
+          <span class="legend-hint">* sem dados suficientes</span>
+        </div>
+        <div class="matrix-scroll">
+          <div id="matchupMatrix" class="matchup-matrix"></div>
+        </div>
+      </div>
+
+      <!-- Bar chart view -->
+      <div id="matchupBarView" class="matchup-view" style="display:none">
+        <div class="chart-wrap" style="min-height:320px">
+          <canvas id="chartMatchupBar"></canvas>
+        </div>
+      </div>
+
+      <!-- Detail tooltip panel -->
+      <div id="matchupDetail" class="matchup-detail" style="display:none">
+        <div class="detail-header">
+          <strong id="detailTitle"></strong>
+          <button class="icon-btn" onclick="document.getElementById('matchupDetail').style.display='none'">✕</button>
+        </div>
+        <div id="detailBody" class="detail-body"></div>
+      </div>
+    </section>
+
+    <!-- Match History Table -->
+    <section class="table-section">
+      <div class="table-header">
+        <h2 class="chart-title">📋 Histórico de Partidas</h2>
+        <input type="search" id="tableSearch" class="table-search" placeholder="Buscar na tabela…" />
+      </div>
+      <div class="table-wrap">
+        <table id="matchTable">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Data</th>
+              <th>Player</th>
+              <th>Deck</th>
+              <th>Adversário</th>
+              <th>Deck Adv.</th>
+              <th>Formato</th>
+              <th>Start</th>
+              <th>Placar</th>
+              <th>Resultado</th>
+              <th>Brick</th>
+              <th>Local</th>
+              <th>Listas</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <p>Jornada Dashboard · Dados persistidos localmente · <span id="footerCount"></span></p>
+  </footer>
+
+  <!-- ===== FAB: REGISTRAR PARTIDA ===== -->
+  <button class="fab" id="fabBtn" title="Registrar Partida">
+    <span class="fab-icon">+</span>
+    <span class="fab-label">Registrar Partida</span>
+  </button>
+
+  <!-- ===================================================
+       MANAGER PANEL (side drawer)
+       =================================================== -->
+  <div class="manager-panel" id="managerPanel">
+    <div class="manager-header">
+      <h2>🃏 Gerenciador</h2>
+      <button class="icon-btn" id="btnCloseManager">✕</button>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tab-bar">
+      <button class="tab-btn active" data-tab="tabDecks">Decks</button>
+      <button class="tab-btn" data-tab="tabPlayers">Players</button>
+    </div>
+
+    <!-- Tab: Decks -->
+    <div class="tab-pane active" id="tabDecks">
+      <div class="panel-toolbar">
+        <button class="action-btn" onclick="openNewDeck()">+ Novo Deck</button>
+      </div>
+      <div id="decksList" class="decks-list"></div>
+    </div>
+
+    <!-- Tab: Players -->
+    <div class="tab-pane" id="tabPlayers">
+      <div class="add-player-row">
+        <input type="text" id="newPlayerName" class="filter-select" placeholder="Nome do player…" />
+        <button class="action-btn" id="btnAddPlayer">+ Adicionar</button>
+      </div>
+      <div id="playersList" class="players-list"></div>
+    </div>
+  </div>
+  <div class="panel-overlay" id="panelOverlay"></div>
+
+  <!-- ===================================================
+       MODAL: DECK FORM (Novo / Editar)
+       =================================================== -->
+  <div class="modal-overlay" id="modalDeckForm">
+    <div class="modal modal-wide">
+      <div class="modal-header">
+        <h3 id="deckFormTitle">+ Novo Deck</h3>
+        <button class="icon-btn" data-close-modal="modalDeckForm">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-row two-col">
+          <div class="form-group">
+            <label class="form-label">Nome do Deck *</label>
+            <input type="text" id="formDeckName" class="form-input" placeholder="Ex: Zoroark ex" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Player</label>
+            <select id="formDeckPlayer" class="form-input">
+              <option value="">Nenhum</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <div class="list-label-row">
+            <label class="form-label">Lista PTCGL (cole o export aqui)</label>
+            <span class="card-counter under" id="cardCounter">0/60 cartas</span>
+          </div>
+          <textarea
+            id="formDeckList"
+            class="form-textarea"
+            rows="18"
+            placeholder="Cole aqui a lista exportada do PTCGL:
+
+Pokémon: 12
+4 Zoroark ex sv5 159
+2 Zorua sv5 103
+...
+
+Treinador: 36
+4 Arven sv5 186
+...
+
+Energia: 12
+4 Energia Psíquica básica SVE 5
+...
+
+Total de cartas: 60"
+          ></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="cancel-btn" data-close-modal="modalDeckForm">Cancelar</button>
+        <button class="save-btn" id="btnSaveDeck">💾 Salvar Deck</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================
+       MODAL: DECK LIST VIEWER
+       =================================================== -->
+  <div class="modal-overlay" id="modalDeckList">
+    <div class="modal modal-wide">
+      <div class="modal-header">
+        <div>
+          <h3 id="deckListTitle">Lista do Deck</h3>
+          <span id="deckListPlayer" class="modal-sub"></span>
+        </div>
+        <div style="display:flex;align-items:center;gap:.75rem">
+          <span id="deckListCount" class="deck-list-count"></span>
+          <button class="icon-btn" data-close-modal="modalDeckList">✕</button>
+        </div>
+      </div>
+      <div class="modal-body">
+        <input type="search" id="deckListSearch" class="table-search" placeholder="Buscar carta…" style="width:100%;margin-bottom:1rem" />
+        <div id="deckListBody" class="deck-list-body"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================
+       MODAL: REGISTRAR PARTIDA
+       =================================================== -->
+  <div class="modal-overlay" id="modalMatchForm">
+    <div class="modal modal-wide">
+      <div class="modal-header">
+        <h3>⚔️ Registrar Partida</h3>
+        <button class="icon-btn" data-close-modal="modalMatchForm">✕</button>
+      </div>
+      <div class="modal-body">
+
+        <!-- Row 1 -->
+        <div class="form-row three-col">
+          <div class="form-group">
+            <label class="form-label">Data *</label>
+            <input type="date" id="formMatchData" class="form-input" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Player *</label>
+            <select id="formMatchPlayer" class="form-input">
+              <option value="">Selecione…</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Deck</label>
+            <select id="formMatchDeck" class="form-input">
+              <option value="">Sem deck cadastrado</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Row 2 -->
+        <div class="form-row two-col">
+          <div class="form-group">
+            <label class="form-label">Adversário *</label>
+            <input type="text" id="formMatchAdv" class="form-input" placeholder="Nome do adversário" />
+          </div>
+          <div class="form-group">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <label class="form-label">Deck do Adversário</label>
+              <button type="button" class="icon-btn sm" id="btnFormAddDeckAdv" style="font-size: .65rem; padding: 2px 6px;" title="Cadastrar novo deck">+</button>
+            </div>
+            <select id="formMatchDeckAdv" class="form-input">
+              <option value="">Selecione…</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Row 3 -->
+        <div class="form-row four-col">
+          <div class="form-group">
+            <label class="form-label">Formato</label>
+            <select id="formMatchFormato" class="form-input">
+              <option value="MD3">MD3</option>
+              <option value="MD1">MD1</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Start</label>
+            <select id="formMatchStart" class="form-input">
+              <option value="1º">1º</option>
+              <option value="2º">2º</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Resultado</label>
+            <select id="formMatchResultado" class="form-input">
+              <option value="Vitória">✅ Vitória</option>
+              <option value="Empate">🤝 Empate</option>
+              <option value="Derrota">❌ Derrota</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Placar</label>
+            <input type="text" id="formMatchPlacar" class="form-input" placeholder="Ex: 2-1" />
+          </div>
+        </div>
+
+        <!-- Row 4: Brick toggles -->
+        <div class="form-row two-col">
+          <div class="form-group">
+            <label class="form-label">Brickei?</label>
+            <div class="brick-toggle-group" id="brickToggleGroup">
+              <button type="button" class="brick-toggle active" data-value="Não" id="brickNo">✅ Não</button>
+              <button type="button" class="brick-toggle" data-value="Sim" id="brickYes">💥 Sim</button>
+            </div>
+            <input type="hidden" id="formMatchBrick" value="Não" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Oponente brickeiou?</label>
+            <div class="brick-toggle-group" id="brickOpToggleGroup">
+              <button type="button" class="brick-toggle active" data-value="Não" id="brickOpNo">✅ Não</button>
+              <button type="button" class="brick-toggle" data-value="Sim" id="brickOpYes">💥 Sim</button>
+            </div>
+            <input type="hidden" id="formMatchBrickOp" value="Não" />
+          </div>
+        </div>
+
+        <!-- Row 5: Local -->
+        <div class="form-row two-col">
+          <div class="form-group">
+            <label class="form-label">Local</label>
+            <select id="formMatchLocal" class="form-input">
+              <option value="">Selecione…</option>
+              <option value="Caverna">Caverna</option>
+              <option value="Spell">Spell</option>
+              <option value="Leitura RioMar">Leitura RioMar</option>
+              <option value="Leitura Tacaruna">Leitura Tacaruna</option>
+              <option value="__outro__">Outro…</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Local personalizado</label>
+            <input type="text" id="formMatchLocalCustom" class="form-input" placeholder="Digite o local…" style="display:none" />
+          </div>
+        </div>
+
+        <!-- Comentários -->
+        <div class="form-group">
+          <label class="form-label">Comentários</label>
+          <textarea id="formMatchComentarios" class="form-textarea" rows="3" placeholder="Observações sobre a partida…"></textarea>
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button class="cancel-btn" data-close-modal="modalMatchForm">Cancelar</button>
+        <button class="save-btn" id="btnSaveMatch">⚔️ Salvar Partida</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================
+       MODAL: ONLINE SYNC
+       =================================================== -->
+  <div class="modal-overlay" id="modalSync">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>🌐 Sincronização Online</h3>
+        <button class="icon-btn" data-close-modal="modalSync">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: .85rem; color: var(--text2); line-height: 1.5; margin-bottom: .75rem;">
+          Sincronize seus dados na nuvem para que você e seus amigos possam alimentar e visualizar o dashboard de múltiplos dispositivos (PC, celular, tablet) em tempo real.
+        </p>
+        
+        <div class="form-group" style="margin-bottom: .75rem;">
+          <label class="form-label">Status da Sincronização</label>
+          <div style="display: flex; align-items: center; gap: .5rem; font-size: .9rem;">
+            <span id="syncStatusIndicator" style="width: 10px; height: 10px; border-radius: 50%; background: var(--red); display: inline-block;"></span>
+            <span id="syncStatusText" style="font-weight: 600; color: var(--red);">Desativado (Local)</span>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom: .75rem;">
+          <label class="form-label">Chave de Sincronização (Token)</label>
+          <div style="display: flex; gap: .5rem; align-items: center;">
+            <input type="text" id="syncTokenInput" class="form-input" placeholder="Cole uma chave existente ou gere uma nova…" style="font-family: monospace; font-size: .8rem;" />
+            <button class="icon-btn" id="btnCopySyncToken" title="Copiar Chave" style="padding: .5rem .7rem;">📋</button>
+          </div>
+          <span class="modal-sub">Compartilhe esta chave com seus amigos para que todos usem o mesmo banco de dados.</span>
+        </div>
+
+        <div style="display: flex; gap: .75rem; margin-top: .5rem; margin-bottom: .5rem;">
+          <button class="action-btn" id="btnEnableSync" style="flex: 1; padding: .6rem;">🌐 Ativar / Conectar</button>
+          <button class="cancel-btn" id="btnDisableSync" style="flex: 1; border-color: var(--red); color: var(--red); padding: .6rem;">Desativar</button>
+        </div>
+
+        <div style="display: flex; justify-content: center; margin-top: .5rem;">
+          <button class="icon-btn" id="btnGenerateSyncToken" style="font-size: .75rem; padding: .4rem .8rem;">✨ Gerar Nova Chave Privada</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="app.js"></script>
+  <script src="manager.js"></script>
+</body>
+</html>
