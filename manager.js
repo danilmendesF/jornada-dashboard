@@ -578,11 +578,11 @@ let isSyncing = false;
 
 function getSyncUrl(token) {
   const isLocalFile = window.location.protocol === 'file:';
-  // Fallback to keyvalue.xyz when double-clicking the file locally.
-  // When running on a server/Vercel, use our secure private serverless route.
+  const cleanToken = token.replace(/[^a-zA-Z0-9_-]/g, '');
+  // Ensure both local file and Vercel proxy hit the exact same key name: jornada_sync_<token>
   return isLocalFile 
-    ? `https://keyvalue.xyz/v1/${token}` 
-    : `/api/sync?token=${token}`;
+    ? `https://keyvalue.xyz/v1/jornada_sync_${cleanToken}` 
+    : `/api/sync?token=${cleanToken}`;
 }
 
 async function pullFromCloud(quiet = false) {
