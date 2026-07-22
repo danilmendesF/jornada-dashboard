@@ -17,13 +17,13 @@ function loadDecks()   { try { return JSON.parse(localStorage.getItem(KEY_DECKS)
 function loadManual()  { try { return JSON.parse(localStorage.getItem(KEY_MATCHES)) || []; } catch { return []; } }
 function loadPlayers() { try { return JSON.parse(localStorage.getItem(KEY_PLAYERS)) || ['Guivaz','Trevas','Braz','Leleco']; } catch { return ['Guivaz','Trevas','Braz','Leleco']; } }
 
-function saveDecks(d)   { localStorage.setItem(KEY_DECKS,   JSON.stringify(d)); }
-function saveManual(m)  { localStorage.setItem(KEY_MATCHES, JSON.stringify(m)); }
-function savePlayers(p) { localStorage.setItem(KEY_PLAYERS, JSON.stringify(p)); }
+function saveDecks(d)   { localStorage.setItem(KEY_DECKS,   JSON.stringify(d)); triggerSyncPush(); }
+function saveManual(m)  { localStorage.setItem(KEY_MATCHES, JSON.stringify(m)); triggerSyncPush(); }
+function savePlayers(p) { localStorage.setItem(KEY_PLAYERS, JSON.stringify(p)); triggerSyncPush(); }
 function loadDeleted()  { try { return new Set(JSON.parse(localStorage.getItem(KEY_DELETED)) || []); } catch { return new Set(); } }
 function loadEdits()    { try { return JSON.parse(localStorage.getItem(KEY_EDITS)) || {}; } catch { return {}; } }
-function saveDeleted(s) { localStorage.setItem(KEY_DELETED, JSON.stringify([...s])); }
-function saveEdits(e)   { localStorage.setItem(KEY_EDITS,   JSON.stringify(e)); }
+function saveDeleted(s) { localStorage.setItem(KEY_DELETED, JSON.stringify([...s])); triggerSyncPush(); }
+function saveEdits(e)   { localStorage.setItem(KEY_EDITS,   JSON.stringify(e)); triggerSyncPush(); }
 
 // Exposed state
 let decks   = loadDecks();
@@ -573,9 +573,11 @@ function initQuickLogToggle() {
 }
 
 // ── ONLINE SYNC FUNCTIONALITY ───────────────────────────────────────────────
-let syncInterval = null;
-let isSyncing = false;
-let lastWriteTime = 0;
+let syncInterval   = null;
+let isSyncing      = false;   // true while a push HTTP request is in-flight
+let isPullPushing  = false;   // true while pull triggered a remediation push
+let lastWriteTime  = 0;       // timestamp of last local write action
+let pushDebounceTimer = null; // debounce timer for triggerSyncPush
 
 function getSyncUrl(token) {
   const isLocalFile = window.location.protocol === 'file:';
@@ -622,32 +624,74 @@ async function pullFromCloud(quiet = false) {
     
     const data = await res.json();
     if (data && typeof data === 'object') {
-      const localDecks = localStorage.getItem(KEY_DECKS) || '[]';
-      const localMatches = localStorage.getItem(KEY_MATCHES) || '[]';
-      const localPlayers = localStorage.getItem(KEY_PLAYERS) || '[]';
-      const localDeleted = localStorage.getItem(KEY_DELETED) || '[]';
-      const localEdits = localStorage.getItem(KEY_EDITS) || '{}';
+      const cloudDecks = data.decks || [];
+      const cloudMatches = data.manualMatches || [];
+      const cloudPlayers = data.players || [];
+      const cloudDeleted = data.deletedIds || [];
+      const cloudEdits = data.editedMatches || {};
 
-      const cloudDecks = JSON.stringify(data.decks || []);
-      const cloudMatches = JSON.stringify(data.manualMatches || []);
-      const cloudPlayers = JSON.stringify(data.players || []);
-      const cloudDeleted = JSON.stringify(data.deletedIds || []);
-      const cloudEdits = JSON.stringify(data.editedMatches || {});
+      const localDecks = loadDecks();
+      const localMatches = loadManual();
+      const localPlayers = loadPlayers();
+      const localDeleted = [...loadDeleted()];
+      const localEdits = loadEdits();
 
-      if (localDecks !== cloudDecks || localMatches !== cloudMatches || 
-          localPlayers !== cloudPlayers || localDeleted !== cloudDeleted || 
-          localEdits !== cloudEdits) {
-        
-        console.log('🔄 Sync [Pull]: Novos dados encontrados! Atualizando banco de dados local...');
-        
-        localStorage.setItem(KEY_DECKS, cloudDecks);
-        localStorage.setItem(KEY_MATCHES, cloudMatches);
-        localStorage.setItem(KEY_PLAYERS, cloudPlayers);
-        localStorage.setItem(KEY_DELETED, cloudDeleted);
-        localStorage.setItem(KEY_EDITS, cloudEdits);
+      // 1. Combine deleted IDs from both local and cloud
+      const combinedDeleted = new Set([...localDeleted, ...cloudDeleted]);
 
-        decks = data.decks || [];
-        players = data.players || [];
+      // 2. Combine edit overrides from both
+      const combinedEdits = { ...localEdits, ...cloudEdits };
+
+      // 3. Merge matches list
+      const matchesMap = new Map();
+      [...localMatches, ...cloudMatches].forEach(m => {
+        if (combinedDeleted.has(m.id)) return; // Exclude deleted
+        const finalMatch = combinedEdits[m.id] || m; // Respect edits
+        matchesMap.set(m.id, finalMatch);
+      });
+      const finalMatches = Array.from(matchesMap.values());
+
+      // 4. Merge Decks (unique by name)
+      const decksMap = new Map();
+      [...localDecks, ...cloudDecks].forEach(d => {
+        decksMap.set(d.name, d);
+      });
+      const finalDecks = Array.from(decksMap.values());
+
+      // 5. Merge Players
+      const finalPlayers = [...new Set([...localPlayers, ...cloudPlayers])];
+
+      // Convert to strings for comparison
+      const localDecksStr = JSON.stringify(localDecks);
+      const localMatchesStr = JSON.stringify(localMatches);
+      const localPlayersStr = JSON.stringify(localPlayers);
+      const localDeletedStr = JSON.stringify(localDeleted);
+      const localEditsStr = JSON.stringify(localEdits);
+
+      const finalDecksStr = JSON.stringify(finalDecks);
+      const finalMatchesStr = JSON.stringify(finalMatches);
+      const finalPlayersStr = JSON.stringify(finalPlayers);
+      const finalDeletedStr = JSON.stringify([...combinedDeleted]);
+      const finalEditsStr = JSON.stringify(combinedEdits);
+
+      const hasLocalChanges = (localDecksStr !== finalDecksStr || localMatchesStr !== finalMatchesStr ||
+                               localPlayersStr !== finalPlayersStr || localDeletedStr !== finalDeletedStr ||
+                               localEditsStr !== finalEditsStr);
+
+      const hasCloudChanges = (JSON.stringify(cloudDecks) !== finalDecksStr || JSON.stringify(cloudMatches) !== finalMatchesStr ||
+                               JSON.stringify(cloudPlayers) !== finalPlayersStr || JSON.stringify(cloudDeleted) !== finalDeletedStr ||
+                               JSON.stringify(cloudEdits) !== finalEditsStr);
+
+      if (hasLocalChanges) {
+        console.log('🔄 Sync [Pull]: Novos dados mesclados localmente! Atualizando banco local...');
+        localStorage.setItem(KEY_DECKS, finalDecksStr);
+        localStorage.setItem(KEY_MATCHES, finalMatchesStr);
+        localStorage.setItem(KEY_PLAYERS, finalPlayersStr);
+        localStorage.setItem(KEY_DELETED, finalDeletedStr);
+        localStorage.setItem(KEY_EDITS, finalEditsStr);
+
+        decks = finalDecks;
+        players = finalPlayers;
 
         if (typeof initializeData === 'function') initializeData();
         if (typeof populateFilters === 'function') populateFilters();
@@ -657,8 +701,18 @@ async function pullFromCloud(quiet = false) {
         if (typeof renderDecksList === 'function') renderDecksList();
         if (typeof renderPlayersList === 'function') renderPlayersList();
         populateQuickLogDropdowns();
-      } else {
-        if (!quiet) console.log('🟢 Sync [Pull]: Dados locais estão totalmente atualizados com a nuvem.');
+      }
+
+      if (hasCloudChanges && !isPullPushing) {
+        console.log('🌐 Sync [Pull → Push]: Dados locais têm novidades. Enviando para a nuvem...');
+        isPullPushing = true;
+        try {
+          await pushToCloud();
+        } finally {
+          isPullPushing = false;
+        }
+      } else if (!hasLocalChanges && !hasCloudChanges) {
+        if (!quiet) console.log('🟢 Sync [Pull]: Dados locais e da nuvem estão em perfeita harmonia.');
       }
       setSyncStatus('connected', 'Sincronizado');
     }
@@ -711,12 +765,16 @@ async function pushToCloud() {
   }
 }
 
+// Debounced push: coalesces rapid consecutive saves (e.g. batch import)
+// into a single HTTP request after 800ms of inactivity.
 function triggerSyncPush() {
   lastWriteTime = Date.now();
-  const token = localStorage.getItem('jornada_sync_token');
-  if (token) {
-    pushToCloud();
-  }
+  if (pushDebounceTimer) clearTimeout(pushDebounceTimer);
+  pushDebounceTimer = setTimeout(() => {
+    pushDebounceTimer = null;
+    const token = localStorage.getItem('jornada_sync_token');
+    if (token) pushToCloud();
+  }, 800);
 }
 
 function setSyncStatus(state, text) {
