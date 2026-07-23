@@ -1383,6 +1383,7 @@ function initSyncUI() {
   const curToken = localStorage.getItem('jornada_sync_token');
   if (curToken) {
     if (tokenInput) tokenInput.value = curToken;
+    pullFromCloud(true);
     startSyncInterval();
   } else {
     setSyncStatus('disconnected');
@@ -1631,6 +1632,7 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 // ── ADMIN PROTECTION FUNCTIONS ────────────────────────────────────────────────
+// ── ADMIN PROTECTION FUNCTIONS ────────────────────────────────────────────────
 async function openProtectedManager() {
   if (isAdminUnlocked()) {
     document.getElementById('managerPanel').classList.add('open');
@@ -1641,17 +1643,24 @@ async function openProtectedManager() {
     return;
   }
 
-  // If no PIN stored locally BUT a cloud sync token exists, check cloud first
-  if (!hasAdminPin() && localStorage.getItem('jornada_sync_token')) {
+  // Always pull cloud data first if token exists to ensure we have cloud adminPin
+  const token = localStorage.getItem('jornada_sync_token');
+  if (token) {
+    showToast('🔄 Verificando permissões na nuvem…');
     try {
-      showToast('🔄 Verificando permissões de administrador na nuvem…');
       await pullFromCloud(true);
     } catch (e) {
       console.warn('Cloud PIN check failed', e);
     }
   }
 
-  setupAdminAuthModal(hasAdminPin() ? 'login' : 'create');
+  if (hasAdminPin()) {
+    setupAdminAuthModal('login');
+    showModal('modalAdminAuth');
+    return;
+  }
+
+  setupAdminAuthModal('create');
   showModal('modalAdminAuth');
 }
 
@@ -1684,7 +1693,7 @@ function setupAdminAuthModal(mode) {
   setTimeout(() => pinInput?.focus(), 150);
 }
 
-function submitAdminAuth() {
+async function submitAdminAuth() {
   const pinInput = document.getElementById('adminPinInput');
   const confirmInput = document.getElementById('adminPinConfirmInput');
   const remember = document.getElementById('adminRememberSession')?.checked;
@@ -1698,6 +1707,25 @@ function submitAdminAuth() {
   }
 
   if (adminAuthMode === 'create') {
+    // Check cloud payload to prevent overwriting an existing cloud PIN
+    const token = localStorage.getItem('jornada_sync_token');
+    if (token) {
+      try {
+        const res = await fetch(getSyncUrl(token));
+        if (res.ok) {
+          const cloudData = await res.json();
+          if (cloudData && cloudData.adminPin) {
+            localStorage.setItem(KEY_ADMIN_PIN, cloudData.adminPin);
+            if (errorEl) errorEl.textContent = '🔒 Uma senha de admin já existe na nuvem! Digite a senha existente.';
+            setupAdminAuthModal('login');
+            return;
+          }
+        }
+      } catch (e) {
+        console.warn('Cloud verification error:', e);
+      }
+    }
+
     const confirmVal = confirmInput ? confirmInput.value.trim() : '';
     if (val.length < 4) {
       if (errorEl) errorEl.textContent = '⚠️ A senha deve ter pelo menos 4 caracteres.';
@@ -1732,12 +1760,13 @@ function submitAdminAuth() {
     renderPlayersList();
     renderLocaisList();
     renderColecoesList();
-    showToast('🔓 Acesso concedido!');
+    showToast('🔓 Acesso liberado!');
   } else {
     if (errorEl) errorEl.textContent = '❌ Senha ou PIN incorreto!';
     if (pinInput) {
       pinInput.classList.add('shake-error');
       setTimeout(() => pinInput.classList.remove('shake-error'), 400);
+      pinInput.value = '';
     }
   }
 }
