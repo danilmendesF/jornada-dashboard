@@ -1159,11 +1159,7 @@ function renderMatchup() {
     if (oppDecks.length === 0) oppDecks = [selectedOppDeck];
   }
 
-  if (matchupCurrentView === 'matrix') {
-    renderMatchupMatrix(matchupData, myDecks, oppDecks);
-  } else {
-    renderMatchupBar(matchupData);
-  }
+  renderMatchupMatrix(matchupData, myDecks, oppDecks);
 }
 
 function populateMatchupDeckSelects() {
@@ -1266,139 +1262,6 @@ function renderMatchupMatrix(matchupData, myDecks, oppDecks) {
   container.innerHTML = html;
 }
 
-function renderMatchupBar(matchupData) {
-  destroyChart('matchupBar');
-  const entries = Object.values(matchupData)
-    .filter(e => e.total >= 1)
-    .map(e => ({ label: `${e.deck} vs ${e.opp}`, wr: Math.round((e.wins / e.total) * 100), total: e.total, wins: e.wins, draws: e.draws, losses: e.losses }))
-    .sort((a, b) => b.wr - a.wr);
-
-  if (entries.length === 0) {
-    document.getElementById('matchupBarView').innerHTML = '<div class="empty-state"><div class="empty-icon">📊</div><p>Sem dados de matchup.</p></div>';
-    return;
-  }
-
-  const labels = entries.map(e => e.label);
-  const wrs    = entries.map(e => e.wr);
-  const bgs    = entries.map(e => wrColor(e.wr, 0.75));
-  const borders= entries.map(e => wrColor(e.wr, 1));
-
-  // Re-inject canvas if needed
-  let barView = document.getElementById('matchupBarView');
-  if (!barView.querySelector('canvas')) {
-    barView.innerHTML = '<div class="chart-wrap" style="min-height:320px"><canvas id="chartMatchupBar"></canvas></div>';
-  }
-
-  charts['matchupBar'] = new Chart(document.getElementById('chartMatchupBar'), {
-    type: 'bar',
-    data: {
-      labels,
-      datasets: [{
-        label: 'Win Rate (%)',
-        data: wrs,
-        backgroundColor: bgs,
-        borderColor: borders,
-        borderWidth: 2,
-        borderRadius: 6,
-        borderSkipped: false,
-      }]
-    },
-    options: {
-      indexAxis: 'y',
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          callbacks: {
-            label: ctx => {
-              const e = entries[ctx.dataIndex];
-              return [` ${e.wr}% Win Rate`, ` ${e.wins}V · ${e.draws}E · ${e.losses}D (${e.total} jogos)`];
-            }
-          }
-        }
-      },
-      scales: {
-        x: { min: 0, max: 100, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { callback: v => v + '%' } },
-        y: { grid: { color: 'rgba(255,255,255,0.03)' } }
-      }
-    }
-  });
-}
-
-window.showMatchupDetail = function(myDeck, oppDeck, updateSelects = true) {
-  if (updateSelects) {
-    const selMy  = document.getElementById('matchupSelectMyDeck');
-    const selOpp = document.getElementById('matchupSelectOppDeck');
-    if (selMy) {
-      selMy.value = myDeck;
-      if (selMy.syncSearchableSelect) selMy.syncSearchableSelect();
-    }
-    if (selOpp) {
-      selOpp.value = oppDeck;
-      if (selOpp.syncSearchableSelect) selOpp.syncSearchableSelect();
-    }
-    renderMatchup();
-  }
-
-  const playerSel = document.getElementById('matchupPlayer')?.value || '';
-  let baseData = allData.filter(d => !playerSel || d.Player === playerSel);
-
-  const matches = baseData.filter(r => r.Deck === myDeck && r.DeckAdv === oppDeck);
-  if (!matches.length) return;
-
-  const wins   = matches.filter(r => r.Resultado === 'Vitória').length;
-  const draws  = matches.filter(r => r.Resultado === 'Empate').length;
-  const losses = matches.filter(r => r.Resultado === 'Derrota').length;
-  const wr     = Math.round((wins / matches.length) * 100);
-
-  document.getElementById('detailTitle').textContent = `${myDeck} vs ${oppDeck}`;
-
-  const playerBreakdown = {};
-  matches.forEach(m => {
-    if (!playerBreakdown[m.Player]) playerBreakdown[m.Player] = { wins: 0, draws: 0, losses: 0 };
-    const pb = playerBreakdown[m.Player];
-    if (m.Resultado === 'Vitória') pb.wins++;
-    else if (m.Resultado === 'Empate') pb.draws++;
-    else pb.losses++;
-  });
-
-  const playerRows = Object.entries(playerBreakdown).map(([p, s]) => {
-    const pTotal = s.wins + s.draws + s.losses;
-    const pWR = Math.round((s.wins / pTotal) * 100);
-    return `<div class="detail-player-row">
-      <span class="detail-player-name">👤 ${p}</span>
-      <span class="detail-record">${s.wins}V · ${s.draws}E · ${s.losses}D</span>
-      <span class="detail-wr" style="color:${wrColor(pWR, 1)}">${pWR}%</span>
-    </div>`;
-  }).join('');
-
-  const recentRows = [...matches].reverse().slice(0, 5).map(m => {
-    const badge = m.Resultado === 'Vitória' ? 'badge-win' : m.Resultado === 'Empate' ? 'badge-draw' : 'badge-loss';
-    const emoji = m.Resultado === 'Vitória' ? '✅' : m.Resultado === 'Empate' ? '🤝' : '❌';
-    return `<div class="detail-match-row">
-      <span class="detail-date">${m.Data}</span>
-      <span class="detail-match-player">👤 ${m.Player}</span>
-      <span class="detail-placar">${m.Placar || '—'}</span>
-      <span class="badge ${badge}" style="font-size:.7rem">${emoji} ${m.Resultado}</span>
-      <span class="detail-local">📍 ${m.Local || '—'}</span>
-    </div>`;
-  }).join('');
-
-  document.getElementById('detailBody').innerHTML = `
-    <div class="detail-kpis">
-      <div class="detail-kpi"><span class="dkpi-val" style="color:var(--green)">${wins}</span><span class="dkpi-label">Vitórias</span></div>
-      <div class="detail-kpi"><span class="dkpi-val" style="color:var(--yellow)">${draws}</span><span class="dkpi-label">Empates</span></div>
-      <div class="detail-kpi"><span class="dkpi-val" style="color:var(--red)">${losses}</span><span class="dkpi-label">Derrotas</span></div>
-      <div class="detail-kpi"><span class="dkpi-val" style="color:${wrColor(wr, 1)}">${wr}%</span><span class="dkpi-label">Win Rate</span></div>
-    </div>
-    ${Object.keys(playerBreakdown).length > 1 ? `<div class="detail-subtitle">Por Player</div>${playerRows}` : ''}
-    <div class="detail-subtitle">Últimas Partidas</div>
-    ${recentRows}
-  `;
-  document.getElementById('matchupDetail').style.display = 'block';
-};
-
 function populateMatchupPlayerSelect() {
   const sel = document.getElementById('matchupPlayer');
   if (!sel) return;
@@ -1418,21 +1281,7 @@ function populateMatchupPlayerSelect() {
   if (sel.syncSearchableSelect) sel.syncSearchableSelect();
 }
 
-// ── 18b. VIEW TOGGLE ──────────────────────────────────────────────────────────
 function initMatchupToggle() {
-  document.querySelectorAll('.toggle-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      matchupCurrentView = btn.dataset.view;
-      const isMatrix = matchupCurrentView === 'matrix';
-      document.getElementById('matchupMatrixView').style.display = isMatrix ? '' : 'none';
-      document.getElementById('matchupBarView').style.display    = isMatrix ? 'none' : '';
-      document.getElementById('matchupDetail').style.display     = 'none';
-      renderMatchup();
-    });
-  });
-
   ['matchupPlayer', 'matchupSelectMyDeck', 'matchupSelectOppDeck'].forEach(id => {
     document.getElementById(id)?.addEventListener('change', () => {
       window.applyMatchupFilter();

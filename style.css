@@ -1620,7 +1620,18 @@ tbody tr:last-child td { border-bottom: none; }
   max-height: 500px;
 }
 .quick-log-body.collapsed { max-height: 0; opacity: 0; pointer-events: none; gap: 0; overflow: hidden; }
-.quick-log-form-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
+.quick-log-form-row {
+  display: grid;
+  grid-template-columns: 1.1fr 1.4fr 1.1fr 1.4fr 0.85fr 1.2fr 0.85fr;
+  gap: 0.75rem;
+}
+
+@media (max-width: 1400px) {
+  .quick-log-form-row { grid-template-columns: repeat(4, 1fr); }
+}
+@media (max-width: 900px) {
+  .quick-log-form-row { grid-template-columns: 1fr 1fr; }
+}
 .quick-log-actions { display: flex; gap: 1rem; }
 .quick-log-btn {
   flex: 1;
@@ -1647,16 +1658,20 @@ tbody tr:last-child td { border-bottom: none; }
 .quick-log-btn.loss { background: linear-gradient(135deg, #e74c3c, #b03030); box-shadow: 0 4px 14px rgba(231,76,60,0.3); }
 .quick-log-btn.loss:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(231,76,60,0.5); }
 
-@media (max-width: 900px) { .quick-log-form-row { grid-template-columns: 1fr 1fr; } }
-@media (max-width: 500px) {
-  .quick-log-form-row { grid-template-columns: 1fr; }
-  .quick-log-actions  { flex-direction: column; gap: .5rem; }
-}
-
 /* ============================================================
    SYNC STATUS DOT (header)
    ============================================================ */
 #headerSyncDot {
   box-shadow: 0 0 8px currentColor;
   transition: background 0.4s, box-shadow 0.4s;
+}
+
+@keyframes shakeError {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-6px); }
+  40%, 80% { transform: translateX(6px); }
+}
+.shake-error {
+  animation: shakeError 0.35s ease;
+  border-color: var(--red) !important;
 }

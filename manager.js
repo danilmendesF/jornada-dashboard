@@ -12,6 +12,13 @@ const KEY_PLAYERS = 'jornada_players';
 const KEY_LOCAIS  = 'jornada_locais';
 const KEY_DELETED = 'jornada_deleted_ids';
 const KEY_EDITS   = 'jornada_edited_matches';
+const KEY_ADMIN_PIN = 'jornada_admin_pin';
+
+function getAdminPin() { return localStorage.getItem(KEY_ADMIN_PIN) || ''; }
+function hasAdminPin() { return !!getAdminPin(); }
+function isAdminUnlocked() { return sessionStorage.getItem('jornada_admin_unlocked') === 'true'; }
+
+let adminAuthMode = 'login'; // 'login' or 'create'
 
 // ── LOAD / SAVE ───────────────────────────────────────────────────────────────
 function loadDecks()   { try { return JSON.parse(localStorage.getItem(KEY_DECKS))   || []; } catch { return []; } }
@@ -307,6 +314,9 @@ let editingMatchId = null;
 function openMatchForm(matchData) {
   editingMatchId = matchData?.id || null;
 
+  // Repopulate local selects to reflect any updated custom/data locations
+  populateLocalSelects();
+
   // Header label
   const h = document.querySelector('#modalMatchForm .modal-header h3');
   if (h) h.textContent = editingMatchId ? '✏️ Editar Partida' : '⚔️ Registrar Partida';
@@ -321,31 +331,47 @@ function openMatchForm(matchData) {
   get('formMatchStart').value     = matchData?.Start    || '1º';
   get('formMatchResultado').value = matchData?.Resultado|| 'Vitória';
   get('formMatchPlacar').value    = matchData?.Placar   || '';
-  get('formMatchLocal').value     = matchData?.Local    || '';
-  get('formMatchLocalCustom').style.display = 'none';
   get('formMatchComentarios').value = matchData?.Comentarios || '';
+
+  // Local select logic
+  const localSel = get('formMatchLocal');
+  const localCustom = get('formMatchLocalCustom');
+  const targetLocal = matchData?.Local || '';
+
+  if (targetLocal) {
+    const hasOption = Array.from(localSel.options).some(o => o.value === targetLocal);
+    if (hasOption) {
+      localSel.value = targetLocal;
+      localCustom.value = '';
+      localCustom.style.display = 'none';
+    } else {
+      localSel.value = '__outro__';
+      localCustom.value = targetLocal;
+      localCustom.style.display = 'block';
+    }
+  } else {
+    localSel.value = '';
+    localCustom.value = '';
+    localCustom.style.display = 'none';
+  }
+  if (localSel.syncSearchableSelect) localSel.syncSearchableSelect();
 
   // Deck select — match by name directly
   get('formMatchDeck').value = matchData?.Deck || '';
 
   // Brick toggles
-  const brickVal   = matchData?.Brick   || 'Não';
-  const brickOpVal = matchData?.BrickOp || 'Não';
   const isOldBrick = v => v && v !== 'Nenhum' && v !== 'Não';
+  const brickVal   = isOldBrick(matchData?.Brick) ? 'Sim' : 'Não';
+  const brickOpVal = isOldBrick(matchData?.BrickOp) ? 'Sim' : 'Não';
 
-  ['brickToggleGroup', 'formMatchBrick'].forEach((gid, i) => {
-    const val = i === 0 ? (isOldBrick(brickVal)   ? 'Sim' : 'Não') : null;
-    if (i === 1) { get(gid).value = isOldBrick(brickVal) ? 'Sim' : 'Não'; return; }
-    const g = document.getElementById(gid);
-    if (!g) return;
-    g.querySelectorAll('.brick-toggle').forEach(b => b.classList.toggle('active', b.dataset.value === val));
+  get('formMatchBrick').value = brickVal;
+  document.querySelectorAll('#brickToggleGroup .brick-toggle').forEach(b => {
+    b.classList.toggle('active', b.dataset.value === brickVal);
   });
-  ['brickOpToggleGroup', 'formMatchBrickOp'].forEach((gid, i) => {
-    const val = i === 0 ? (isOldBrick(brickOpVal) ? 'Sim' : 'Não') : null;
-    if (i === 1) { get(gid).value = isOldBrick(brickOpVal) ? 'Sim' : 'Não'; return; }
-    const g = document.getElementById(gid);
-    if (!g) return;
-    g.querySelectorAll('.brick-toggle').forEach(b => b.classList.toggle('active', b.dataset.value === val));
+
+  get('formMatchBrickOp').value = brickOpVal;
+  document.querySelectorAll('#brickOpToggleGroup .brick-toggle').forEach(b => {
+    b.classList.toggle('active', b.dataset.value === brickOpVal);
   });
 
   showModal('modalMatchForm');
@@ -537,8 +563,13 @@ function populateLocalSelects() {
   const select = document.getElementById('formMatchLocal');
   if (!select) return;
   const cur = select.value;
+
+  const customLocais = (typeof loadLocais === 'function') ? loadLocais() : [];
+  const dataLocais = (typeof allData !== 'undefined' && Array.isArray(allData)) ? allData.map(d => d.Local).filter(Boolean) : [];
+  const allLocais = [...new Set([...customLocais, ...dataLocais])].sort((a, b) => a.localeCompare(b));
+
   select.innerHTML = '<option value="">Selecione…</option>';
-  locais.forEach(l => {
+  allLocais.forEach(l => {
     const o = document.createElement('option');
     o.value = l;
     o.textContent = l;
@@ -548,7 +579,12 @@ function populateLocalSelects() {
   outroOpt.value = '__outro__';
   outroOpt.textContent = 'Outro…';
   select.appendChild(outroOpt);
-  select.value = cur;
+
+  if (cur && (allLocais.includes(cur) || cur === '__outro__')) {
+    select.value = cur;
+  }
+
+  if (select.syncSearchableSelect) select.syncSearchableSelect();
 }
 
 // ── TOAST ─────────────────────────────────────────────────────────────────────
@@ -569,23 +605,46 @@ function showToast(msg) {
 // ── QUICK LOG FUNCTIONALITY ──────────────────────────────────────────────────
 function populateQuickLogDropdowns() {
   const qPlayer = document.getElementById('quickLogPlayer');
-  if (!qPlayer) return;
+  if (qPlayer) {
+    const curP = qPlayer.value;
+    qPlayer.innerHTML = players.map(p => `<option value="${p}">👤 ${p}</option>`).join('');
+    if (curP && players.includes(curP)) qPlayer.value = curP;
+    if (qPlayer.syncSearchableSelect) qPlayer.syncSearchableSelect();
+  }
 
-  const curP = qPlayer.value;
-  qPlayer.innerHTML = players.map(p => `<option value="${p}">👤 ${p}</option>`).join('');
-  if (curP && players.includes(curP)) qPlayer.value = curP;
-  if (qPlayer.syncSearchableSelect) qPlayer.syncSearchableSelect();
+  const qLocal = document.getElementById('quickLogLocal');
+  if (qLocal) {
+    const curL = qLocal.value;
+    const customLocais = (typeof loadLocais === 'function') ? loadLocais() : [];
+    const dataLocais = (typeof allData !== 'undefined' && Array.isArray(allData)) ? allData.map(d => d.Local).filter(Boolean) : [];
+    const allLocais = [...new Set([...customLocais, ...dataLocais])].sort((a, b) => a.localeCompare(b));
+
+    qLocal.innerHTML = '<option value="">Selecione…</option>';
+    allLocais.forEach(l => {
+      const o = document.createElement('option');
+      o.value = l; o.textContent = l;
+      qLocal.appendChild(o);
+    });
+    if (curL && allLocais.includes(curL)) qLocal.value = curL;
+    if (qLocal.syncSearchableSelect) qLocal.syncSearchableSelect();
+  }
 }
 
 window.quickLogMatch = function(resultado) {
-  const player = document.getElementById('quickLogPlayer')?.value;
+  const player   = document.getElementById('quickLogPlayer')?.value;
   const deckName = document.getElementById('quickLogDeck')?.value;
-  const advName = document.getElementById('quickLogAdvName')?.value.trim() || 'Oponente';
-  const deckAdv = document.getElementById('quickLogDeckAdv')?.value;
+  const advName  = document.getElementById('quickLogAdvName')?.value.trim() || 'Oponente';
+  const deckAdv  = document.getElementById('quickLogDeckAdv')?.value;
+  const formato  = document.getElementById('quickLogFormato')?.value || 'MD3';
+  const local    = document.getElementById('quickLogLocal')?.value;
+  const placarInput = document.getElementById('quickLogPlacar')?.value.trim();
 
-  if (!player) { alert('Adicione ou selecione um player primeiro.'); return; }
-  if (!deckName) { alert('Selecione seu deck para registrar.'); return; }
-  if (!deckAdv) { alert('Selecione o deck do oponente.'); return; }
+  if (!player)   { showToast('⚠️ Selecione seu player.'); return; }
+  if (!deckName) { showToast('⚠️ Selecione seu deck.'); return; }
+  if (!deckAdv)  { showToast('⚠️ Selecione o deck do oponente.'); return; }
+  if (!formato)  { showToast('⚠️ Selecione o formato (MD1 ou MD3).'); return; }
+  if (!local)    { showToast('⚠️ Selecione o local da partida.'); return; }
+  if (!placarInput) { showToast('⚠️ Informe o placar da partida (ex: 2-1).'); return; }
 
   const pontos = resultado === 'Vitória' ? 1 : resultado === 'Empate' ? 0.5 : 0;
 
@@ -597,12 +656,12 @@ window.quickLogMatch = function(resultado) {
     Adversario:  advName,
     DeckAdv:     deckAdv,
     Luck:        0,
-    Formato:     'MD3',
+    Formato:     formato,
     Start:       '1º',
     Resultado:   resultado,
     Pontos:      pontos,
-    Placar:      resultado === 'Vitória' ? '2-1' : resultado === 'Empate' ? '1-1' : '1-2',
-    Local:       'Online',
+    Placar:      placarInput,
+    Local:       local,
     Brick:       'Não',
     BrickOp:     'Não',
     Comentarios: 'Registrado via Quick Log',
@@ -619,11 +678,13 @@ window.quickLogMatch = function(resultado) {
 
   const opD = document.getElementById('quickLogDeckAdv');
   if (opD) opD.value = '';
+  const plc = document.getElementById('quickLogPlacar');
+  if (plc) plc.value = '';
 
   if (typeof populateFilters === 'function') populateFilters();
   if (typeof applyFilters    === 'function') applyFilters();
 
-  showToast(`⚡ Partida (${resultado}) registrada!`);
+  showToast(`⚡ Partida (${resultado} - ${placarInput} em ${local}) registrada!`);
 };
 
 function initQuickLogToggle() {
@@ -987,6 +1048,27 @@ window.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // Event: Brick toggle buttons
+  document.querySelectorAll('#brickToggleGroup .brick-toggle').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      document.querySelectorAll('#brickToggleGroup .brick-toggle').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const input = document.getElementById('formMatchBrick');
+      if (input) input.value = btn.dataset.value;
+    });
+  });
+
+  document.querySelectorAll('#brickOpToggleGroup .brick-toggle').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      document.querySelectorAll('#brickOpToggleGroup .brick-toggle').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const input = document.getElementById('formMatchBrickOp');
+      if (input) input.value = btn.dataset.value;
+    });
+  });
+
   // Event: deck form save
   document.getElementById('btnSaveDeck')?.addEventListener('click', saveDeckForm);
 
@@ -1040,15 +1122,55 @@ window.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Manager panel toggle
+  // Manager panel toggle — protected by Admin PIN/Password
   document.getElementById('btnOpenManager')?.addEventListener('click', () => {
-    document.getElementById('managerPanel').classList.toggle('open');
-    renderDecksList();
-    renderPlayersList();
-    renderLocaisList();
+    openProtectedManager();
   });
   document.getElementById('btnCloseManager')?.addEventListener('click', () => {
     document.getElementById('managerPanel').classList.remove('open');
+  });
+  document.getElementById('btnLockManager')?.addEventListener('click', () => {
+    lockAdminAccess();
+  });
+
+  // Admin Auth Modal handlers
+  document.getElementById('btnSubmitAdminAuth')?.addEventListener('click', submitAdminAuth);
+  document.getElementById('adminPinInput')?.addEventListener('keydown', e => {
+    if (e.key === 'Enter') submitAdminAuth();
+  });
+  document.getElementById('adminPinConfirmInput')?.addEventListener('keydown', e => {
+    if (e.key === 'Enter') submitAdminAuth();
+  });
+
+  // Password visibility toggle
+  document.getElementById('btnToggleAdminPinVisibility')?.addEventListener('click', () => {
+    const pinIn = document.getElementById('adminPinInput');
+    const confIn = document.getElementById('adminPinConfirmInput');
+    if (pinIn) {
+      const isPass = pinIn.type === 'password';
+      pinIn.type = isPass ? 'text' : 'password';
+      if (confIn) confIn.type = isPass ? 'text' : 'password';
+    }
+  });
+
+  // Admin security settings handlers inside tabSeguranca
+  document.getElementById('btnSaveNewAdminPin')?.addEventListener('click', () => {
+    const p1 = document.getElementById('changeAdminPinNew')?.value.trim();
+    const p2 = document.getElementById('changeAdminPinConfirm')?.value.trim();
+    if (!p1 || p1.length < 4) { alert('A senha deve ter pelo menos 4 caracteres.'); return; }
+    if (p1 !== p2) { alert('As senhas não coincidem!'); return; }
+    localStorage.setItem(KEY_ADMIN_PIN, p1);
+    document.getElementById('changeAdminPinNew').value = '';
+    document.getElementById('changeAdminPinConfirm').value = '';
+    showToast('🔑 Senha de administrador atualizada com sucesso!');
+  });
+
+  document.getElementById('btnRemoveAdminPin')?.addEventListener('click', () => {
+    if (confirm('Tem certeza que deseja remover a proteção por senha do Gerenciador de Dados? Qualquer pessoa poderá acessar os dados.')) {
+      localStorage.removeItem(KEY_ADMIN_PIN);
+      sessionStorage.removeItem('jornada_admin_unlocked');
+      showToast('🔓 Proteção por senha desativada.');
+    }
   });
 
   // Backup events
@@ -1066,6 +1188,109 @@ window.addEventListener('DOMContentLoaded', () => {
     if (typeof applyFilters    === 'function') applyFilters();
   }
 });
+
+// ── ADMIN PROTECTION FUNCTIONS ────────────────────────────────────────────────
+function openProtectedManager() {
+  if (isAdminUnlocked()) {
+    document.getElementById('managerPanel').classList.add('open');
+    renderDecksList();
+    renderPlayersList();
+    renderLocaisList();
+    return;
+  }
+  setupAdminAuthModal(hasAdminPin() ? 'login' : 'create');
+  showModal('modalAdminAuth');
+}
+
+function setupAdminAuthModal(mode) {
+  adminAuthMode = mode;
+  const title = document.getElementById('adminAuthTitle');
+  const sub   = document.getElementById('adminAuthSub');
+  const pinInput = document.getElementById('adminPinInput');
+  const confirmWrap = document.getElementById('adminPinConfirmWrap');
+  const confirmInput = document.getElementById('adminPinConfirmInput');
+  const btnSubmit = document.getElementById('btnSubmitAdminAuth');
+  const errorEl = document.getElementById('adminAuthError');
+
+  if (pinInput) pinInput.value = '';
+  if (confirmInput) confirmInput.value = '';
+  if (errorEl) errorEl.textContent = '';
+
+  if (mode === 'create') {
+    if (title) title.textContent = '🔑 Criar Senha de Admin';
+    if (sub)   sub.textContent = 'Esta área é privada. Crie uma senha ou PIN de administrador para proteger o Gerenciador de Dados.';
+    if (confirmWrap) confirmWrap.style.display = 'block';
+    if (btnSubmit) btnSubmit.textContent = '💾 Salvar e Desbloquear';
+  } else {
+    if (title) title.textContent = '🔒 Acesso Privado';
+    if (sub)   sub.textContent = 'Digite sua senha ou PIN de administrador para acessar o Gerenciador de Dados.';
+    if (confirmWrap) confirmWrap.style.display = 'none';
+    if (btnSubmit) btnSubmit.textContent = '🔓 Desbloquear Acesso';
+  }
+
+  setTimeout(() => pinInput?.focus(), 150);
+}
+
+function submitAdminAuth() {
+  const pinInput = document.getElementById('adminPinInput');
+  const confirmInput = document.getElementById('adminPinConfirmInput');
+  const remember = document.getElementById('adminRememberSession')?.checked;
+  const errorEl = document.getElementById('adminAuthError');
+
+  const val = pinInput ? pinInput.value.trim() : '';
+
+  if (!val) {
+    if (errorEl) errorEl.textContent = '⚠️ Digite a senha ou PIN.';
+    return;
+  }
+
+  if (adminAuthMode === 'create') {
+    const confirmVal = confirmInput ? confirmInput.value.trim() : '';
+    if (val.length < 4) {
+      if (errorEl) errorEl.textContent = '⚠️ A senha deve ter pelo menos 4 caracteres.';
+      return;
+    }
+    if (val !== confirmVal) {
+      if (errorEl) errorEl.textContent = '⚠️ As senhas não coincidem!';
+      return;
+    }
+    localStorage.setItem(KEY_ADMIN_PIN, val);
+    sessionStorage.setItem('jornada_admin_unlocked', 'true');
+    closeModal('modalAdminAuth');
+    document.getElementById('managerPanel').classList.add('open');
+    renderDecksList();
+    renderPlayersList();
+    renderLocaisList();
+    showToast('🔑 Senha de administrador criada com sucesso!');
+    return;
+  }
+
+  // Login mode
+  const stored = getAdminPin();
+  if (val === stored) {
+    if (remember) {
+      sessionStorage.setItem('jornada_admin_unlocked', 'true');
+    }
+    closeModal('modalAdminAuth');
+    document.getElementById('managerPanel').classList.add('open');
+    renderDecksList();
+    renderPlayersList();
+    renderLocaisList();
+    showToast('🔓 Acesso concedido!');
+  } else {
+    if (errorEl) errorEl.textContent = '❌ Senha ou PIN incorreto!';
+    if (pinInput) {
+      pinInput.classList.add('shake-error');
+      setTimeout(() => pinInput.classList.remove('shake-error'), 400);
+    }
+  }
+}
+
+function lockAdminAccess() {
+  sessionStorage.removeItem('jornada_admin_unlocked');
+  document.getElementById('managerPanel').classList.remove('open');
+  showToast('🔒 Gerenciador de dados bloqueado!');
+}
 
 window.exportBackup = function() {
   const payload = {
