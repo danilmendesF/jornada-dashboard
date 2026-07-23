@@ -1559,12 +1559,15 @@ window.addEventListener('DOMContentLoaded', () => {
   });
 
   // Manager panel toggle — protected by Admin PIN/Password
+  const closeManager = () => document.getElementById('managerPanel')?.classList.remove('open');
+
   document.getElementById('btnOpenManager')?.addEventListener('click', () => {
     openProtectedManager();
   });
-  document.getElementById('btnCloseManager')?.addEventListener('click', () => {
-    document.getElementById('managerPanel').classList.remove('open');
-  });
+  document.getElementById('btnCloseManager')?.addEventListener('click', closeManager);
+  document.getElementById('btnCloseManagerFooter')?.addEventListener('click', closeManager);
+  document.getElementById('panelOverlay')?.addEventListener('click', closeManager);
+
   document.getElementById('btnLockManager')?.addEventListener('click', () => {
     lockAdminAccess();
   });
