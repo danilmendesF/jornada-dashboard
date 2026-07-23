@@ -470,7 +470,8 @@ function openMatchForm(matchData) {
   const isOldBrick = v => v && v !== 'Nenhum' && v !== 'Não';
   const brickVal   = isOldBrick(matchData?.Brick) ? 'Sim' : 'Não';
   const brickOpVal = isOldBrick(matchData?.BrickOp) ? 'Sim' : 'Não';
-  const confVal    = matchData?.Confiabilidade || 'Alta';
+  const rawConf = matchData?.Confiabilidade || 'Alta';
+  const confVal = (String(rawConf).trim().toLowerCase() === 'baixa') ? 'Baixa' : 'Alta';
 
   get('formMatchBrick').value = brickVal;
   document.querySelectorAll('#brickToggleGroup .brick-toggle').forEach(b => {
@@ -484,7 +485,7 @@ function openMatchForm(matchData) {
 
   get('formMatchConfiabilidade').value = confVal;
   document.querySelectorAll('#confiabilidadeToggleGroup .brick-toggle').forEach(b => {
-    b.classList.toggle('active', b.dataset.value === confVal);
+    b.classList.toggle('active', b.dataset.value.toLowerCase() === confVal.toLowerCase());
   });
 
   showModal('modalMatchForm');

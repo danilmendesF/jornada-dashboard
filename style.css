@@ -1582,8 +1582,10 @@ tbody tr:last-child td { border-bottom: none; }
   transition: all .2s;
   text-align: center;
 }
-.brick-toggle.active[data-value="Não"] { background: rgba(46,232,160,.15); border-color: #2ee8a0; color: #2ee8a0; }
-.brick-toggle.active[data-value="Sim"] { background: rgba(240,80,80,.15); border-color: #f05050; color: #f05050; }
+.brick-toggle.active[data-value="Não"],
+.brick-toggle.active[data-value="Alta"]  { background: rgba(46,232,160,.15); border-color: #2ee8a0; color: #2ee8a0; }
+.brick-toggle.active[data-value="Sim"],
+.brick-toggle.active[data-value="Baixa"] { background: rgba(240,80,80,.15);  border-color: #f05050; color: #f05050; }
 .brick-toggle:not(.active):hover { border-color: var(--accent2); color: var(--text); }
 
 /* ============================================================
