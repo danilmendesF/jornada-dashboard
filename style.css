@@ -1375,15 +1375,33 @@ tbody tr:last-child td { border-bottom: none; }
 /* ============================================================
    MATCHUP WIN RATE SECTION
    ============================================================ */
-.matchup-section { display: flex; flex-direction: column; gap: 1.2rem; }
+.matchup-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  overflow: visible !important;
+  position: relative;
+  z-index: 50;
+}
 .matchup-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 1rem;
+  overflow: visible !important;
+  position: relative;
+  z-index: 100;
 }
-.matchup-controls { display: flex; align-items: flex-end; gap: 1rem; flex-wrap: wrap; }
+.matchup-controls {
+  display: flex;
+  align-items: flex-end;
+  gap: 1rem;
+  flex-wrap: wrap;
+  overflow: visible !important;
+  position: relative;
+  z-index: 100;
+}
 
 /* View Toggle Buttons */
 .matchup-view-toggle {
@@ -1623,7 +1641,7 @@ tbody tr:last-child td { border-bottom: none; }
 .quick-log-body.collapsed { max-height: 0; opacity: 0; pointer-events: none; gap: 0; overflow: hidden; }
 .quick-log-form-row {
   display: grid;
-  grid-template-columns: 1.1fr 1.4fr 1.1fr 1.4fr 0.85fr 1.2fr 0.85fr;
+  grid-template-columns: 1fr 1.3fr 1fr 1.3fr 0.8fr 1.2fr 1fr 0.8fr;
   gap: 0.75rem;
 }
 

@@ -92,6 +92,10 @@
         </select>
       </div>
       <div class="filter-group">
+        <label class="filter-label">Coleção</label>
+        <select id="filterColecao" class="filter-select"></select>
+      </div>
+      <div class="filter-group">
         <label class="filter-label">Data Início</label>
         <input type="date" id="filterDateStart" class="filter-select" style="min-width:135px;" />
       </div>
@@ -162,6 +166,12 @@
               <select id="quickLogFormato" class="form-input">
                 <option value="MD3">MD3</option>
                 <option value="MD1">MD1</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Coleção *</label>
+              <select id="quickLogColecao" class="form-input">
+                <option value="">Selecione…</option>
               </select>
             </div>
             <div class="form-group">
@@ -418,6 +428,7 @@
               <th>Adversário</th>
               <th>Deck Adv.</th>
               <th>Formato</th>
+              <th>Coleção</th>
               <th>Start</th>
               <th>Placar</th>
               <th>Resultado</th>
@@ -470,6 +481,7 @@
       <button class="tab-btn active" data-tab="tabDecks">Decks</button>
       <button class="tab-btn" data-tab="tabPlayers">Players</button>
       <button class="tab-btn" data-tab="tabLocais">Locais</button>
+      <button class="tab-btn" data-tab="tabColecoes">Coleções</button>
       <button class="tab-btn" data-tab="tabBackup">Backup</button>
       <button class="tab-btn" data-tab="tabSeguranca">🔒 Segurança</button>
     </div>
@@ -498,6 +510,15 @@
         <button class="action-btn" id="btnAddLocal">+ Adicionar</button>
       </div>
       <div id="locaisList" class="players-list"></div>
+    </div>
+
+    <!-- Tab: Coleções -->
+    <div class="tab-pane" id="tabColecoes">
+      <div class="add-player-row">
+        <input type="text" id="newColecaoName" class="filter-select" placeholder="Nome da coleção (ex: SV8 Surging Sparks)…" />
+        <button class="action-btn" id="btnAddColecao">+ Adicionar</button>
+      </div>
+      <div id="colecoesList" class="players-list"></div>
     </div>
 
     <!-- Tab: Backup -->
@@ -654,6 +675,7 @@ Total de cartas: 60"
           <span id="deckListPlayer" class="modal-sub"></span>
         </div>
         <div style="display:flex;align-items:center;gap:.75rem">
+          <button class="action-btn sm" id="btnEditDeckListFromModal" style="font-size: .75rem; padding: 4px 10px;">✏️ Editar / Importar Lista</button>
           <span id="deckListCount" class="deck-list-count"></span>
           <button class="icon-btn" data-close-modal="modalDeckList">✕</button>
         </div>
@@ -763,22 +785,42 @@ Total de cartas: 60"
           </div>
         </div>
 
-        <!-- Row 5: Local -->
+        <!-- Row 5: Local & Coleção -->
         <div class="form-row two-col">
+          <div class="form-group">
+            <label class="form-label">Coleção *</label>
+            <select id="formMatchColecao" class="form-input">
+              <option value="">Selecione…</option>
+            </select>
+          </div>
           <div class="form-group">
             <label class="form-label">Local</label>
             <select id="formMatchLocal" class="form-input">
               <option value="">Selecione…</option>
-              <option value="Caverna">Caverna</option>
-              <option value="Spell">Spell</option>
-              <option value="Leitura RioMar">Leitura RioMar</option>
-              <option value="Leitura Tacaruna">Leitura Tacaruna</option>
               <option value="__outro__">Outro…</option>
             </select>
           </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Local personalizado</label>
+          <input type="text" id="formMatchLocalCustom" class="form-input" placeholder="Digite o local…" style="display:none" />
+        </div>
+
+        <!-- Listas de Decks (Opcionais) -->
+        <div class="form-row two-col">
           <div class="form-group">
-            <label class="form-label">Local personalizado</label>
-            <input type="text" id="formMatchLocalCustom" class="form-input" placeholder="Digite o local…" style="display:none" />
+            <div class="list-label-row">
+              <label class="form-label">📜 Lista do Meu Deck (Opcional)</label>
+              <span class="card-counter under" id="formMatchDeckOwnCounter">0/60</span>
+            </div>
+            <textarea id="formMatchDeckOwnList" class="form-textarea" rows="3" placeholder="Opcional: Cole o export PTCGL do seu deck…"></textarea>
+          </div>
+          <div class="form-group">
+            <div class="list-label-row">
+              <label class="form-label">📜 Lista do Deck Oponente (Opcional)</label>
+              <span class="card-counter under" id="formMatchDeckAdvCounter">0/60</span>
+            </div>
+            <textarea id="formMatchDeckAdvList" class="form-textarea" rows="3" placeholder="Opcional: Cole o export PTCGL do deck do oponente…"></textarea>
           </div>
         </div>
 
@@ -792,6 +834,22 @@ Total de cartas: 60"
       <div class="modal-footer">
         <button class="cancel-btn" data-close-modal="modalMatchForm">Cancelar</button>
         <button class="save-btn" id="btnSaveMatch">⚔️ Salvar Partida</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================
+       MODAL: VER COMENTÁRIO
+       =================================================== -->
+  <div class="modal-overlay" id="modalViewComment">
+    <div class="modal" style="max-width: 450px;">
+      <div class="modal-header">
+        <h3>💬 Comentário da Partida</h3>
+        <button class="icon-btn" data-close-modal="modalViewComment">✕</button>
+      </div>
+      <div class="modal-body" style="padding: 1.25rem;">
+        <div id="commentMatchInfo" style="font-size: 0.8rem; color: var(--text2); margin-bottom: 0.85rem; padding-bottom: 0.6rem; border-bottom: 1px solid var(--border);"></div>
+        <div id="commentTextBody" style="background: var(--bg3); padding: 1rem; border-radius: var(--radius-sm); border: 1px solid var(--glass-bd); font-size: 0.9rem; line-height: 1.6; color: var(--text); white-space: pre-wrap;"></div>
       </div>
     </div>
   </div>

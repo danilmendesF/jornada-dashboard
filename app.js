@@ -218,10 +218,10 @@ function makeSearchableSelect(selectEl) {
 
 function initAllSearchableSelects() {
   const ids = [
-    'filterPlayer', 'filterDeck', 'filterFormato', 'filterLocal',
-    'quickLogPlayer', 'quickLogDeck', 'quickLogDeckAdv',
+    'filterPlayer', 'filterDeck', 'filterFormato', 'filterLocal', 'filterColecao',
+    'quickLogPlayer', 'quickLogDeck', 'quickLogDeckAdv', 'quickLogColecao',
     'matchupPlayer', 'matchupSelectMyDeck', 'matchupSelectOppDeck',
-    'formMatchPlayer', 'formMatchDeck', 'formMatchDeckAdv', 'formDeckPlayer'
+    'formMatchPlayer', 'formMatchDeck', 'formMatchDeckAdv', 'formDeckPlayer', 'formMatchColecao'
   ];
   ids.forEach(id => {
     const el = document.getElementById(id);
@@ -501,14 +501,15 @@ function populateFilters() {
   const formatos = [...new Set(allData.map(d => d.Formato))].sort();
 
   fillSelect('filterFormato', formatos);
-  if (typeof populateLocalSelects === 'function') populateLocalSelects();
+  if (typeof populateLocalSelects   === 'function') populateLocalSelects();
+  if (typeof populateColecaoSelects === 'function') populateColecaoSelects();
   populateMultiPlayerFilter();
   populateMultiDeckFilter();
   populateMatchupDeckSelects();
   initAllSearchableSelects();
 
-  // Attach change handlers to Formato, Local, Data Início, Data Fim
-  ['filterFormato', 'filterLocal', 'filterDateStart', 'filterDateEnd'].forEach(id => {
+  // Attach change handlers to Formato, Local, Coleção, Data Início, Data Fim
+  ['filterFormato', 'filterLocal', 'filterColecao', 'filterDateStart', 'filterDateEnd'].forEach(id => {
     const el = document.getElementById(id);
     if (el && !el.dataset.filterHandler) {
       el.dataset.filterHandler = "true";
@@ -535,6 +536,7 @@ function fillSelect(id, values) {
 function applyFilters() {
   const formato   = (document.getElementById('filterFormato')?.value || '').trim().toLowerCase();
   const local     = (document.getElementById('filterLocal')?.value || '').trim().toLowerCase();
+  const colecao   = (document.getElementById('filterColecao')?.value || '').trim().toLowerCase();
   const dateStart = document.getElementById('filterDateStart')?.value || '';
   const dateEnd   = document.getElementById('filterDateEnd')?.value || '';
 
@@ -542,18 +544,20 @@ function applyFilters() {
     const pName        = (d.Player || '').trim();
     const fName        = (d.Formato || '').trim().toLowerCase();
     const lName        = (d.Local || '').trim().toLowerCase();
+    const cName        = (d.Colecao || '').trim().toLowerCase();
     const mDate        = (d.Data || '').slice(0, 10);
 
     const matchPlayer  = selectedPlayers.has(pName);
     const matchFormato = !formato || fName === formato;
     const matchLocal   = !local   || lName === local;
+    const matchColecao = !colecao || cName === colecao;
     const matchDeck    = selectedDecks.has(d.Deck);
 
     let matchDate = true;
     if (dateStart && mDate < dateStart) matchDate = false;
     if (dateEnd   && mDate > dateEnd)   matchDate = false;
 
-    return matchPlayer && matchFormato && matchLocal && matchDeck && matchDate;
+    return matchPlayer && matchFormato && matchLocal && matchColecao && matchDeck && matchDate;
   });
 
   renderAll();
@@ -997,7 +1001,7 @@ function renderTable(rows, resetPage = false) {
   const pagedRows = reversed.slice(startIdx, endIdx);
 
   if (pagedRows.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="14" style="text-align:center;padding:2rem;color:var(--text2)">Nenhuma partida encontrada</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="15" style="text-align:center;padding:2rem;color:var(--text2)">Nenhuma partida encontrada</td></tr>`;
   } else {
     tbody.innerHTML = pagedRows.map((r, i) => {
       const globalRowNumber = totalItems - (startIdx + i);
@@ -1005,11 +1009,8 @@ function renderTable(rows, resetPage = false) {
                          r.Resultado === 'Empate'  ? 'badge-draw' : 'badge-loss';
       const emoji = r.Resultado === 'Vitória' ? '✅' : r.Resultado === 'Empate' ? '🤝' : '❌';
 
-      const myDeckObj = (typeof decks !== 'undefined') ? decks.find(d => d.name === r.Deck) : null;
-      const oppDeckObj = (typeof decks !== 'undefined') ? decks.find(d => d.name === r.DeckAdv) : null;
-
-      let myBtn = myDeckObj ? `<button class="list-peek-btn" onclick="openDeckList('${myDeckObj.id}')" title="Ver lista do Player">Meu</button>` : '';
-      let oppBtn = oppDeckObj ? `<button class="list-peek-btn opp-btn" onclick="openDeckList('${oppDeckObj.id}')" title="Ver lista do Oponente">Opo</button>` : '';
+      let myBtn = r.Deck ? `<button class="list-peek-btn" onclick="openDeckListByName('${r.Deck.replace(/'/g, "\\'")}', '${(r.Player||'').replace(/'/g, "\\'")}')" title="Ver/Editar lista do Meu Deck">Meu</button>` : '';
+      let oppBtn = (r.DeckAdv && r.DeckAdv !== '—') ? `<button class="list-peek-btn opp-btn" onclick="openDeckListByName('${r.DeckAdv.replace(/'/g, "\\'")}', 'Oponente')" title="Ver/Editar lista do Deck Oponente">Opo</button>` : '';
 
       const listasCol = (myBtn || oppBtn) 
         ? `<div style="display:flex;gap:4px;justify-content:center">${myBtn}${oppBtn}</div>` 
@@ -1017,8 +1018,14 @@ function renderTable(rows, resetPage = false) {
 
       const brickVal = (r.Brick === 'Sim' || (r.Brick && r.Brick !== 'Nenhum' && r.Brick !== 'Não')) ? '💥 Sim' : '✅ Não';
 
+      const hasComment = r.Comentarios && r.Comentarios.trim() !== '';
+      const commentBtn = hasComment 
+        ? `<button class="icon-btn sm" onclick="viewMatchComment('${r.id}')" title="${(r.Comentarios || '').replace(/"/g, '&quot;')}" style="background:rgba(0,200,248,0.18);color:var(--accent2);border-color:rgba(0,200,248,0.35);">💬</button>` 
+        : '';
+
       const actionsCol = `
-        <div style="display:flex;gap:4px;justify-content:center">
+        <div style="display:flex;gap:4px;justify-content:center;align-items:center;">
+          ${commentBtn}
           <button class="icon-btn sm" onclick="editMatch('${r.id}')" title="Editar partida">✏️</button>
           <button class="icon-btn danger sm" onclick="deleteMatch('${r.id}')" title="Deletar partida">🗑️</button>
         </div>
@@ -1032,6 +1039,7 @@ function renderTable(rows, resetPage = false) {
         <td>${r.Adversario}</td>
         <td>${r.DeckAdv}</td>
         <td>${r.Formato}</td>
+        <td><span style="font-size:.8rem;color:var(--accent2);font-weight:600">${r.Colecao || '—'}</span></td>
         <td>${r.Start}</td>
         <td>${r.Placar}</td>
         <td><span class="badge ${badgeClass}">${emoji} ${r.Resultado}</span></td>
@@ -1131,23 +1139,46 @@ function wrColor(wr, alpha = 1) {
   }
 }
 
+function getMatchupBaseDataset() {
+  const formato   = (document.getElementById('filterFormato')?.value || '').trim().toLowerCase();
+  const local     = (document.getElementById('filterLocal')?.value || '').trim().toLowerCase();
+  const colecao   = (document.getElementById('filterColecao')?.value || '').trim().toLowerCase();
+  const dateStart = document.getElementById('filterDateStart')?.value || '';
+  const dateEnd   = document.getElementById('filterDateEnd')?.value || '';
+
+  return allData.filter(d => {
+    const pName        = (d.Player || '').trim();
+    const fName        = (d.Formato || '').trim().toLowerCase();
+    const lName        = (d.Local || '').trim().toLowerCase();
+    const cName        = (d.Colecao || '').trim().toLowerCase();
+    const mDate        = (d.Data || '').slice(0, 10);
+
+    const matchPlayer  = selectedPlayers.has(pName);
+    const matchFormato = !formato || fName === formato;
+    const matchLocal   = !local   || lName === local;
+    const matchColecao = !colecao || cName === colecao;
+
+    let matchDate = true;
+    if (dateStart && mDate < dateStart) matchDate = false;
+    if (dateEnd   && mDate > dateEnd)   matchDate = false;
+
+    // Independent from top-bar selectedDecks filter
+    return matchPlayer && matchFormato && matchLocal && matchColecao && matchDate;
+  });
+}
+
 function renderMatchup() {
   const selectedPlayer = document.getElementById('matchupPlayer')?.value || '';
   
-  let matchupDataset = filtered;
+  let matchupDataset = getMatchupBaseDataset();
   if (selectedPlayer) {
-    matchupDataset = filtered.filter(d => d.Player === selectedPlayer);
+    matchupDataset = matchupDataset.filter(d => d.Player === selectedPlayer);
   }
 
   const matchupData = buildMatchupData(matchupDataset);
   
   let myDecks  = [...new Set(matchupDataset.map(d => d.Deck).filter(Boolean))].sort();
   let oppDecks = [...new Set(matchupDataset.map(d => d.DeckAdv).filter(Boolean))].sort();
-
-  if (selectedDecks.size > 0) {
-    myDecks  = myDecks.filter(d => selectedDecks.has(d));
-    oppDecks = oppDecks.filter(d => selectedDecks.has(d));
-  }
 
   const selectedMyDeck  = document.getElementById('matchupSelectMyDeck')?.value || '';
   const selectedOppDeck = document.getElementById('matchupSelectOppDeck')?.value || '';
@@ -1283,6 +1314,99 @@ function populateMatchupPlayerSelect() {
   if (cur && allPlayerNames.includes(cur)) sel.value = cur;
   if (sel.syncSearchableSelect) sel.syncSearchableSelect();
 }
+
+window.showMatchupDetail = function(myDeck, oppDeck, scroll = true) {
+  const detailEl = document.getElementById('matchupDetail');
+  const titleEl  = document.getElementById('detailTitle');
+  const bodyEl   = document.getElementById('detailBody');
+  if (!detailEl || !titleEl || !bodyEl) return;
+
+  const selectedPlayer = document.getElementById('matchupPlayer')?.value || '';
+  let dataset = getMatchupBaseDataset().filter(m => m.Deck === myDeck && m.DeckAdv === oppDeck);
+  if (selectedPlayer) dataset = dataset.filter(m => m.Player === selectedPlayer);
+
+  if (dataset.length === 0) {
+    detailEl.style.display = 'none';
+    return;
+  }
+
+  const total  = dataset.length;
+  const wins   = dataset.filter(m => m.Resultado === 'Vitória').length;
+  const draws  = dataset.filter(m => m.Resultado === 'Empate').length;
+  const losses = dataset.filter(m => m.Resultado === 'Derrota').length;
+  const wr     = Math.round((wins / total) * 100);
+
+  titleEl.innerHTML = `⚔️ ${myDeck} <span style="color:var(--text2);font-weight:400">vs</span> ${oppDeck} <span style="font-size:0.85rem;color:var(--accent2);margin-left:0.5rem">(${wr}% WR &middot; ${wins}V-${draws}E-${losses}D)</span>`;
+
+  let html = `
+    <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(130px, 1fr));gap:0.75rem;margin-bottom:1rem;">
+      <div style="background:var(--bg3);padding:0.6rem 0.8rem;border-radius:var(--radius-sm);border:1px solid var(--glass-bd);text-align:center;">
+        <span style="font-size:0.72rem;color:var(--text2);display:block;">Partidas</span>
+        <strong style="font-size:1.1rem;color:var(--text);">${total}</strong>
+      </div>
+      <div style="background:var(--bg3);padding:0.6rem 0.8rem;border-radius:var(--radius-sm);border:1px solid var(--glass-bd);text-align:center;">
+        <span style="font-size:0.72rem;color:var(--text2);display:block;">Vitórias</span>
+        <strong style="font-size:1.1rem;color:var(--green);">${wins}</strong>
+      </div>
+      <div style="background:var(--bg3);padding:0.6rem 0.8rem;border-radius:var(--radius-sm);border:1px solid var(--glass-bd);text-align:center;">
+        <span style="font-size:0.72rem;color:var(--text2);display:block;">Empates</span>
+        <strong style="font-size:1.1rem;color:var(--yellow);">${draws}</strong>
+      </div>
+      <div style="background:var(--bg3);padding:0.6rem 0.8rem;border-radius:var(--radius-sm);border:1px solid var(--glass-bd);text-align:center;">
+        <span style="font-size:0.72rem;color:var(--text2);display:block;">Derrotas</span>
+        <strong style="font-size:1.1rem;color:var(--red);">${losses}</strong>
+      </div>
+      <div style="background:var(--bg3);padding:0.6rem 0.8rem;border-radius:var(--radius-sm);border:1px solid var(--glass-bd);text-align:center;">
+        <span style="font-size:0.72rem;color:var(--text2);display:block;">Win Rate</span>
+        <strong style="font-size:1.1rem;color:var(--accent2);">${wr}%</strong>
+      </div>
+    </div>
+    <div style="overflow-x:auto;">
+      <table class="matrix-table" style="width:100%;font-size:0.82rem;">
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th>Player</th>
+            <th>Adversário</th>
+            <th>Formato</th>
+            <th>Coleção</th>
+            <th>Placar</th>
+            <th>Resultado</th>
+            <th>Local</th>
+            <th>Brick</th>
+            <th>Comentários</th>
+          </tr>
+        </thead>
+        <tbody>
+  `;
+
+  dataset.forEach(m => {
+    const badgeClass = m.Resultado === 'Vitória' ? 'badge-win' : m.Resultado === 'Empate' ? 'badge-draw' : 'badge-loss';
+    const emoji = m.Resultado === 'Vitória' ? '✅' : m.Resultado === 'Empate' ? '🤝' : '❌';
+    const brickVal = (m.Brick === 'Sim' || (m.Brick && m.Brick !== 'Nenhum' && m.Brick !== 'Não')) ? '💥 Sim' : '✅ Não';
+
+    html += `<tr>
+      <td>${m.Data || '—'}</td>
+      <td><strong>${m.Player || '—'}</strong></td>
+      <td>${m.Adversario || '—'}</td>
+      <td>${m.Formato || '—'}</td>
+      <td><span style="color:var(--accent2);font-weight:600">${m.Colecao || '—'}</span></td>
+      <td>${m.Placar || '—'}</td>
+      <td><span class="badge ${badgeClass}">${emoji} ${m.Resultado}</span></td>
+      <td>${m.Local || '—'}</td>
+      <td>${brickVal}</td>
+      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${(m.Comentarios || '').replace(/"/g, '&quot;')}">${m.Comentarios || '—'}</td>
+    </tr>`;
+  });
+
+  html += `</tbody></table></div>`;
+  bodyEl.innerHTML = html;
+  detailEl.style.display = 'block';
+
+  if (scroll) {
+    detailEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+};
 
 function initMatchupToggle() {
   ['matchupPlayer', 'matchupSelectMyDeck', 'matchupSelectOppDeck'].forEach(id => {
@@ -1448,6 +1572,13 @@ window.resetAllFilters = function() {
       if (el.syncSearchableSelect) el.syncSearchableSelect();
     }
   });
+
+  // Reset Coleção: select first specific collection (no "Todas" option)
+  const colEl = document.getElementById('filterColecao');
+  if (colEl && colEl.options.length > 0) {
+    colEl.selectedIndex = 0;
+    if (colEl.syncSearchableSelect) colEl.syncSearchableSelect();
+  }
 
   // 2. Reset Multi-Player: select ALL players
   isExplicitPlayerSelection = false;
