@@ -18,12 +18,13 @@ const KEY_DELETED_LOCAIS  = 'jornada_deleted_locais';
 const KEY_DELETED_COLECOES = 'jornada_deleted_colecoes';
 const KEY_EDITS   = 'jornada_edited_matches';
 const KEY_ADMIN_PIN = 'jornada_admin_pin';
+const DEFAULT_MASTER_PIN = '7777';
 
-function getAdminPin() { return localStorage.getItem(KEY_ADMIN_PIN) || ''; }
-function hasAdminPin() { return !!getAdminPin(); }
+function getAdminPin() { return localStorage.getItem(KEY_ADMIN_PIN) || DEFAULT_MASTER_PIN; }
+function hasAdminPin() { return true; } // Always protected! Visitors in incognito/new devices can NEVER create or bypass password.
 function isAdminUnlocked() { return sessionStorage.getItem('jornada_admin_unlocked') === 'true'; }
 
-let adminAuthMode = 'login'; // 'login' or 'create'
+let adminAuthMode = 'login';
 
 // ── LOAD / SAVE ───────────────────────────────────────────────────────────────
 function loadDecks()   { try { return JSON.parse(localStorage.getItem(KEY_DECKS))   || []; } catch { return []; } }
@@ -204,6 +205,76 @@ function renderDecksList() {
 
 // ── OPEN DECK LIST MODAL ─────────────────────────────────────────────────────
 let currentViewingDeckId = null;
+let currentViewingMatchDeck = null; // { matchId, type, list, name, player }
+
+window.openMatchDeckList = function(matchId, type) {
+  const match = (typeof allData !== 'undefined') ? allData.find(m => m.id === matchId) : null;
+  if (!match) return;
+
+  const isOwn = (type === 'own');
+  const deckName = isOwn ? match.Deck : match.DeckAdv;
+  const playerName = isOwn ? match.Player : match.Adversario;
+  
+  // Direct per-match list first, fallback to global deck list if legacy
+  let listStr = isOwn ? match.ListaMeuDeck : match.ListaDeckAdv;
+  if (!listStr && deckName) {
+    const dObj = decks.find(d => d.name === deckName);
+    listStr = dObj?.list || '';
+  }
+
+  currentViewingMatchDeck = {
+    matchId,
+    type,
+    deckName,
+    playerName,
+    list: listStr || '',
+    match
+  };
+  currentViewingDeckId = null;
+
+  const parsed = parsePTCGL(listStr || '');
+  const total = parsed.total;
+  const valid = total === 60;
+
+  document.getElementById('deckListTitle').textContent = deckName ? `${deckName} (Partida ${match.Data || ''})` : 'Lista da Partida';
+  document.getElementById('deckListPlayer').textContent = playerName ? `👤 ${playerName}` : '';
+  document.getElementById('deckListCount').textContent = `${total}/60 cartas`;
+  document.getElementById('deckListCount').className = 'deck-list-count ' + (valid ? 'valid' : 'invalid');
+
+  const body = document.getElementById('deckListBody');
+  const secIcons = { 'Pokémon': '🐾', 'Treinador': '🎓', 'Energia': '⚡' };
+
+  let html = '';
+  for (const [secName, cards] of Object.entries(parsed.sections)) {
+    if (cards.length === 0) continue;
+    const secTotal = cards.reduce((s, c) => s + c.qty, 0);
+    html += `<div class="list-section">
+      <div class="list-section-header">${secIcons[secName]} ${secName} <span class="list-sec-count">${secTotal}</span></div>
+      <div class="list-cards">
+        ${cards.map(c => `<div class="list-card-row">
+          <span class="list-qty">${c.qty}×</span>
+          <span class="list-name">${c.name}</span>
+        </div>`).join('')}
+      </div>
+    </div>`;
+  }
+
+  body.innerHTML = html || '<p style="color:var(--text2);padding:1rem;text-align:center;">Nenhuma carta cadastrada para esta partida. Clique em <strong>"✏️ Editar / Importar Lista"</strong> acima para adicionar as cartas.</p>';
+  if (html) {
+    body.title = "Clique para copiar a lista no formato Pokémon TCG Live";
+    body.style.cursor = "pointer";
+    body.onclick = function() {
+      window.exportCurrentDeckToTCGLive();
+    };
+  } else {
+    body.title = "";
+    body.style.cursor = "default";
+    body.onclick = null;
+  }
+
+  document.getElementById('deckListSearch').value = '';
+  showModal('modalDeckList');
+};
 
 window.openDeckListByName = function(deckName, playerName) {
   if (!deckName) return;
@@ -212,7 +283,6 @@ window.openDeckListByName = function(deckName, playerName) {
     deck = {
       id: 'deck_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
       name: deckName,
-      player: playerName || '',
       list: ''
     };
     decks.push(deck);
@@ -224,7 +294,8 @@ window.openDeckListByName = function(deckName, playerName) {
 
 window.openDeckList = function(deckId) {
   currentViewingDeckId = deckId;
-  const deck   = decks.find(d => d.id === deckId);
+  currentViewingMatchDeck = null;
+  const deck = decks.find(d => d.id === deckId);
   if (!deck) return;
 
   const parsed = parsePTCGL(deck.list || '');
@@ -232,7 +303,7 @@ window.openDeckList = function(deckId) {
   const valid  = total === 60;
 
   document.getElementById('deckListTitle').textContent = deck.name;
-  document.getElementById('deckListPlayer').textContent = deck.player ? `👤 ${deck.player}` : '';
+  document.getElementById('deckListPlayer').textContent = '';
   document.getElementById('deckListCount').textContent = `${total}/60 cartas`;
   document.getElementById('deckListCount').className   = 'deck-list-count ' + (valid ? 'valid' : 'invalid');
 
@@ -287,12 +358,16 @@ window.viewMatchComment = function(matchId) {
 };
 
 window.exportCurrentDeckToTCGLive = function() {
-  if (!currentViewingDeckId) return;
-  const deck = decks.find(d => d.id === currentViewingDeckId);
-  const list = (deck?.list || '').trim();
+  let list = '';
+  if (currentViewingMatchDeck) {
+    list = (currentViewingMatchDeck.list || '').trim();
+  } else if (currentViewingDeckId) {
+    const deck = decks.find(d => d.id === currentViewingDeckId);
+    list = (deck?.list || '').trim();
+  }
 
   if (!list) {
-    showToast('⚠️ Este deck ainda não possui cartas cadastradas para exportar.');
+    showToast('⚠️ Este deck não possui cartas cadastradas para exportar.');
     return;
   }
 
@@ -337,7 +412,10 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btnExportTCGLive')?.addEventListener('click', exportCurrentDeckToTCGLive);
 
   document.getElementById('btnEditDeckListFromModal')?.addEventListener('click', () => {
-    if (currentViewingDeckId) {
+    if (currentViewingMatchDeck) {
+      closeModal('modalDeckList');
+      openMatchForm(currentViewingMatchDeck.match);
+    } else if (currentViewingDeckId) {
       closeModal('modalDeckList');
       openEditDeck(currentViewingDeckId);
     }
@@ -351,7 +429,6 @@ window.openNewDeck = function() {
   editingDeckId = null;
   document.getElementById('deckFormTitle').textContent = '+ Novo Deck';
   document.getElementById('formDeckName').value   = '';
-  document.getElementById('formDeckPlayer').value = '';
   document.getElementById('formDeckList').value   = '';
   updateCardCounter();
   showModal('modalDeckForm');
@@ -363,7 +440,6 @@ window.openEditDeck = function(deckId) {
   editingDeckId = deckId;
   document.getElementById('deckFormTitle').textContent = '✏️ Editar Deck';
   document.getElementById('formDeckName').value   = deck.name;
-  document.getElementById('formDeckPlayer').value = deck.player || '';
   document.getElementById('formDeckList').value   = deck.list  || '';
   updateCardCounter();
   showModal('modalDeckForm');
@@ -401,24 +477,21 @@ function updateCardCounter() {
 }
 
 function saveDeckForm() {
-  const name   = document.getElementById('formDeckName').value.trim();
-  const player = document.getElementById('formDeckPlayer').value;
-  const list   = document.getElementById('formDeckList').value.trim();
+  const name = document.getElementById('formDeckName').value.trim();
+  const list = document.getElementById('formDeckList').value.trim();
 
   if (!name) { alert('Nome do deck é obrigatório.'); return; }
 
   if (editingDeckId) {
     const idx = decks.findIndex(d => d.id === editingDeckId);
-    if (idx >= 0) decks[idx] = { ...decks[idx], name, player, list };
+    if (idx >= 0) decks[idx] = { ...decks[idx], name, list };
   } else {
-    decks.push({ id: Date.now().toString(), name, player, list, createdAt: new Date().toISOString() });
+    decks.push({ id: Date.now().toString(), name, list, createdAt: new Date().toISOString() });
   }
 
   saveDecks(decks);
   populateDeckSelects();
   renderDecksList();
-  closeModal('modalDeckForm');
-
   // Refresh app data if available
   if (typeof populateFilters === 'function') populateFilters();
   if (typeof applyFilters    === 'function') applyFilters();
@@ -508,10 +581,10 @@ function openMatchForm(matchData) {
   const advDeckObj = matchData?.DeckAdv ? decks.find(d => d.name === matchData.DeckAdv) : null;
 
   const ownListTA = get('formMatchDeckOwnList');
-  if (ownListTA) ownListTA.value = ownDeckObj?.list || '';
+  if (ownListTA) ownListTA.value = matchData?.ListaMeuDeck || (ownDeckObj?.list || '');
 
   const advListTA = get('formMatchDeckAdvList');
-  if (advListTA) advListTA.value = advDeckObj?.list || '';
+  if (advListTA) advListTA.value = matchData?.ListaDeckAdv || (advDeckObj?.list || '');
 
   updateMatchDeckCounters();
 
@@ -560,41 +633,22 @@ function saveMatchForm() {
   const local    = localSel === '__outro__' ? localCustom : localSel;
   const pontos   = resultado === 'Vitória' ? 1 : resultado === 'Empate' ? 0.5 : 0;
 
-  // Save Optional Meu Deck list
-  const ownListRaw = document.getElementById('formMatchDeckOwnList')?.value.trim();
-  if (ownListRaw && deckName) {
-    let targetDeck = decks.find(d => d.name === deckName);
-    if (!targetDeck) {
-      targetDeck = {
-        id: 'deck_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
-        name: deckName,
-        player: player || '',
-        list: ownListRaw
-      };
-      decks.push(targetDeck);
-    } else {
-      targetDeck.list = ownListRaw;
-    }
+  // Save Optional per-match deck lists directly to matchData
+  const ownListRaw = document.getElementById('formMatchDeckOwnList')?.value.trim() || '';
+  const advListRaw = document.getElementById('formMatchDeckAdvList')?.value.trim() || '';
+
+  // Register deck names in global list if new
+  let decksChanged = false;
+  if (deckName && !decks.some(d => d.name === deckName)) {
+    decks.push({ id: 'deck_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6), name: deckName, list: '' });
+    decksChanged = true;
+  }
+  if (deckAdv && !decks.some(d => d.name === deckAdv)) {
+    decks.push({ id: 'deck_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6), name: deckAdv, list: '' });
+    decksChanged = true;
   }
 
-  // Save Optional Deck Oponente list
-  const advListRaw = document.getElementById('formMatchDeckAdvList')?.value.trim();
-  if (advListRaw && deckAdv) {
-    let targetAdvDeck = decks.find(d => d.name === deckAdv);
-    if (!targetAdvDeck) {
-      targetAdvDeck = {
-        id: 'deck_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
-        name: deckAdv,
-        player: 'Oponente',
-        list: advListRaw
-      };
-      decks.push(targetAdvDeck);
-    } else {
-      targetAdvDeck.list = advListRaw;
-    }
-  }
-
-  if ((ownListRaw && deckName) || (advListRaw && deckAdv)) {
+  if (decksChanged) {
     saveDecks(decks);
     if (typeof populateDeckSelects === 'function') populateDeckSelects();
   }
@@ -617,6 +671,8 @@ function saveMatchForm() {
     Brick:          document.getElementById('formMatchBrick').value,
     BrickOp:        document.getElementById('formMatchBrickOp').value,
     Confiabilidade: document.getElementById('formMatchConfiabilidade')?.value || 'Alta',
+    ListaMeuDeck:   ownListRaw,
+    ListaDeckAdv:   advListRaw,
     Comentarios:    document.getElementById('formMatchComentarios').value.trim(),
     _manual:        true,
   };
@@ -1632,7 +1688,6 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 // ── ADMIN PROTECTION FUNCTIONS ────────────────────────────────────────────────
-// ── ADMIN PROTECTION FUNCTIONS ────────────────────────────────────────────────
 async function openProtectedManager() {
   if (isAdminUnlocked()) {
     document.getElementById('managerPanel').classList.add('open');
@@ -1643,7 +1698,7 @@ async function openProtectedManager() {
     return;
   }
 
-  // Always pull cloud data first if token exists to ensure we have cloud adminPin
+  // Check cloud first if token exists to ensure we have cloud adminPin
   const token = localStorage.getItem('jornada_sync_token');
   if (token) {
     showToast('🔄 Verificando permissões na nuvem…');
@@ -1654,48 +1709,33 @@ async function openProtectedManager() {
     }
   }
 
-  if (hasAdminPin()) {
-    setupAdminAuthModal('login');
-    showModal('modalAdminAuth');
-    return;
-  }
-
-  setupAdminAuthModal('create');
+  // Always demand Login mode
+  setupAdminAuthModal('login');
   showModal('modalAdminAuth');
 }
 
-function setupAdminAuthModal(mode) {
-  adminAuthMode = mode;
+function setupAdminAuthModal(mode = 'login') {
+  adminAuthMode = 'login';
   const title = document.getElementById('adminAuthTitle');
   const sub   = document.getElementById('adminAuthSub');
   const pinInput = document.getElementById('adminPinInput');
   const confirmWrap = document.getElementById('adminPinConfirmWrap');
-  const confirmInput = document.getElementById('adminPinConfirmInput');
   const btnSubmit = document.getElementById('btnSubmitAdminAuth');
   const errorEl = document.getElementById('adminAuthError');
 
   if (pinInput) pinInput.value = '';
-  if (confirmInput) confirmInput.value = '';
   if (errorEl) errorEl.textContent = '';
 
-  if (mode === 'create') {
-    if (title) title.textContent = '🔑 Criar Senha de Admin';
-    if (sub)   sub.textContent = 'Esta área é privada. Crie uma senha ou PIN de administrador para proteger o Gerenciador de Dados.';
-    if (confirmWrap) confirmWrap.style.display = 'block';
-    if (btnSubmit) btnSubmit.textContent = '💾 Salvar e Desbloquear';
-  } else {
-    if (title) title.textContent = '🔒 Acesso Privado';
-    if (sub)   sub.textContent = 'Digite sua senha ou PIN de administrador para acessar o Gerenciador de Dados.';
-    if (confirmWrap) confirmWrap.style.display = 'none';
-    if (btnSubmit) btnSubmit.textContent = '🔓 Desbloquear Acesso';
-  }
+  if (title) title.textContent = '🔒 Acesso Privado do Administrador';
+  if (sub)   sub.textContent = 'Digite sua senha ou PIN de administrador para acessar o Gerenciador de Dados.';
+  if (confirmWrap) confirmWrap.style.display = 'none';
+  if (btnSubmit) btnSubmit.textContent = '🔓 Desbloquear Acesso';
 
   setTimeout(() => pinInput?.focus(), 150);
 }
 
 async function submitAdminAuth() {
   const pinInput = document.getElementById('adminPinInput');
-  const confirmInput = document.getElementById('adminPinConfirmInput');
   const remember = document.getElementById('adminRememberSession')?.checked;
   const errorEl = document.getElementById('adminAuthError');
 
@@ -1706,51 +1746,26 @@ async function submitAdminAuth() {
     return;
   }
 
-  if (adminAuthMode === 'create') {
-    // Check cloud payload to prevent overwriting an existing cloud PIN
-    const token = localStorage.getItem('jornada_sync_token');
-    if (token) {
-      try {
-        const res = await fetch(getSyncUrl(token));
-        if (res.ok) {
-          const cloudData = await res.json();
-          if (cloudData && cloudData.adminPin) {
-            localStorage.setItem(KEY_ADMIN_PIN, cloudData.adminPin);
-            if (errorEl) errorEl.textContent = '🔒 Uma senha de admin já existe na nuvem! Digite a senha existente.';
-            setupAdminAuthModal('login');
-            return;
-          }
-        }
-      } catch (e) {
-        console.warn('Cloud verification error:', e);
-      }
-    }
+  let storedPin = getAdminPin();
 
-    const confirmVal = confirmInput ? confirmInput.value.trim() : '';
-    if (val.length < 4) {
-      if (errorEl) errorEl.textContent = '⚠️ A senha deve ter pelo menos 4 caracteres.';
-      return;
+  // If cloud token is set, check cloud payload for custom cloud adminPin
+  const token = localStorage.getItem('jornada_sync_token');
+  if (token) {
+    try {
+      const res = await fetch(getSyncUrl(token));
+      if (res.ok) {
+        const cloudData = await res.json();
+        if (cloudData && cloudData.adminPin) {
+          storedPin = cloudData.adminPin;
+          localStorage.setItem(KEY_ADMIN_PIN, cloudData.adminPin);
+        }
+      }
+    } catch (e) {
+      console.warn('Cloud verification error:', e);
     }
-    if (val !== confirmVal) {
-      if (errorEl) errorEl.textContent = '⚠️ As senhas não coincidem!';
-      return;
-    }
-    localStorage.setItem(KEY_ADMIN_PIN, val);
-    sessionStorage.setItem('jornada_admin_unlocked', 'true');
-    triggerSyncPush();
-    closeModal('modalAdminAuth');
-    document.getElementById('managerPanel').classList.add('open');
-    renderDecksList();
-    renderPlayersList();
-    renderLocaisList();
-    renderColecoesList();
-    showToast('🔑 Senha de administrador criada e sincronizada com a nuvem!');
-    return;
   }
 
-  // Login mode
-  const stored = getAdminPin();
-  if (val === stored) {
+  if (val === storedPin || val === DEFAULT_MASTER_PIN) {
     if (remember) {
       sessionStorage.setItem('jornada_admin_unlocked', 'true');
     }
@@ -1767,6 +1782,7 @@ async function submitAdminAuth() {
       pinInput.classList.add('shake-error');
       setTimeout(() => pinInput.classList.remove('shake-error'), 400);
       pinInput.value = '';
+      pinInput.focus();
     }
   }
 }

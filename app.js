@@ -1013,8 +1013,8 @@ function renderTable(rows, resetPage = false) {
                          r.Resultado === 'Empate'  ? 'badge-draw' : 'badge-loss';
       const emoji = r.Resultado === 'Vitória' ? '✅' : r.Resultado === 'Empate' ? '🤝' : '❌';
 
-      let myBtn = r.Deck ? `<button class="list-peek-btn" onclick="openDeckListByName('${r.Deck.replace(/'/g, "\\'")}', '${(r.Player||'').replace(/'/g, "\\'")}')" title="Ver/Editar lista do Meu Deck">Meu</button>` : '';
-      let oppBtn = (r.DeckAdv && r.DeckAdv !== '—') ? `<button class="list-peek-btn opp-btn" onclick="openDeckListByName('${r.DeckAdv.replace(/'/g, "\\'")}', 'Oponente')" title="Ver/Editar lista do Deck Oponente">Opo</button>` : '';
+      let myBtn = r.Deck ? `<button class="list-peek-btn" onclick="openMatchDeckList('${r.id}', 'own')" title="Ver/Editar lista do Meu Deck desta partida">Meu</button>` : '';
+      let oppBtn = (r.DeckAdv && r.DeckAdv !== '—') ? `<button class="list-peek-btn opp-btn" onclick="openMatchDeckList('${r.id}', 'adv')" title="Ver/Editar lista do Deck Oponente desta partida">Opo</button>` : '';
 
       const listasCol = (myBtn || oppBtn) 
         ? `<div style="display:flex;gap:4px;justify-content:center">${myBtn}${oppBtn}</div>` 
@@ -1387,6 +1387,7 @@ window.showMatchupDetail = function(myDeck, oppDeck, scroll = true) {
             <th>Resultado</th>
             <th>Local</th>
             <th>Brick</th>
+            <th>Listas</th>
             <th>Comentários</th>
           </tr>
         </thead>
@@ -1400,6 +1401,10 @@ window.showMatchupDetail = function(myDeck, oppDeck, scroll = true) {
     const confVal = (m.Confiabilidade === 'Baixa') ? 'Baixa' : 'Alta';
     const confBadge = confVal === 'Baixa' ? '🔴 Baixa' : '🟢 Alta';
 
+    let myBtn = m.Deck ? `<button class="list-peek-btn" onclick="openMatchDeckList('${m.id}', 'own')" title="Ver/Editar lista do Meu Deck desta partida">Meu</button>` : '';
+    let oppBtn = (m.DeckAdv && m.DeckAdv !== '—') ? `<button class="list-peek-btn opp-btn" onclick="openMatchDeckList('${m.id}', 'adv')" title="Ver/Editar lista do Deck Oponente desta partida">Opo</button>` : '';
+    const listasCol = (myBtn || oppBtn) ? `<div style="display:flex;gap:4px;justify-content:center">${myBtn}${oppBtn}</div>` : '<span style="color:var(--text2);font-size:.75rem">—</span>';
+
     html += `<tr>
       <td>${m.Data || '—'}</td>
       <td><strong>${m.Player || '—'}</strong></td>
@@ -1411,6 +1416,7 @@ window.showMatchupDetail = function(myDeck, oppDeck, scroll = true) {
       <td><span class="badge ${badgeClass}">${emoji} ${m.Resultado}</span></td>
       <td>${m.Local || '—'}</td>
       <td>${brickVal}</td>
+      <td>${listasCol}</td>
       <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${(m.Comentarios || '').replace(/"/g, '&quot;')}">${m.Comentarios || '—'}</td>
     </tr>`;
   });
