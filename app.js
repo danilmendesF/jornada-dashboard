@@ -539,6 +539,8 @@ function applyFilters() {
   const colecao   = (document.getElementById('filterColecao')?.value || '').trim().toLowerCase();
   const dateStart = document.getElementById('filterDateStart')?.value || '';
   const dateEnd   = document.getElementById('filterDateEnd')?.value || '';
+  const confAltaChecked  = document.getElementById('filterConfAlta')?.checked ?? true;
+  const confBaixaChecked = document.getElementById('filterConfBaixa')?.checked ?? true;
 
   filtered = allData.filter(d => {
     const pName        = (d.Player || '').trim();
@@ -546,18 +548,20 @@ function applyFilters() {
     const lName        = (d.Local || '').trim().toLowerCase();
     const cName        = (d.Colecao || '').trim().toLowerCase();
     const mDate        = (d.Data || '').slice(0, 10);
+    const confVal      = d.Confiabilidade || 'Alta';
 
     const matchPlayer  = selectedPlayers.has(pName);
     const matchFormato = !formato || fName === formato;
     const matchLocal   = !local   || lName === local;
     const matchColecao = !colecao || cName === colecao;
     const matchDeck    = selectedDecks.has(d.Deck);
+    const matchConf    = (confVal === 'Alta' && confAltaChecked) || (confVal === 'Baixa' && confBaixaChecked);
 
     let matchDate = true;
     if (dateStart && mDate < dateStart) matchDate = false;
     if (dateEnd   && mDate > dateEnd)   matchDate = false;
 
-    return matchPlayer && matchFormato && matchLocal && matchColecao && matchDeck && matchDate;
+    return matchPlayer && matchFormato && matchLocal && matchColecao && matchDeck && matchDate && matchConf;
   });
 
   renderAll();
@@ -1001,7 +1005,7 @@ function renderTable(rows, resetPage = false) {
   const pagedRows = reversed.slice(startIdx, endIdx);
 
   if (pagedRows.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="15" style="text-align:center;padding:2rem;color:var(--text2)">Nenhuma partida encontrada</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="16" style="text-align:center;padding:2rem;color:var(--text2)">Nenhuma partida encontrada</td></tr>`;
   } else {
     tbody.innerHTML = pagedRows.map((r, i) => {
       const globalRowNumber = totalItems - (startIdx + i);
@@ -1017,6 +1021,9 @@ function renderTable(rows, resetPage = false) {
         : '<span style="color:var(--text2);font-size:.75rem">—</span>';
 
       const brickVal = (r.Brick === 'Sim' || (r.Brick && r.Brick !== 'Nenhum' && r.Brick !== 'Não')) ? '💥 Sim' : '✅ Não';
+      const confVal = (r.Confiabilidade === 'Baixa') ? 'Baixa' : 'Alta';
+      const confBadgeClass = (confVal === 'Baixa') ? 'badge-loss' : 'badge-win';
+      const confBadge = `<span class="badge ${confBadgeClass}" style="font-size:0.73rem;">${confVal === 'Baixa' ? '🔴 Baixa' : '🟢 Alta'}</span>`;
 
       const hasComment = r.Comentarios && r.Comentarios.trim() !== '';
       const commentBtn = hasComment 
@@ -1040,6 +1047,7 @@ function renderTable(rows, resetPage = false) {
         <td>${r.DeckAdv}</td>
         <td>${r.Formato}</td>
         <td><span style="font-size:.8rem;color:var(--accent2);font-weight:600">${r.Colecao || '—'}</span></td>
+        <td>${confBadge}</td>
         <td>${r.Start}</td>
         <td>${r.Placar}</td>
         <td><span class="badge ${badgeClass}">${emoji} ${r.Resultado}</span></td>
@@ -1145,6 +1153,8 @@ function getMatchupBaseDataset() {
   const colecao   = (document.getElementById('filterColecao')?.value || '').trim().toLowerCase();
   const dateStart = document.getElementById('filterDateStart')?.value || '';
   const dateEnd   = document.getElementById('filterDateEnd')?.value || '';
+  const confAltaChecked  = document.getElementById('filterConfAlta')?.checked ?? true;
+  const confBaixaChecked = document.getElementById('filterConfBaixa')?.checked ?? true;
 
   return allData.filter(d => {
     const pName        = (d.Player || '').trim();
@@ -1152,18 +1162,20 @@ function getMatchupBaseDataset() {
     const lName        = (d.Local || '').trim().toLowerCase();
     const cName        = (d.Colecao || '').trim().toLowerCase();
     const mDate        = (d.Data || '').slice(0, 10);
+    const confVal      = d.Confiabilidade || 'Alta';
 
     const matchPlayer  = selectedPlayers.has(pName);
     const matchFormato = !formato || fName === formato;
     const matchLocal   = !local   || lName === local;
     const matchColecao = !colecao || cName === colecao;
+    const matchConf    = (confVal === 'Alta' && confAltaChecked) || (confVal === 'Baixa' && confBaixaChecked);
 
     let matchDate = true;
     if (dateStart && mDate < dateStart) matchDate = false;
     if (dateEnd   && mDate > dateEnd)   matchDate = false;
 
     // Independent from top-bar selectedDecks filter
-    return matchPlayer && matchFormato && matchLocal && matchColecao && matchDate;
+    return matchPlayer && matchFormato && matchLocal && matchColecao && matchDate && matchConf;
   });
 }
 
@@ -1370,6 +1382,7 @@ window.showMatchupDetail = function(myDeck, oppDeck, scroll = true) {
             <th>Adversário</th>
             <th>Formato</th>
             <th>Coleção</th>
+            <th>Conf.</th>
             <th>Placar</th>
             <th>Resultado</th>
             <th>Local</th>
@@ -1384,6 +1397,8 @@ window.showMatchupDetail = function(myDeck, oppDeck, scroll = true) {
     const badgeClass = m.Resultado === 'Vitória' ? 'badge-win' : m.Resultado === 'Empate' ? 'badge-draw' : 'badge-loss';
     const emoji = m.Resultado === 'Vitória' ? '✅' : m.Resultado === 'Empate' ? '🤝' : '❌';
     const brickVal = (m.Brick === 'Sim' || (m.Brick && m.Brick !== 'Nenhum' && m.Brick !== 'Não')) ? '💥 Sim' : '✅ Não';
+    const confVal = (m.Confiabilidade === 'Baixa') ? 'Baixa' : 'Alta';
+    const confBadge = confVal === 'Baixa' ? '🔴 Baixa' : '🟢 Alta';
 
     html += `<tr>
       <td>${m.Data || '—'}</td>
@@ -1391,6 +1406,7 @@ window.showMatchupDetail = function(myDeck, oppDeck, scroll = true) {
       <td>${m.Adversario || '—'}</td>
       <td>${m.Formato || '—'}</td>
       <td><span style="color:var(--accent2);font-weight:600">${m.Colecao || '—'}</span></td>
+      <td><span style="font-size:0.75rem;">${confBadge}</span></td>
       <td>${m.Placar || '—'}</td>
       <td><span class="badge ${badgeClass}">${emoji} ${m.Resultado}</span></td>
       <td>${m.Local || '—'}</td>
@@ -1579,6 +1595,10 @@ window.resetAllFilters = function() {
     colEl.selectedIndex = 0;
     if (colEl.syncSearchableSelect) colEl.syncSearchableSelect();
   }
+
+  // Reset Confiabilidade checkboxes
+  if (document.getElementById('filterConfAlta'))  document.getElementById('filterConfAlta').checked = true;
+  if (document.getElementById('filterConfBaixa')) document.getElementById('filterConfBaixa').checked = true;
 
   // 2. Reset Multi-Player: select ALL players
   isExplicitPlayerSelection = false;

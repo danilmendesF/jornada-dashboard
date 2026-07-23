@@ -466,10 +466,11 @@ function openMatchForm(matchData) {
 
   updateMatchDeckCounters();
 
-  // Brick toggles
+  // Brick & Confiabilidade toggles
   const isOldBrick = v => v && v !== 'Nenhum' && v !== 'Não';
   const brickVal   = isOldBrick(matchData?.Brick) ? 'Sim' : 'Não';
   const brickOpVal = isOldBrick(matchData?.BrickOp) ? 'Sim' : 'Não';
+  const confVal    = matchData?.Confiabilidade || 'Alta';
 
   get('formMatchBrick').value = brickVal;
   document.querySelectorAll('#brickToggleGroup .brick-toggle').forEach(b => {
@@ -479,6 +480,11 @@ function openMatchForm(matchData) {
   get('formMatchBrickOp').value = brickOpVal;
   document.querySelectorAll('#brickOpToggleGroup .brick-toggle').forEach(b => {
     b.classList.toggle('active', b.dataset.value === brickOpVal);
+  });
+
+  get('formMatchConfiabilidade').value = confVal;
+  document.querySelectorAll('#confiabilidadeToggleGroup .brick-toggle').forEach(b => {
+    b.classList.toggle('active', b.dataset.value === confVal);
   });
 
   showModal('modalMatchForm');
@@ -544,24 +550,25 @@ function saveMatchForm() {
   }
 
   const matchData = {
-    id:          editingMatchId || Date.now().toString(),
-    Data:        document.getElementById('formMatchData').value,
-    Player:      player,
-    Deck:        deckName,
-    Adversario:  adversario,
-    DeckAdv:     deckAdv,
-    Luck:        0,
-    Formato:     document.getElementById('formMatchFormato').value,
-    Start:       document.getElementById('formMatchStart').value,
-    Resultado:   resultado,
-    Pontos:      pontos,
-    Placar:      document.getElementById('formMatchPlacar').value.trim(),
-    Local:       local,
-    Colecao:     colecao,
-    Brick:       document.getElementById('formMatchBrick').value,
-    BrickOp:     document.getElementById('formMatchBrickOp').value,
-    Comentarios: document.getElementById('formMatchComentarios').value.trim(),
-    _manual:     true,
+    id:             editingMatchId || Date.now().toString(),
+    Data:           document.getElementById('formMatchData').value,
+    Player:         player,
+    Deck:           deckName,
+    Adversario:     adversario,
+    DeckAdv:        deckAdv,
+    Luck:           0,
+    Formato:        document.getElementById('formMatchFormato').value,
+    Start:          document.getElementById('formMatchStart').value,
+    Resultado:      resultado,
+    Pontos:         pontos,
+    Placar:         document.getElementById('formMatchPlacar').value.trim(),
+    Local:          local,
+    Colecao:        colecao,
+    Brick:          document.getElementById('formMatchBrick').value,
+    BrickOp:        document.getElementById('formMatchBrickOp').value,
+    Confiabilidade: document.getElementById('formMatchConfiabilidade')?.value || 'Alta',
+    Comentarios:    document.getElementById('formMatchComentarios').value.trim(),
+    _manual:        true,
   };
 
   if (editingMatchId) {
@@ -922,24 +929,25 @@ window.quickLogMatch = function(resultado) {
   const pontos = resultado === 'Vitória' ? 1 : resultado === 'Empate' ? 0.5 : 0;
 
   const matchData = {
-    id:          Date.now().toString(),
-    Data:        new Date().toISOString().slice(0, 10),
-    Player:      player,
-    Deck:        deckName,
-    Adversario:  advName,
-    DeckAdv:     deckAdv,
-    Luck:        0,
-    Formato:     formato,
-    Start:       '1º',
-    Resultado:   resultado,
-    Pontos:      pontos,
-    Placar:      placarInput,
-    Local:       local,
-    Colecao:     colecao,
-    Brick:       'Não',
-    BrickOp:     'Não',
-    Comentarios: 'Registrado via Quick Log',
-    _manual:     true
+    id:             Date.now().toString(),
+    Data:           new Date().toISOString().slice(0, 10),
+    Player:         player,
+    Deck:           deckName,
+    Adversario:     advName,
+    DeckAdv:        deckAdv,
+    Luck:           0,
+    Formato:        formato,
+    Start:          '1º',
+    Resultado:      resultado,
+    Pontos:         pontos,
+    Placar:         placarInput,
+    Local:          local,
+    Colecao:        colecao,
+    Brick:          'Não',
+    BrickOp:        'Não',
+    Confiabilidade: document.getElementById('quickLogConfiabilidade')?.value || 'Alta',
+    Comentarios:    'Registrado via Quick Log',
+    _manual:        true
   };
 
   const manual = loadManual();
@@ -1427,6 +1435,16 @@ window.addEventListener('DOMContentLoaded', () => {
       document.querySelectorAll('#brickOpToggleGroup .brick-toggle').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       const input = document.getElementById('formMatchBrickOp');
+      if (input) input.value = btn.dataset.value;
+    });
+  });
+
+  document.querySelectorAll('#confiabilidadeToggleGroup .brick-toggle').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      document.querySelectorAll('#confiabilidadeToggleGroup .brick-toggle').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const input = document.getElementById('formMatchConfiabilidade');
       if (input) input.value = btn.dataset.value;
     });
   });

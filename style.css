@@ -97,7 +97,7 @@ body::after {
 .header {
   position: sticky;
   top: 0;
-  z-index: 100;
+  z-index: 500;
   background: rgba(5, 8, 15, 0.96);
   backdrop-filter: blur(24px);
   border-bottom: 1px solid rgba(26,127,255,0.15);
@@ -198,7 +198,7 @@ body::after {
   border-bottom: 1px solid var(--border);
   padding: 0.9rem 2rem;
   position: relative;
-  z-index: 300 !important;
+  z-index: 50;
 }
 
 .filters-inner {
@@ -1641,7 +1641,7 @@ tbody tr:last-child td { border-bottom: none; }
 .quick-log-body.collapsed { max-height: 0; opacity: 0; pointer-events: none; gap: 0; overflow: hidden; }
 .quick-log-form-row {
   display: grid;
-  grid-template-columns: 1fr 1.3fr 1fr 1.3fr 0.8fr 1.2fr 1fr 0.8fr;
+  grid-template-columns: 1fr 1.3fr 1fr 1.3fr 0.8fr 1.2fr 1fr 0.8fr 0.9fr;
   gap: 0.75rem;
 }
 

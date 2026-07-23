@@ -103,6 +103,17 @@
         <label class="filter-label">Data Fim</label>
         <input type="date" id="filterDateEnd" class="filter-select" style="min-width:135px;" />
       </div>
+      <div class="filter-group">
+        <label class="filter-label">Confiabilidade</label>
+        <div class="checkbox-group" style="display:flex;gap:0.6rem;align-items:center;padding:0.42rem 0.75rem;background:var(--bg3);border:1px solid var(--glass-bd);border-radius:var(--radius-sm);height:38px;box-sizing:border-box;">
+          <label style="font-size:0.8rem;color:var(--text);display:flex;align-items:center;gap:0.3rem;cursor:pointer;user-select:none;">
+            <input type="checkbox" id="filterConfAlta" value="Alta" checked onchange="applyFilters()" /> 🟢 Alta
+          </label>
+          <label style="font-size:0.8rem;color:var(--text);display:flex;align-items:center;gap:0.3rem;cursor:pointer;user-select:none;">
+            <input type="checkbox" id="filterConfBaixa" value="Baixa" checked onchange="applyFilters()" /> 🔴 Baixa
+          </label>
+        </div>
+      </div>
       <div style="display:flex;gap:0.5rem;align-items:flex-end">
         <button class="btn-apply-filters" id="btnApplyFilters" onclick="applyFilters()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg> APLICAR</button>
         <button class="reset-btn" id="resetFilters" onclick="resetAllFilters()">↺ Limpar</button>
@@ -183,6 +194,13 @@
             <div class="form-group">
               <label class="form-label">Placar *</label>
               <input type="text" id="quickLogPlacar" class="form-input" placeholder="Ex: 2-1" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Confiabilidade</label>
+              <select id="quickLogConfiabilidade" class="form-input">
+                <option value="Alta">🟢 Alta</option>
+                <option value="Baixa">🔴 Baixa</option>
+              </select>
             </div>
           </div>
           <div class="quick-log-actions">
@@ -429,6 +447,7 @@
               <th>Deck Adv.</th>
               <th>Formato</th>
               <th>Coleção</th>
+              <th>Conf.</th>
               <th>Start</th>
               <th>Placar</th>
               <th>Resultado</th>
@@ -765,8 +784,8 @@ Total de cartas: 60"
           </div>
         </div>
 
-        <!-- Row 4: Brick toggles -->
-        <div class="form-row two-col">
+        <!-- Row 4: Brick & Confiabilidade toggles -->
+        <div class="form-row three-col">
           <div class="form-group">
             <label class="form-label">Brickei?</label>
             <div class="brick-toggle-group" id="brickToggleGroup">
@@ -782,6 +801,14 @@ Total de cartas: 60"
               <button type="button" class="brick-toggle" data-value="Sim" id="brickOpYes">💥 Sim</button>
             </div>
             <input type="hidden" id="formMatchBrickOp" value="Não" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Confiabilidade *</label>
+            <div class="brick-toggle-group" id="confiabilidadeToggleGroup">
+              <button type="button" class="brick-toggle active" data-value="Alta" id="confAltaBtn">🟢 Alta</button>
+              <button type="button" class="brick-toggle" data-value="Baixa" id="confBaixaBtn">🔴 Baixa</button>
+            </div>
+            <input type="hidden" id="formMatchConfiabilidade" value="Alta" />
           </div>
         </div>
 
