@@ -498,14 +498,10 @@ function initMultiDeckEvents() {
 
 // ── POPULATE FILTERS ──────────────────────────────────────────────────────────
 function populateFilters() {
-  const customLocais = (typeof loadLocais === 'function') ? loadLocais() : [];
-  const dataLocais   = allData.map(d => d.Local).filter(Boolean);
-  const locais       = [...new Set([...customLocais, ...dataLocais])].sort((a, b) => a.localeCompare(b));
-
   const formatos = [...new Set(allData.map(d => d.Formato))].sort();
 
   fillSelect('filterFormato', formatos);
-  fillSelect('filterLocal',   locais);
+  if (typeof populateLocalSelects === 'function') populateLocalSelects();
   populateMultiPlayerFilter();
   populateMultiDeckFilter();
   populateMatchupDeckSelects();
