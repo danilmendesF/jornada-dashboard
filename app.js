@@ -1563,8 +1563,8 @@ async function handleFile(file) {
 
 // ── 20. GLOBAL RESET FUNCTION ────────────────────────────────────────────────
 window.resetAllFilters = function() {
-  // 1. Reset Formato, Local, Coleção, Data Início, and Data Fim
-  ['filterFormato','filterLocal','filterColecao','filterDateStart','filterDateEnd'].forEach(id => {
+  // 1. Reset Formato, Local, Data Início, and Data Fim
+  ['filterFormato','filterLocal','filterDateStart','filterDateEnd'].forEach(id => {
     const el = document.getElementById(id);
     if (el) {
       el.value = '';
@@ -1572,6 +1572,13 @@ window.resetAllFilters = function() {
       if (el.syncSearchableSelect) el.syncSearchableSelect();
     }
   });
+
+  // Reset Coleção: seleciona a primeira coleção cadastrada (sem a opção "Todas")
+  const colEl = document.getElementById('filterColecao');
+  if (colEl && colEl.options.length > 0) {
+    colEl.selectedIndex = 0;
+    if (colEl.syncSearchableSelect) colEl.syncSearchableSelect();
+  }
 
   // 2. Reset Multi-Player: select ALL players
   isExplicitPlayerSelection = false;

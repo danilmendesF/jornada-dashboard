@@ -853,18 +853,20 @@ function populateColecaoSelects() {
     if (quickSel.syncSearchableSelect) quickSel.syncSearchableSelect();
   }
 
-  // 3. Main Filter Coleção Select (#filterColecao)
+  // 3. Main Filter Coleção Select (#filterColecao) — apenas coleções cadastradas (sem "Todas")
   const filterSel = document.getElementById('filterColecao');
   if (filterSel) {
     const cur = filterSel.value;
-    filterSel.innerHTML = '<option value="">Todas</option>';
+    filterSel.innerHTML = '';
     allColecoes.forEach(c => {
       const o = document.createElement('option');
       o.value = c; o.textContent = c;
       filterSel.appendChild(o);
     });
-    if (cur && (allColecoes.includes(cur) || cur === '')) {
+    if (cur && allColecoes.includes(cur)) {
       filterSel.value = cur;
+    } else if (allColecoes.length > 0) {
+      filterSel.value = allColecoes[0];
     }
     if (filterSel.syncSearchableSelect) filterSel.syncSearchableSelect();
   }
