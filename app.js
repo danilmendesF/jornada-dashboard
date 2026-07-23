@@ -511,8 +511,8 @@ function populateFilters() {
   populateMatchupDeckSelects();
   initAllSearchableSelects();
 
-  // Attach change handlers to Formato and Local
-  ['filterFormato', 'filterLocal'].forEach(id => {
+  // Attach change handlers to Formato, Local, Data Início, Data Fim
+  ['filterFormato', 'filterLocal', 'filterDateStart', 'filterDateEnd'].forEach(id => {
     const el = document.getElementById(id);
     if (el && !el.dataset.filterHandler) {
       el.dataset.filterHandler = "true";
@@ -537,20 +537,27 @@ function fillSelect(id, values) {
 
 // ── 6. FILTER LOGIC ──────────────────────────────────────────────────────────
 function applyFilters() {
-  const formato = (document.getElementById('filterFormato')?.value || '').trim().toLowerCase();
-  const local   = (document.getElementById('filterLocal')?.value || '').trim().toLowerCase();
+  const formato   = (document.getElementById('filterFormato')?.value || '').trim().toLowerCase();
+  const local     = (document.getElementById('filterLocal')?.value || '').trim().toLowerCase();
+  const dateStart = document.getElementById('filterDateStart')?.value || '';
+  const dateEnd   = document.getElementById('filterDateEnd')?.value || '';
 
   filtered = allData.filter(d => {
     const pName        = (d.Player || '').trim();
     const fName        = (d.Formato || '').trim().toLowerCase();
     const lName        = (d.Local || '').trim().toLowerCase();
+    const mDate        = (d.Data || '').slice(0, 10);
 
     const matchPlayer  = selectedPlayers.has(pName);
     const matchFormato = !formato || fName === formato;
     const matchLocal   = !local   || lName === local;
     const matchDeck    = selectedDecks.has(d.Deck);
 
-    return matchPlayer && matchFormato && matchLocal && matchDeck;
+    let matchDate = true;
+    if (dateStart && mDate < dateStart) matchDate = false;
+    if (dateEnd   && mDate > dateEnd)   matchDate = false;
+
+    return matchPlayer && matchFormato && matchLocal && matchDeck && matchDate;
   });
 
   renderAll();
@@ -1436,12 +1443,12 @@ async function handleFile(file) {
 
 // ── 20. GLOBAL RESET FUNCTION ────────────────────────────────────────────────
 window.resetAllFilters = function() {
-  // 1. Reset Formato and Local selects
-  ['filterFormato','filterLocal'].forEach(id => {
+  // 1. Reset Formato, Local, Data Início, and Data Fim
+  ['filterFormato','filterLocal','filterDateStart','filterDateEnd'].forEach(id => {
     const el = document.getElementById(id);
     if (el) {
-      el.selectedIndex = 0;
       el.value = '';
+      if (el.selectedIndex !== undefined) el.selectedIndex = 0;
       if (el.syncSearchableSelect) el.syncSearchableSelect();
     }
   });

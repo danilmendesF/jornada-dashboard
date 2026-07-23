@@ -91,6 +91,14 @@
           <option value="">Todos</option>
         </select>
       </div>
+      <div class="filter-group">
+        <label class="filter-label">Data Início</label>
+        <input type="date" id="filterDateStart" class="filter-select" style="min-width:135px;" />
+      </div>
+      <div class="filter-group">
+        <label class="filter-label">Data Fim</label>
+        <input type="date" id="filterDateEnd" class="filter-select" style="min-width:135px;" />
+      </div>
       <div style="display:flex;gap:0.5rem;align-items:flex-end">
         <button class="btn-apply-filters" id="btnApplyFilters" onclick="applyFilters()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg> APLICAR</button>
         <button class="reset-btn" id="resetFilters" onclick="resetAllFilters()">↺ Limpar</button>
