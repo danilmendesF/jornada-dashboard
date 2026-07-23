@@ -91,7 +91,10 @@
           <option value="">Todos</option>
         </select>
       </div>
-      <button class="reset-btn" id="resetFilters" onclick="resetAllFilters()">↺ Limpar</button>
+      <div style="display:flex;gap:0.5rem;align-items:flex-end">
+        <button class="btn-apply-filters" id="btnApplyFilters" onclick="applyFilters()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg> APLICAR</button>
+        <button class="reset-btn" id="resetFilters" onclick="resetAllFilters()">↺ Limpar</button>
+      </div>
     </div>
   </section>
 
@@ -258,14 +261,14 @@
       <div class="chart-card">
         <div class="chart-header">
           <h2 class="chart-title">🃏 Win Rate por Deck</h2>
-          <span class="chart-sub">Porcentagem de vitórias por deck do time</span>
+          <span class="chart-sub">Top 7 decks com maiores win rates da equipe</span>
         </div>
         <div class="chart-wrap"><canvas id="chartDeckWR"></canvas></div>
       </div>
       <div class="chart-card">
         <div class="chart-header">
           <h2 class="chart-title">🧢 Performance por Treinador</h2>
-          <span class="chart-sub">Vitórias, empates e derrotas por jogador</span>
+          <span class="chart-sub">Treinadores ordenados por maior número de vitórias</span>
         </div>
         <div class="chart-wrap"><canvas id="chartPlayerPerf"></canvas></div>
       </div>
@@ -297,38 +300,27 @@
     </section>
 
     <!-- Charts Row 3 -->
-    <section class="charts-grid two-col">
-      <div class="chart-card">
-        <div class="chart-header">
-          <h2 class="chart-title">🎯 Performance vs Deck Oponente</h2>
-          <span class="chart-sub">Taxa de vitória contra cada deck adversário</span>
-        </div>
-        <div class="chart-wrap"><canvas id="chartOppWR"></canvas></div>
-      </div>
+    <section class="charts-grid three-col">
       <div class="chart-card">
         <div class="chart-header">
           <h2 class="chart-title">🃏 Volume de Jogos por Deck</h2>
           <span class="chart-sub">Quantidade total de partidas registradas</span>
         </div>
-        <div class="chart-wrap"><canvas id="chartDeckCount"></canvas></div>
+        <div class="chart-wrap chart-wrap-sm"><canvas id="chartDeckCount"></canvas></div>
       </div>
-    </section>
-
-    <!-- Charts Row 4 -->
-    <section class="charts-grid two-col">
       <div class="chart-card">
         <div class="chart-header">
           <h2 class="chart-title">🪙 1º vs 2º a Jogar (Moeda)</h2>
           <span class="chart-sub">Impacto de começar jogando no resultado final</span>
         </div>
-        <div class="chart-wrap"><canvas id="chartStart"></canvas></div>
+        <div class="chart-wrap chart-wrap-sm"><canvas id="chartStart"></canvas></div>
       </div>
       <div class="chart-card">
         <div class="chart-header">
           <h2 class="chart-title">🧱 Brick Analysis por Deck</h2>
           <span class="chart-sub">Porcentagem de mãos ruins / zoadas por deck</span>
         </div>
-        <div class="chart-wrap"><canvas id="chartBrick"></canvas></div>
+        <div class="chart-wrap chart-wrap-sm"><canvas id="chartBrick"></canvas></div>
       </div>
     </section>
 
@@ -346,6 +338,19 @@
               <option value="">Todos os Treinadores</option>
             </select>
           </div>
+          <div class="filter-group">
+            <label class="filter-label">Meu Deck</label>
+            <select id="matchupSelectMyDeck" class="filter-select">
+              <option value="">Todos os Decks</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label class="filter-label">vs Deck Oponente</label>
+            <select id="matchupSelectOppDeck" class="filter-select">
+              <option value="">Todos os Decks</option>
+            </select>
+          </div>
+          <button class="btn-apply-matchup" id="btnApplyMatchup" onclick="applyMatchupFilter()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> APLICAR</button>
           <div class="matchup-view-toggle">
             <button class="toggle-btn active" id="btnViewMatrix" data-view="matrix">🔲 Matriz</button>
             <button class="toggle-btn" id="btnViewBar" data-view="bar">📊 Ranking</button>

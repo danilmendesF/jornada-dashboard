@@ -210,15 +210,18 @@ function makeSearchableSelect(selectEl) {
 
   selectEl.addEventListener("change", updateInputFromSelect);
   updateInputFromSelect();
-  selectEl.syncSearchableSelect = updateInputFromSelect;
+  selectEl.syncSearchableSelect = function() {
+    updateInputFromSelect();
+    renderOptions();
+  };
 }
 
 function initAllSearchableSelects() {
   const ids = [
     'filterPlayer', 'filterDeck', 'filterFormato', 'filterLocal',
     'quickLogPlayer', 'quickLogDeck', 'quickLogDeckAdv',
-    'matchupPlayer', 'formMatchPlayer', 'formMatchDeck',
-    'formMatchDeckAdv', 'formDeckPlayer'
+    'matchupPlayer', 'matchupSelectMyDeck', 'matchupSelectOppDeck',
+    'formMatchPlayer', 'formMatchDeck', 'formMatchDeckAdv', 'formDeckPlayer'
   ];
   ids.forEach(id => {
     const el = document.getElementById(id);
@@ -505,6 +508,7 @@ function populateFilters() {
   fillSelect('filterLocal',   locais);
   populateMultiPlayerFilter();
   populateMultiDeckFilter();
+  populateMatchupDeckSelects();
   initAllSearchableSelects();
 
   // Attach change handlers to Formato and Local
@@ -587,9 +591,24 @@ function animCount(id, target) {
 function renderDeckWR() {
   destroyChart('deckWR');
   const byDeck = groupBy(filtered, 'Deck');
-  const labels = Object.keys(byDeck).sort();
-  const wrData = labels.map(d => pct(byDeck[d].filter(r => r.Resultado==='Vitória').length, byDeck[d].length));
-  const bgColors = labels.map((_, i) => PALETTE[i % PALETTE.length]);
+
+  // Calculate WR stats for each deck
+  const deckStats = Object.keys(byDeck).map(d => {
+    const tot = byDeck[d].length;
+    const wins = byDeck[d].filter(r => r.Resultado === 'Vitória').length;
+    const wr = pct(wins, tot);
+    return { deck: d, wr, wins, tot };
+  });
+
+  // Sort descending by Win Rate, then by total matches
+  deckStats.sort((a, b) => b.wr - a.wr || b.tot - a.tot);
+
+  // Take top 7 decks with highest win rates
+  const top7 = deckStats.slice(0, 7);
+
+  const labels = top7.map(d => d.deck);
+  const wrData = top7.map(d => d.wr);
+  const bgColors = top7.map((_, i) => PALETTE[i % PALETTE.length]);
 
   charts['deckWR'] = new Chart(document.getElementById('chartDeckWR'), {
     type: 'bar',
@@ -613,10 +632,8 @@ function renderDeckWR() {
         tooltip: {
           callbacks: {
             label: ctx => {
-              const dk = labels[ctx.dataIndex];
-              const tot = byDeck[dk].length;
-              const wins = byDeck[dk].filter(r=>r.Resultado==='Vitória').length;
-              return ` ${ctx.parsed.y}%  (${wins}V / ${tot} jogos)`;
+              const stat = top7[ctx.dataIndex];
+              return ` ${stat.wr}%  (${stat.wins}V / ${stat.tot} jogos)`;
             }
           }
         }
@@ -637,28 +654,66 @@ function renderDeckWR() {
 function renderPlayerPerf() {
   destroyChart('playerPerf');
   const byPlayer = groupBy(filtered, 'Player');
-  const labels = Object.keys(byPlayer).sort();
-  const wins   = labels.map(p => byPlayer[p].filter(r=>r.Resultado==='Vitória').length);
-  const draws  = labels.map(p => byPlayer[p].filter(r=>r.Resultado==='Empate').length);
-  const losses = labels.map(p => byPlayer[p].filter(r=>r.Resultado==='Derrota').length);
+  
+  // Include all active players from filtered data and registered players list
+  const registeredPlayers = (typeof players !== 'undefined') ? players : [];
+  const allPlayerNames = [...new Set([...Object.keys(byPlayer), ...registeredPlayers])];
+
+  const playerStats = allPlayerNames.map(p => {
+    const pMatches = byPlayer[p] || [];
+    const wins   = pMatches.filter(r => r.Resultado === 'Vitória').length;
+    const draws  = pMatches.filter(r => r.Resultado === 'Empate').length;
+    const losses = pMatches.filter(r => r.Resultado === 'Derrota').length;
+    const total  = pMatches.length;
+    const wr     = total > 0 ? pct(wins, total) : 0;
+    return { player: p, wins, draws, losses, total, wr };
+  });
+
+  // Sort descending by highest number of victories (wins), then by Win Rate, then total matches
+  playerStats.sort((a, b) => b.wins - a.wins || b.wr - a.wr || b.total - a.total);
+
+  const labels = playerStats.map(s => s.player);
+  const wins   = playerStats.map(s => s.wins);
+  const draws  = playerStats.map(s => s.draws);
+  const losses = playerStats.map(s => s.losses);
 
   charts['playerPerf'] = new Chart(document.getElementById('chartPlayerPerf'), {
     type: 'bar',
     data: {
       labels,
       datasets: [
-        { label: 'Vitórias', data: wins,   backgroundColor: WIN_COLOR  + 'bb', borderColor: WIN_COLOR,   borderWidth:2, borderRadius:6 },
-        { label: 'Empates',  data: draws,  backgroundColor: DRAW_COLOR + 'bb', borderColor: DRAW_COLOR,  borderWidth:2, borderRadius:6 },
-        { label: 'Derrotas', data: losses, backgroundColor: LOSS_COLOR + 'bb', borderColor: LOSS_COLOR,  borderWidth:2, borderRadius:6 },
+        { label: 'Vitórias', data: wins,   backgroundColor: WIN_COLOR  + 'bb', borderColor: WIN_COLOR,   borderWidth: 2, borderRadius: 6 },
+        { label: 'Empates',  data: draws,  backgroundColor: DRAW_COLOR + 'bb', borderColor: DRAW_COLOR,  borderWidth: 2, borderRadius: 6 },
+        { label: 'Derrotas', data: losses, backgroundColor: LOSS_COLOR + 'bb', borderColor: LOSS_COLOR,  borderWidth: 2, borderRadius: 6 },
       ]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: { legend: { position: 'bottom' } },
+      plugins: {
+        legend: { position: 'bottom' },
+        tooltip: {
+          callbacks: {
+            label: ctx => {
+              const stat = playerStats[ctx.dataIndex];
+              const dsLabel = ctx.dataset.label;
+              const val = ctx.parsed.y;
+              return ` ${dsLabel}: ${val} (Total: ${stat.total} jogos | WR: ${stat.wr}%)`;
+            }
+          }
+        }
+      },
       scales: {
         y: { stacked: false, grid: { color: 'rgba(255,255,255,0.05)' } },
-        x: { grid: { color: 'rgba(255,255,255,0.03)' } }
+        x: {
+          grid: { color: 'rgba(255,255,255,0.03)' },
+          ticks: {
+            autoSkip: false,
+            maxRotation: 45,
+            minRotation: 0,
+            color: '#a0aec0'
+          }
+        }
       }
     }
   });
@@ -757,67 +812,6 @@ function renderFormato() {
     }
   });
 }
-
-// ── 13. CHART: WIN RATE VS OPONENTE ─────────────────────────────────────────────
-function renderOppWR() {
-  destroyChart('oppWR');
-  const byOpp = groupBy(filtered, 'Adversario');
-  const sorted = Object.entries(byOpp)
-    .filter(([k]) => k && k !== '0')
-    .map(([opp, rows]) => ({
-      opp,
-      wins:   rows.filter(r => r.Resultado === 'Vitória').length,
-      draws:  rows.filter(r => r.Resultado === 'Empate').length,
-      losses: rows.filter(r => r.Resultado === 'Derrota').length,
-      total:  rows.length,
-      wr:     pct(rows.filter(r => r.Resultado === 'Vitória').length, rows.length),
-    }))
-    .sort((a, b) => b.wr - a.wr || b.total - a.total);
-
-  if (!sorted.length) return;
-
-  const labels  = sorted.map(e => e.opp);
-  const wrs     = sorted.map(e => e.wr);
-  const bgs     = sorted.map(e => e.wr >= 60 ? '#34e0a1bb' : e.wr >= 40 ? '#f5c842bb' : '#f75050bb');
-  const borders = sorted.map(e => e.wr >= 60 ? '#34e0a1'   : e.wr >= 40 ? '#f5c842'   : '#f75050');
-
-  charts['oppWR'] = new Chart(document.getElementById('chartOppWR'), {
-    type: 'bar',
-    data: {
-      labels,
-      datasets: [{
-        label: 'Win Rate (%)',
-        data: wrs,
-        backgroundColor: bgs,
-        borderColor: borders,
-        borderWidth: 2,
-        borderRadius: 8,
-        borderSkipped: false,
-      }]
-    },
-    options: {
-      indexAxis: 'y',
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          callbacks: {
-            label: ctx => {
-              const e = sorted[ctx.dataIndex];
-              return [` ${e.wr}% WR`, ` ${e.wins}V · ${e.draws}E · ${e.losses}D (${e.total} jogos)`];
-            }
-          }
-        }
-      },
-      scales: {
-        x: { min: 0, max: 100, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { callback: v => v + '%' } },
-        y: { grid: { color: 'rgba(255,255,255,0.03)' } }
-      }
-    }
-  });
-}
-
 
 // ── 14. CHART: DECK COUNT ───────────────────────────────────────────────────
 function renderDeckCount() {
@@ -1135,13 +1129,34 @@ function wrColor(wr, alpha = 1) {
 }
 
 function renderMatchup() {
-  const matchupData = buildMatchupData(filtered);
-  let myDecks  = [...new Set(filtered.map(d => d.Deck).filter(Boolean))].sort();
-  let oppDecks = [...new Set(filtered.map(d => d.DeckAdv).filter(Boolean))].sort();
+  const selectedPlayer = document.getElementById('matchupPlayer')?.value || '';
+  
+  let matchupDataset = filtered;
+  if (selectedPlayer) {
+    matchupDataset = filtered.filter(d => d.Player === selectedPlayer);
+  }
+
+  const matchupData = buildMatchupData(matchupDataset);
+  
+  let myDecks  = [...new Set(matchupDataset.map(d => d.Deck).filter(Boolean))].sort();
+  let oppDecks = [...new Set(matchupDataset.map(d => d.DeckAdv).filter(Boolean))].sort();
 
   if (selectedDecks.size > 0) {
     myDecks  = myDecks.filter(d => selectedDecks.has(d));
     oppDecks = oppDecks.filter(d => selectedDecks.has(d));
+  }
+
+  const selectedMyDeck  = document.getElementById('matchupSelectMyDeck')?.value || '';
+  const selectedOppDeck = document.getElementById('matchupSelectOppDeck')?.value || '';
+
+  if (selectedMyDeck) {
+    myDecks = myDecks.filter(d => d === selectedMyDeck);
+    if (myDecks.length === 0) myDecks = [selectedMyDeck];
+  }
+
+  if (selectedOppDeck) {
+    oppDecks = oppDecks.filter(d => d === selectedOppDeck);
+    if (oppDecks.length === 0) oppDecks = [selectedOppDeck];
   }
 
   if (matchupCurrentView === 'matrix') {
@@ -1151,9 +1166,46 @@ function renderMatchup() {
   }
 }
 
+function populateMatchupDeckSelects() {
+  const selMy  = document.getElementById('matchupSelectMyDeck');
+  const selOpp = document.getElementById('matchupSelectOppDeck');
+  if (!selMy || !selOpp) return;
+
+  const curMy  = selMy.value;
+  const curOpp = selOpp.value;
+
+  const registeredDeckNames = (typeof decks !== 'undefined' && Array.isArray(decks))
+    ? decks.map(d => d.name).filter(Boolean)
+    : [];
+
+  const myDecks  = [...new Set([...registeredDeckNames, ...allData.map(d => d.Deck).filter(Boolean)])].sort((a, b) => a.localeCompare(b));
+  const oppDecks = [...new Set([...registeredDeckNames, ...allData.map(d => d.DeckAdv).filter(Boolean)])].sort((a, b) => a.localeCompare(b));
+
+  selMy.innerHTML = '<option value="">Todos os Decks</option>';
+  myDecks.forEach(d => {
+    const o = document.createElement('option');
+    o.value = d; o.textContent = d;
+    selMy.appendChild(o);
+  });
+  if (curMy && myDecks.includes(curMy)) selMy.value = curMy;
+  if (selMy.syncSearchableSelect) selMy.syncSearchableSelect();
+
+  selOpp.innerHTML = '<option value="">Todos os Decks</option>';
+  oppDecks.forEach(d => {
+    const o = document.createElement('option');
+    o.value = d; o.textContent = d;
+    selOpp.appendChild(o);
+  });
+  if (curOpp && oppDecks.includes(curOpp)) selOpp.value = curOpp;
+  if (selOpp.syncSearchableSelect) selOpp.syncSearchableSelect();
+}
+
 function renderMatchupMatrix(matchupData, myDecks, oppDecks) {
   const container = document.getElementById('matchupMatrix');
   if (!container) return;
+
+  const selMy  = document.getElementById('matchupSelectMyDeck')?.value || '';
+  const selOpp = document.getElementById('matchupSelectOppDeck')?.value || '';
 
   if (myDecks.length === 0) {
     container.innerHTML = '<div class="empty-state"><div class="empty-icon">⚔️</div><p>Sem dados de matchup suficientes.</p></div>';
@@ -1166,7 +1218,8 @@ function renderMatchupMatrix(matchupData, myDecks, oppDecks) {
   // Header row
   html += '<thead><tr><th class="matrix-corner">Meu Deck \\ Oponente</th>';
   oppDecks.forEach(opp => {
-    html += `<th class="matrix-col-header"><div class="col-label">${opp}</div></th>`;
+    const isColActive = selOpp === opp;
+    html += `<th class="matrix-col-header ${isColActive ? 'active-header' : ''}"><div class="col-label">${opp}</div></th>`;
   });
   html += '<th class="matrix-col-header total-col">Total</th></tr></thead>';
 
@@ -1174,20 +1227,24 @@ function renderMatchupMatrix(matchupData, myDecks, oppDecks) {
   html += '<tbody>';
   myDecks.forEach(myDeck => {
     let rowWins = 0, rowTotal = 0;
-    html += `<tr><td class="matrix-row-header">${myDeck}</td>`;
+    const isRowActive = selMy === myDeck;
+    html += `<tr><td class="matrix-row-header ${isRowActive ? 'active-header' : ''}">${myDeck}</td>`;
 
     oppDecks.forEach(opp => {
       const key = `${myDeck}|||${opp}`;
       const entry = matchupData[key];
+      const isActiveCell = (selMy === myDeck && selOpp === opp);
+      const activeClass = isActiveCell ? ' matrix-cell-active' : '';
+
       if (!entry || entry.total === 0) {
-        html += `<td class="matrix-cell empty" title="Sem dados">—</td>`;
+        html += `<td class="matrix-cell empty${activeClass}" title="Sem dados">—</td>`;
       } else {
         const wr = Math.round((entry.wins / entry.total) * 100);
         const bg = wrColor(wr, 0.75);
         const textColor = (wr >= 40 && wr <= 60) ? '#fff' : (wr > 60 ? '#0b1a0f' : '#1a0b0b');
         rowWins  += entry.wins;
         rowTotal += entry.total;
-        html += `<td class="matrix-cell" 
+        html += `<td class="matrix-cell${activeClass}" 
           style="background:${bg}; color:${textColor}"
           onclick="showMatchupDetail('${myDeck}', '${opp}')"
           title="${myDeck} vs ${opp}: ${wr}% (${entry.wins}V-${entry.draws}E-${entry.losses}D / ${entry.total} jogos)">
@@ -1269,7 +1326,21 @@ function renderMatchupBar(matchupData) {
   });
 }
 
-window.showMatchupDetail = function(myDeck, oppDeck) {
+window.showMatchupDetail = function(myDeck, oppDeck, updateSelects = true) {
+  if (updateSelects) {
+    const selMy  = document.getElementById('matchupSelectMyDeck');
+    const selOpp = document.getElementById('matchupSelectOppDeck');
+    if (selMy) {
+      selMy.value = myDeck;
+      if (selMy.syncSearchableSelect) selMy.syncSearchableSelect();
+    }
+    if (selOpp) {
+      selOpp.value = oppDeck;
+      if (selOpp.syncSearchableSelect) selOpp.syncSearchableSelect();
+    }
+    renderMatchup();
+  }
+
   const playerSel = document.getElementById('matchupPlayer')?.value || '';
   let baseData = allData.filter(d => !playerSel || d.Player === playerSel);
 
@@ -1331,15 +1402,19 @@ window.showMatchupDetail = function(myDeck, oppDeck) {
 function populateMatchupPlayerSelect() {
   const sel = document.getElementById('matchupPlayer');
   if (!sel) return;
-  const mainPlayer = document.getElementById('filterPlayer')?.value || '';
+  const cur = sel.value;
   sel.innerHTML = '<option value="">Todos os Treinadores (Consolidado)</option>';
-  const ps = [...new Set(allData.map(d => d.Player).filter(Boolean))].sort();
-  ps.forEach(p => {
+  
+  const dataPlayers = allData.map(d => d.Player).filter(Boolean);
+  const managerPlayers = (typeof players !== 'undefined') ? players : [];
+  const allPlayerNames = [...new Set([...dataPlayers, ...managerPlayers])].sort((a, b) => a.localeCompare(b));
+
+  allPlayerNames.forEach(p => {
     const o = document.createElement('option');
     o.value = p; o.textContent = p;
     sel.appendChild(o);
   });
-  sel.value = mainPlayer;
+  if (cur && allPlayerNames.includes(cur)) sel.value = cur;
   if (sel.syncSearchableSelect) sel.syncSearchableSelect();
 }
 
@@ -1358,15 +1433,23 @@ function initMatchupToggle() {
     });
   });
 
-  document.getElementById('matchupPlayer')?.addEventListener('change', (e) => {
-    const mainP = document.getElementById('filterPlayer');
-    if (mainP && mainP.value !== e.target.value) {
-      mainP.value = e.target.value;
-      if (mainP.syncSearchableSelect) mainP.syncSearchableSelect();
-      applyFilters();
-    }
+  ['matchupPlayer', 'matchupSelectMyDeck', 'matchupSelectOppDeck'].forEach(id => {
+    document.getElementById(id)?.addEventListener('change', () => {
+      window.applyMatchupFilter();
+    });
   });
 }
+
+window.applyMatchupFilter = function() {
+  const myDeck  = document.getElementById('matchupSelectMyDeck')?.value || '';
+  const oppDeck = document.getElementById('matchupSelectOppDeck')?.value || '';
+  renderMatchup();
+  if (myDeck && oppDeck) {
+    showMatchupDetail(myDeck, oppDeck, false);
+  } else {
+    document.getElementById('matchupDetail').style.display = 'none';
+  }
+};
 
 // ── 19. RENDER ALL ──────────────────────────────────────────────────────────
 function renderAll() {
@@ -1376,7 +1459,6 @@ function renderAll() {
   renderResultPie();
   renderLocal();
   renderFormato();
-  renderOppWR();
   renderDeckCount();
   renderStart();
   renderBrick();
