@@ -255,6 +255,17 @@ window.openDeckList = function(deckId) {
   }
 
   body.innerHTML = html || '<p style="color:var(--text2);padding:1rem;text-align:center;">Lista vazia. Clique em <strong>"✏️ Editar / Importar Lista"</strong> acima para adicionar as cartas deste deck.</p>';
+  if (html) {
+    body.title = "Clique para copiar a lista no formato Pokémon TCG Live";
+    body.style.cursor = "pointer";
+    body.onclick = function() {
+      window.exportCurrentDeckToTCGLive();
+    };
+  } else {
+    body.title = "";
+    body.style.cursor = "default";
+    body.onclick = null;
+  }
 
   // Search
   document.getElementById('deckListSearch').value = '';
@@ -275,6 +286,42 @@ window.viewMatchComment = function(matchId) {
   showModal('modalViewComment');
 };
 
+window.exportCurrentDeckToTCGLive = function() {
+  if (!currentViewingDeckId) return;
+  const deck = decks.find(d => d.id === currentViewingDeckId);
+  const list = (deck?.list || '').trim();
+
+  if (!list) {
+    showToast('⚠️ Este deck ainda não possui cartas cadastradas para exportar.');
+    return;
+  }
+
+  const notify = () => showToast('📋 Lista copiada para a área de transferência no formato Pokémon TCG Live!');
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(list).then(notify).catch(() => fallbackCopyList(list));
+  } else {
+    fallbackCopyList(list);
+  }
+};
+
+function fallbackCopyList(text) {
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    showToast('📋 Lista copiada para a área de transferência no formato Pokémon TCG Live!');
+  } catch(err) {
+    alert('Não foi possível copiar a lista automaticamente.');
+  }
+}
+
 // Deck list search filter
 document.addEventListener('DOMContentLoaded', () => {
   const searchEl = document.getElementById('deckListSearch');
@@ -286,6 +333,8 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
   }
+
+  document.getElementById('btnExportTCGLive')?.addEventListener('click', exportCurrentDeckToTCGLive);
 
   document.getElementById('btnEditDeckListFromModal')?.addEventListener('click', () => {
     if (currentViewingDeckId) {
