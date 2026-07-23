@@ -762,6 +762,16 @@ async function pullFromCloud(quiet = false) {
       const cloudPlayers = data.players || [];
       const cloudDeleted = data.deletedIds || [];
       const cloudEdits = data.editedMatches || {};
+      const cloudAdminPin = data.adminPin !== undefined ? data.adminPin : null;
+
+      if (cloudAdminPin !== null) {
+        if (cloudAdminPin) {
+          localStorage.setItem(KEY_ADMIN_PIN, cloudAdminPin);
+        } else {
+          localStorage.removeItem(KEY_ADMIN_PIN);
+          sessionStorage.removeItem('jornada_admin_unlocked');
+        }
+      }
 
       const localDecks = loadDecks();
       const localMatches = loadManual();
@@ -869,8 +879,10 @@ async function pushToCloud() {
       decks: loadDecks(),
       manualMatches: loadManual(),
       players: loadPlayers(),
+      locais: loadLocais(),
       deletedIds: [...loadDeleted()],
-      editedMatches: loadEdits()
+      editedMatches: loadEdits(),
+      adminPin: getAdminPin()
     };
     
     console.log(`🌐 Sync [Push]: Enviando dados locais para o banco na nuvem...`, {
@@ -1160,15 +1172,17 @@ window.addEventListener('DOMContentLoaded', () => {
     if (!p1 || p1.length < 4) { alert('A senha deve ter pelo menos 4 caracteres.'); return; }
     if (p1 !== p2) { alert('As senhas não coincidem!'); return; }
     localStorage.setItem(KEY_ADMIN_PIN, p1);
+    triggerSyncPush();
     document.getElementById('changeAdminPinNew').value = '';
     document.getElementById('changeAdminPinConfirm').value = '';
-    showToast('🔑 Senha de administrador atualizada com sucesso!');
+    showToast('🔑 Senha de administrador atualizada e sincronizada com a nuvem!');
   });
 
   document.getElementById('btnRemoveAdminPin')?.addEventListener('click', () => {
     if (confirm('Tem certeza que deseja remover a proteção por senha do Gerenciador de Dados? Qualquer pessoa poderá acessar os dados.')) {
       localStorage.removeItem(KEY_ADMIN_PIN);
       sessionStorage.removeItem('jornada_admin_unlocked');
+      triggerSyncPush();
       showToast('🔓 Proteção por senha desativada.');
     }
   });
@@ -1190,7 +1204,7 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 // ── ADMIN PROTECTION FUNCTIONS ────────────────────────────────────────────────
-function openProtectedManager() {
+async function openProtectedManager() {
   if (isAdminUnlocked()) {
     document.getElementById('managerPanel').classList.add('open');
     renderDecksList();
@@ -1198,6 +1212,17 @@ function openProtectedManager() {
     renderLocaisList();
     return;
   }
+
+  // If no PIN stored locally BUT a cloud sync token exists, check cloud first
+  if (!hasAdminPin() && localStorage.getItem('jornada_sync_token')) {
+    try {
+      showToast('🔄 Verificando permissões de administrador na nuvem…');
+      await pullFromCloud(true);
+    } catch (e) {
+      console.warn('Cloud PIN check failed', e);
+    }
+  }
+
   setupAdminAuthModal(hasAdminPin() ? 'login' : 'create');
   showModal('modalAdminAuth');
 }
@@ -1256,12 +1281,13 @@ function submitAdminAuth() {
     }
     localStorage.setItem(KEY_ADMIN_PIN, val);
     sessionStorage.setItem('jornada_admin_unlocked', 'true');
+    triggerSyncPush();
     closeModal('modalAdminAuth');
     document.getElementById('managerPanel').classList.add('open');
     renderDecksList();
     renderPlayersList();
     renderLocaisList();
-    showToast('🔑 Senha de administrador criada com sucesso!');
+    showToast('🔑 Senha de administrador criada e sincronizada com a nuvem!');
     return;
   }
 
