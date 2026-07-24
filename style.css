@@ -1148,12 +1148,14 @@ tbody tr:last-child td { border-bottom: none; }
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,.70);
+  background: rgba(0,0,0,.75);
   backdrop-filter: blur(8px);
   z-index: 400;
   align-items: center;
   justify-content: center;
-  padding: 1rem;
+  padding: 1.25rem 1rem;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 .modal-overlay.open { display: flex; animation: fadeIn .2s ease; }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -1164,11 +1166,13 @@ tbody tr:last-child td { border-bottom: none; }
   border-radius: var(--radius);
   width: 100%;
   max-width: 560px;
-  max-height: 90vh;
+  max-height: 85vh;
+  max-height: 85dvh;
   display: flex;
   flex-direction: column;
   box-shadow: 0 20px 60px rgba(0,0,0,.7), 0 0 40px rgba(26,127,255,0.08);
   animation: slideUp .25s cubic-bezier(.4,0,.2,1);
+  margin: auto;
 }
 .modal.modal-wide { max-width: 780px; }
 @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
@@ -1460,8 +1464,11 @@ tbody tr:last-child td { border-bottom: none; }
 .matrix-table { border-collapse: collapse; min-width: 100%; font-size: .78rem; }
 
 .matrix-corner {
+  position: sticky;
+  left: 0;
+  z-index: 12;
+  background: #080d1a;
   padding: .6rem 1rem;
-  background: rgba(26,127,255,.08);
   color: var(--accent2);
   font-family: 'Rajdhani', sans-serif;
   font-size: .7rem;
@@ -1471,7 +1478,8 @@ tbody tr:last-child td { border-bottom: none; }
   white-space: nowrap;
   text-align: left;
   border-bottom: 1px solid var(--border);
-  border-right: 1px solid var(--border);
+  border-right: 2px solid rgba(26,127,255,0.35);
+  box-shadow: 4px 0 12px rgba(0,0,0,0.5);
   min-width: 140px;
 }
 .matrix-col-header {
@@ -1497,14 +1505,18 @@ tbody tr:last-child td { border-bottom: none; }
   max-width: 90px;
 }
 .matrix-row-header {
+  position: sticky;
+  left: 0;
+  z-index: 10;
+  background: #080d1a;
   padding: .5rem 1rem;
-  background: rgba(26,127,255,.06);
   color: var(--text);
   font-weight: 600;
   font-size: .78rem;
   white-space: nowrap;
-  border-right: 1px solid var(--border);
+  border-right: 2px solid rgba(26,127,255,0.35);
   border-bottom: 1px solid rgba(255,255,255,.04);
+  box-shadow: 4px 0 12px rgba(0,0,0,0.5);
 }
 .matrix-cell {
   padding: .5rem .4rem;

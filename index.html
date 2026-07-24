@@ -713,6 +713,9 @@ Total de cartas: 60"
         <input type="search" id="deckListSearch" class="table-search" placeholder="Buscar carta…" style="width:100%;margin-bottom:1rem" />
         <div id="deckListBody" class="deck-list-body"></div>
       </div>
+      <div class="modal-footer">
+        <button class="cancel-btn" data-close-modal="modalDeckList" style="width: 100%; text-align: center;">✕ Fechar Lista</button>
+      </div>
     </div>
   </div>
 
@@ -878,13 +881,16 @@ Total de cartas: 60"
        MODAL: VER COMENTÁRIO
        =================================================== -->
   <div class="modal-overlay" id="modalViewComment">
-    <div class="modal" style="max-width: 450px;">
+    <div class="modal" style="max-width: 480px; max-height: 85vh; max-height: 85dvh;">
       <div class="modal-header">
         <h3>💬 Comentário da Partida</h3>
       </div>
-      <div class="modal-body" style="padding: 1.25rem;">
+      <div class="modal-body" style="padding: 1.25rem; overflow-y: auto;">
         <div id="commentMatchInfo" style="font-size: 0.8rem; color: var(--text2); margin-bottom: 0.85rem; padding-bottom: 0.6rem; border-bottom: 1px solid var(--border);"></div>
-        <div id="commentTextBody" style="background: var(--bg3); padding: 1rem; border-radius: var(--radius-sm); border: 1px solid var(--glass-bd); font-size: 0.9rem; line-height: 1.6; color: var(--text); white-space: pre-wrap;"></div>
+        <div id="commentTextBody" style="background: var(--bg3); padding: 1rem; border-radius: var(--radius-sm); border: 1px solid var(--glass-bd); font-size: 0.9rem; line-height: 1.6; color: var(--text); white-space: pre-wrap; word-break: break-word; max-height: 45vh; overflow-y: auto;"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="cancel-btn" data-close-modal="modalViewComment" style="width: 100%; text-align: center; font-weight: 600;">✕ Fechar Comentário</button>
       </div>
     </div>
   </div>
@@ -927,6 +933,9 @@ Total de cartas: 60"
         <div style="display: flex; justify-content: center; margin-top: .5rem;">
           <button class="icon-btn" id="btnGenerateSyncToken" style="font-size: .75rem; padding: .4rem .8rem;">✨ Gerar Nova Chave Privada</button>
         </div>
+      </div>
+      <div class="modal-footer">
+        <button class="cancel-btn" data-close-modal="modalSync" style="width: 100%; text-align: center;">✕ Fechar</button>
       </div>
     </div>
   </div>
