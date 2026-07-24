@@ -1020,6 +1020,7 @@ window.quickLogMatch = function(resultado) {
   const advName  = document.getElementById('quickLogAdvName')?.value.trim() || 'Oponente';
   const deckAdv  = document.getElementById('quickLogDeckAdv')?.value;
   const formato  = document.getElementById('quickLogFormato')?.value || 'MD3';
+  const startVal = document.getElementById('quickLogStart')?.value || '1º';
   const colecao  = document.getElementById('quickLogColecao')?.value;
   const local    = document.getElementById('quickLogLocal')?.value;
   const placarInput = document.getElementById('quickLogPlacar')?.value.trim();
@@ -1043,7 +1044,7 @@ window.quickLogMatch = function(resultado) {
     DeckAdv:        deckAdv,
     Luck:           0,
     Formato:        formato,
-    Start:          '1º',
+    Start:          startVal,
     Resultado:      resultado,
     Pontos:         pontos,
     Placar:         placarInput,

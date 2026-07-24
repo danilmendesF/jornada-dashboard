@@ -145,14 +145,15 @@
           <button class="icon-btn sm" id="btnToggleQuickLog">▼ Recolher</button>
         </div>
         <div class="quick-log-body" id="quickLogBody">
-          <div class="quick-log-form-row">
+          <!-- Row 1: Players & Decks -->
+          <div class="quick-log-grid-top">
             <div class="form-group">
-              <label class="form-label">Meu Player *</label>
+              <label class="form-label">👤 Meu Player *</label>
               <select id="quickLogPlayer" class="form-input"></select>
             </div>
             <div class="form-group">
               <div style="display:flex; justify-content:space-between; align-items:center;">
-                <label class="form-label">Meu Deck *</label>
+                <label class="form-label">🃏 Meu Deck *</label>
                 <button type="button" class="icon-btn sm" id="btnQuickAddDeckOwn" style="font-size: .65rem; padding: 2px 6px;" title="Cadastrar novo deck">+</button>
               </div>
               <select id="quickLogDeck" class="form-input">
@@ -160,43 +161,54 @@
               </select>
             </div>
             <div class="form-group">
-              <label class="form-label">Oponente *</label>
+              <label class="form-label">⚔️ Oponente *</label>
               <input type="text" id="quickLogAdvName" class="form-input" placeholder="Ex: GreatBall" value="Oponente" />
             </div>
             <div class="form-group">
               <div style="display:flex; justify-content:space-between; align-items:center;">
-                <label class="form-label">Deck Oponente *</label>
+                <label class="form-label">🃏 Deck Oponente *</label>
                 <button type="button" class="icon-btn sm" id="btnQuickAddDeckAdv" style="font-size: .65rem; padding: 2px 6px;" title="Cadastrar novo deck">+</button>
               </div>
               <select id="quickLogDeckAdv" class="form-input">
                 <option value="">Selecione…</option>
               </select>
             </div>
+          </div>
+
+          <!-- Row 2: Match Parameters -->
+          <div class="quick-log-grid-bottom">
             <div class="form-group">
-              <label class="form-label">Formato *</label>
+              <label class="form-label">🏆 Formato *</label>
               <select id="quickLogFormato" class="form-input">
                 <option value="MD3">MD3</option>
                 <option value="MD1">MD1</option>
               </select>
             </div>
             <div class="form-group">
-              <label class="form-label">Coleção *</label>
+              <label class="form-label">🎲 Start *</label>
+              <select id="quickLogStart" class="form-input">
+                <option value="1º">1º (Saiu Jogando)</option>
+                <option value="2º">2º (Foi Segundo)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">📦 Coleção *</label>
               <select id="quickLogColecao" class="form-input">
                 <option value="">Selecione…</option>
               </select>
             </div>
             <div class="form-group">
-              <label class="form-label">Local *</label>
+              <label class="form-label">📍 Local *</label>
               <select id="quickLogLocal" class="form-input">
                 <option value="">Selecione…</option>
               </select>
             </div>
             <div class="form-group">
-              <label class="form-label">Placar *</label>
+              <label class="form-label">🎯 Placar *</label>
               <input type="text" id="quickLogPlacar" class="form-input" placeholder="Ex: 2-1" />
             </div>
             <div class="form-group">
-              <label class="form-label">Confiabilidade</label>
+              <label class="form-label">🟢 Confiabilidade</label>
               <select id="quickLogConfiabilidade" class="form-input">
                 <option value="Alta">🟢 Alta</option>
                 <option value="Baixa">🔴 Baixa</option>
