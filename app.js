@@ -977,6 +977,23 @@ let tableRows = [];
 let currentPage = 1;
 const PAGE_SIZE = 10;
 
+function normalizeStr(str) {
+  return String(str || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+}
+
+window.triggerTableSearch = function() {
+  renderTable(filtered || allData, true);
+};
+
+window.clearTableSearch = function() {
+  const searchInput = document.getElementById('tableSearch');
+  if (searchInput) searchInput.value = '';
+  renderTable(filtered || allData, true);
+};
+
 function changePage(page) {
   currentPage = page;
   renderTable(tableRows, false);
@@ -984,14 +1001,79 @@ function changePage(page) {
 window.changePage = changePage;
 
 function renderTable(rows, resetPage = false) {
-  tableRows = rows;
+  const targetRows = (Array.isArray(rows)) ? rows : (filtered || allData || []);
+  tableRows = targetRows;
   if (resetPage) currentPage = 1;
 
   const tbody = document.getElementById('tableBody');
-  const search = (document.getElementById('tableSearch').value || '').toLowerCase();
-  const toRender = rows.filter(r =>
-    Object.values(r).some(v => String(v).toLowerCase().includes(search))
-  );
+  const searchInput = document.getElementById('tableSearch');
+  const searchRaw = (searchInput?.value || '').trim();
+  const searchNorm = normalizeStr(searchRaw);
+
+  const clearBtn = document.getElementById('btnClearTableSearch');
+  if (clearBtn) clearBtn.style.display = searchNorm ? 'block' : 'none';
+
+  const toRender = targetRows.filter(r => {
+    if (!searchNorm) return true;
+
+    // Field-specific syntax (e.g. "player:Danilo", "deck:Zoroark", "placar:1-0", "conf:baixa", "local:Online", "colecao:Pitch")
+    if (searchNorm.includes(':')) {
+      const parts = searchNorm.split(':');
+      const key = parts[0].trim();
+      const val = parts.slice(1).join(':').trim();
+
+      if (key === 'player' || key === 'jogador') {
+        return normalizeStr(r.Player).includes(val) || normalizeStr(r.Adversario).includes(val);
+      }
+      if (key === 'deck') {
+        return normalizeStr(r.Deck).includes(val) || normalizeStr(r.DeckAdv).includes(val);
+      }
+      if (key === 'placar') {
+        return normalizeStr(r.Placar).includes(val);
+      }
+      if (key === 'local') {
+        return normalizeStr(r.Local).includes(val);
+      }
+      if (key === 'colecao' || key === 'coleção') {
+        return normalizeStr(r.Colecao).includes(val);
+      }
+      if (key === 'conf' || key === 'confiabilidade') {
+        return normalizeStr(r.Confiabilidade).includes(val);
+      }
+      if (key === 'resultado') {
+        return normalizeStr(r.Resultado).includes(val);
+      }
+      if (key === 'start') {
+        return normalizeStr(r.Start).includes(val);
+      }
+      if (key === 'formato') {
+        return normalizeStr(r.Formato).includes(val);
+      }
+      if (key === 'brick') {
+        return normalizeStr(r.Brick).includes(val);
+      }
+    }
+
+    // Broad text search strictly across visible match fields
+    const visibleValues = [
+      r.Data,
+      r.Player,
+      r.Deck,
+      r.Adversario,
+      r.DeckAdv,
+      r.Formato,
+      r.Colecao,
+      r.Confiabilidade,
+      r.Start,
+      r.Placar,
+      r.Resultado,
+      r.Brick,
+      r.Local,
+      r.Comentarios
+    ].filter(Boolean).map(v => normalizeStr(v));
+
+    return visibleValues.some(v => v.includes(searchNorm));
+  });
 
   const reversed = [...toRender].reverse();
   const totalItems = reversed.length;
@@ -1640,10 +1722,33 @@ window.addEventListener('DOMContentLoaded', () => {
     if (e.target.files[0]) handleFile(e.target.files[0]);
   });
 
-  // Table search
-  document.getElementById('tableSearch').addEventListener('input', () => {
-    renderTable(filtered, true);
-  });
+  // Table search & search button listeners
+  const tableSearchEl = document.getElementById('tableSearch');
+  const btnTableSearch = document.getElementById('btnTableSearch');
+  const btnClearTableSearch = document.getElementById('btnClearTableSearch');
+
+  const triggerSearch = () => renderTable(filtered, true);
+
+  if (btnTableSearch) {
+    btnTableSearch.addEventListener('click', triggerSearch);
+  }
+  if (btnClearTableSearch && tableSearchEl) {
+    btnClearTableSearch.addEventListener('click', () => {
+      tableSearchEl.value = '';
+      triggerSearch();
+    });
+  }
+  if (tableSearchEl) {
+    tableSearchEl.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        triggerSearch();
+      }
+    });
+    ['input', 'keyup', 'change', 'search'].forEach(evt => {
+      tableSearchEl.addEventListener(evt, triggerSearch);
+    });
+  }
 
   // Drag & drop on body
   document.body.addEventListener('dragover', e => e.preventDefault());
