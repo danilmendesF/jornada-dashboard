@@ -1468,7 +1468,7 @@ tbody tr:last-child td { border-bottom: none; }
   left: 0;
   z-index: 12;
   background: #080d1a;
-  background-clip: padding-box;
+  background-clip: border-box;
   padding: .6rem 1rem;
   color: var(--accent2);
   font-family: 'Rajdhani', sans-serif;
@@ -1478,22 +1478,22 @@ tbody tr:last-child td { border-bottom: none; }
   font-weight: 600;
   white-space: nowrap;
   text-align: left;
-  border-bottom: 1px solid rgba(26,127,255,0.25);
-  border-right: 2px solid rgba(26,127,255,0.4);
+  border-bottom: 1px solid #152238;
+  border-right: 2px solid #1a3668;
   box-shadow: 4px 0 12px rgba(0,0,0,0.6);
   min-width: 140px;
 }
 .matrix-col-header {
   padding: .5rem .4rem;
   background: rgba(26,127,255,.06);
-  border-bottom: 1px solid rgba(26,127,255,0.25);
+  border-bottom: 1px solid #152238;
   border-right: 1px solid rgba(255,255,255,.04);
   text-align: center;
   min-width: 90px;
 }
 .matrix-col-header.total-col {
   background: rgba(26,127,255,.12);
-  border-left: 2px solid rgba(26,127,255,.25);
+  border-left: 2px solid #1a3668;
 }
 .col-label {
   font-size: .7rem;
@@ -1510,18 +1510,19 @@ tbody tr:last-child td { border-bottom: none; }
   left: 0;
   z-index: 10;
   background: #080d1a;
-  background-clip: padding-box;
+  background-clip: border-box;
   padding: .5rem 1rem;
   color: var(--text);
   font-weight: 600;
   font-size: .78rem;
   white-space: nowrap;
-  border-right: 2px solid rgba(26,127,255,0.4);
-  border-bottom: 1px solid rgba(26,127,255,0.15);
+  border-right: 2px solid #1a3668;
+  border-bottom: 1px solid #152238;
   box-shadow: 4px 0 12px rgba(0,0,0,0.6);
 }
 .matrix-row-header.active-header {
   background: #0d152c !important;
+  background-clip: border-box !important;
   color: var(--accent2) !important;
 }
 .matrix-cell {
@@ -1533,6 +1534,7 @@ tbody tr:last-child td { border-bottom: none; }
   transition: filter .15s, transform .1s;
   vertical-align: middle;
   min-width: 90px;
+  background-clip: padding-box;
 }
 .matrix-cell:hover { filter: brightness(1.2); transform: scale(1.04); z-index: 1; position: relative; }
 .matrix-cell.matrix-cell-active {
