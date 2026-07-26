@@ -154,7 +154,7 @@
             <div class="form-group">
               <div style="display:flex; justify-content:space-between; align-items:center;">
                 <label class="form-label">🃏 Meu Deck *</label>
-                <button type="button" class="icon-btn sm" id="btnQuickAddDeckOwn" style="font-size: .65rem; padding: 2px 6px;" title="Cadastrar novo deck">+</button>
+                <button type="button" class="btn-add-deck" id="btnQuickAddDeckOwn" title="Cadastrar novo deck">+</button>
               </div>
               <select id="quickLogDeck" class="form-input">
                 <option value="">Selecione…</option>
@@ -167,7 +167,7 @@
             <div class="form-group">
               <div style="display:flex; justify-content:space-between; align-items:center;">
                 <label class="form-label">🃏 Deck Oponente *</label>
-                <button type="button" class="icon-btn sm" id="btnQuickAddDeckAdv" style="font-size: .65rem; padding: 2px 6px;" title="Cadastrar novo deck">+</button>
+                <button type="button" class="btn-add-deck" id="btnQuickAddDeckAdv" title="Cadastrar novo deck">+</button>
               </div>
               <select id="quickLogDeckAdv" class="form-input">
                 <option value="">Selecione…</option>
@@ -180,8 +180,8 @@
             <div class="form-group">
               <label class="form-label">🏆 Formato *</label>
               <select id="quickLogFormato" class="form-input">
+                <option value="MD1" selected>MD1</option>
                 <option value="MD3">MD3</option>
-                <option value="MD1">MD1</option>
               </select>
             </div>
             <div class="form-group">
@@ -205,7 +205,10 @@
             </div>
             <div class="form-group">
               <label class="form-label">🎯 Placar *</label>
-              <input type="text" id="quickLogPlacar" class="form-input" placeholder="Ex: 2-1" />
+              <select id="quickLogPlacar" class="form-input">
+                <option value="1-0">1-0</option>
+                <option value="0-1">0-1</option>
+              </select>
             </div>
             <div class="form-group">
               <label class="form-label">🟢 Confiabilidade</label>
@@ -415,7 +418,14 @@
               <option value="">Todos os Decks</option>
             </select>
           </div>
+          <div class="filter-group">
+            <label class="filter-label">Ordenação WR</label>
+            <button type="button" class="btn-sort-toggle" id="btnMatchupSortToggle" onclick="toggleMatchupSortOrder()" title="Alternar ordenação por Win Rate (Maior WR / Menor WR / Alfabética)">
+              <span id="matchupSortIcon">⬇️</span> <span id="matchupSortLabel">Maior WR</span>
+            </button>
+          </div>
           <button class="btn-apply-matchup" id="btnApplyMatchup" onclick="applyMatchupFilter()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> APLICAR</button>
+          <button class="btn-reset-matchup" id="btnResetMatchupFilter" onclick="resetMatchupFilters()" title="Resetar todos os filtros de matchup"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> RESETAR</button>
         </div>
       </div>
 
@@ -458,23 +468,23 @@
       <div class="table-wrap">
         <table id="matchTable">
           <thead>
-            <tr>
-              <th>#</th>
-              <th>Data</th>
-              <th>Player</th>
-              <th>Deck</th>
-              <th>Adversário</th>
-              <th>Deck Adv.</th>
-              <th>Formato</th>
-              <th>Coleção</th>
-              <th>Conf.</th>
-              <th>Start</th>
-              <th>Placar</th>
-              <th>Resultado</th>
-              <th>Brick</th>
-              <th>Local</th>
-              <th>Listas</th>
-              <th>Ações</th>
+            <tr id="matchTableHeaderRow">
+              <th class="sortable-th" onclick="sortTableByColumn('id')" title="Ordenar por nº"># <span id="sort-icon-id"></span></th>
+              <th class="sortable-th" onclick="sortTableByColumn('Data')" title="Ordenar por data">Data <span id="sort-icon-Data"></span></th>
+              <th class="sortable-th" onclick="sortTableByColumn('Player')" title="Ordenar por player">Player <span id="sort-icon-Player"></span></th>
+              <th class="sortable-th" onclick="sortTableByColumn('Deck')" title="Ordenar por deck">Deck <span id="sort-icon-Deck"></span></th>
+              <th class="sortable-th" onclick="sortTableByColumn('Adversario')" title="Ordenar por adversário">Adversário <span id="sort-icon-Adversario"></span></th>
+              <th class="sortable-th" onclick="sortTableByColumn('DeckAdv')" title="Ordenar por deck oponente">Deck Adv. <span id="sort-icon-DeckAdv"></span></th>
+              <th class="sortable-th" onclick="sortTableByColumn('Formato')" title="Ordenar por formato">Formato <span id="sort-icon-Formato"></span></th>
+              <th class="sortable-th" onclick="sortTableByColumn('Colecao')" title="Ordenar por coleção">Coleção <span id="sort-icon-Colecao"></span></th>
+              <th class="sortable-th" onclick="sortTableByColumn('Confiabilidade')" title="Ordenar por confiabilidade">Conf. <span id="sort-icon-Confiabilidade"></span></th>
+              <th class="sortable-th" onclick="sortTableByColumn('Start')" title="Ordenar por quem começou">Start <span id="sort-icon-Start"></span></th>
+              <th class="sortable-th" onclick="sortTableByColumn('Placar')" title="Ordenar por placar">Placar <span id="sort-icon-Placar"></span></th>
+              <th class="sortable-th" onclick="sortTableByColumn('Resultado')" title="Ordenar por resultado">Resultado <span id="sort-icon-Resultado"></span></th>
+              <th class="sortable-th" onclick="sortTableByColumn('Brick')" title="Ordenar por brick">Brick <span id="sort-icon-Brick"></span></th>
+              <th class="sortable-th" onclick="sortTableByColumn('Local')" title="Ordenar por local">Local <span id="sort-icon-Local"></span></th>
+              <th style="cursor:default;" title="Lista de cartas (não ordenável)">Listas</th>
+              <th style="cursor:default;" title="Ações">Ações</th>
             </tr>
           </thead>
           <tbody id="tableBody"></tbody>
@@ -762,7 +772,10 @@ Total de cartas: 60"
             </select>
           </div>
           <div class="form-group">
-            <label class="form-label">Deck</label>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <label class="form-label">Meu Deck</label>
+              <button type="button" class="btn-add-deck" id="btnFormAddDeckOwn" title="Cadastrar novo deck">+</button>
+            </div>
             <select id="formMatchDeck" class="form-input">
               <option value="">Sem deck cadastrado</option>
             </select>
@@ -778,7 +791,7 @@ Total de cartas: 60"
           <div class="form-group">
             <div style="display:flex; justify-content:space-between; align-items:center;">
               <label class="form-label">Deck do Adversário</label>
-              <button type="button" class="icon-btn sm" id="btnFormAddDeckAdv" style="font-size: .65rem; padding: 2px 6px;" title="Cadastrar novo deck">+</button>
+              <button type="button" class="btn-add-deck" id="btnFormAddDeckAdv" title="Cadastrar novo deck">+</button>
             </div>
             <select id="formMatchDeckAdv" class="form-input">
               <option value="">Selecione…</option>
@@ -791,8 +804,8 @@ Total de cartas: 60"
           <div class="form-group">
             <label class="form-label">Formato</label>
             <select id="formMatchFormato" class="form-input">
+              <option value="MD1" selected>MD1</option>
               <option value="MD3">MD3</option>
-              <option value="MD1">MD1</option>
             </select>
           </div>
           <div class="form-group">
@@ -812,7 +825,10 @@ Total de cartas: 60"
           </div>
           <div class="form-group">
             <label class="form-label">Placar</label>
-            <input type="text" id="formMatchPlacar" class="form-input" placeholder="Ex: 2-1" />
+            <select id="formMatchPlacar" class="form-input">
+              <option value="1-0">1-0</option>
+              <option value="0-1">0-1</option>
+            </select>
           </div>
         </div>
 

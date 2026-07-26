@@ -18,10 +18,9 @@ const KEY_DELETED_LOCAIS  = 'jornada_deleted_locais';
 const KEY_DELETED_COLECOES = 'jornada_deleted_colecoes';
 const KEY_EDITS   = 'jornada_edited_matches';
 const KEY_ADMIN_PIN = 'jornada_admin_pin';
-const DEFAULT_MASTER_PIN = '7777';
 
-function getAdminPin() { return localStorage.getItem(KEY_ADMIN_PIN) || DEFAULT_MASTER_PIN; }
-function hasAdminPin() { return true; } // Always protected! Visitors in incognito/new devices can NEVER create or bypass password.
+function getAdminPin() { return localStorage.getItem(KEY_ADMIN_PIN) || ''; }
+function hasAdminPin() { return Boolean(getAdminPin()); }
 function isAdminUnlocked() { return sessionStorage.getItem('jornada_admin_unlocked') === 'true'; }
 
 let adminAuthMode = 'login';
@@ -99,9 +98,21 @@ function parsePTCGL(raw) {
 // ── DECK CARD COUNT ──────────────────────────────────────────────────────────
 function countCards(raw) { return parsePTCGL(raw).total; }
 
-// ── MODAL HELPERS ────────────────────────────────────────────────────────────
-function showModal(id)  { document.getElementById(id).classList.add('open'); }
-function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function showModal(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const openModals = document.querySelectorAll('.modal-overlay.open');
+  const baseZ = 400;
+  el.style.zIndex = baseZ + (openModals.length + 1) * 100;
+  el.classList.add('open');
+}
+
+function closeModal(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.classList.remove('open');
+  el.style.zIndex = '';
+}
 
 // ── POPULATE PLAYER SELECTS ──────────────────────────────────────────────────
 function populatePlayerSelects() {
@@ -420,10 +431,21 @@ document.addEventListener('DOMContentLoaded', () => {
       openEditDeck(currentViewingDeckId);
     }
   });
+
+  document.getElementById('btnFormAddDeckOwn')?.addEventListener('click', () => openDeckFormForTarget('formMatchDeck'));
+  document.getElementById('btnFormAddDeckAdv')?.addEventListener('click', () => openDeckFormForTarget('formMatchDeckAdv'));
+  document.getElementById('btnQuickAddDeckOwn')?.addEventListener('click', () => openDeckFormForTarget('quickLogDeck'));
+  document.getElementById('btnQuickAddDeckAdv')?.addEventListener('click', () => openDeckFormForTarget('quickLogDeckAdv'));
 });
 
 // ── ADD / EDIT DECK ──────────────────────────────────────────────────────────
 let editingDeckId = null;
+let deckSelectTargetId = null;
+
+window.openDeckFormForTarget = function(targetSelectId) {
+  deckSelectTargetId = targetSelectId;
+  openNewDeck();
+};
 
 window.openNewDeck = function() {
   editingDeckId = null;
@@ -492,9 +514,23 @@ function saveDeckForm() {
   saveDecks(decks);
   populateDeckSelects();
   renderDecksList();
+
+  // Auto-select newly created deck in target dropdown
+  if (deckSelectTargetId) {
+    const targetSelect = document.getElementById(deckSelectTargetId);
+    if (targetSelect) {
+      targetSelect.value = name;
+      if (targetSelect.syncSearchableSelect) targetSelect.syncSearchableSelect();
+    }
+    deckSelectTargetId = null;
+  }
+
   // Refresh app data if available
   if (typeof populateFilters === 'function') populateFilters();
   if (typeof applyFilters    === 'function') applyFilters();
+
+  closeModal('modalDeckForm');
+  showToast(`💾 Deck "${name}" salvo com sucesso!`);
 }
 
 // ── MATCH FORM ────────────────────────────────────────────────────────────────
@@ -538,10 +574,14 @@ function openMatchForm(matchData) {
   get('formMatchPlayer').value    = matchData?.Player   || '';
   get('formMatchAdv').value       = matchData?.Adversario || '';
   get('formMatchDeckAdv').value   = matchData?.DeckAdv  || '';
-  get('formMatchFormato').value   = matchData?.Formato  || 'MD3';
+  get('formMatchFormato').value   = matchData?.Formato  || 'MD1';
   get('formMatchStart').value     = matchData?.Start    || '1º';
   get('formMatchResultado').value = matchData?.Resultado|| 'Vitória';
-  get('formMatchPlacar').value    = matchData?.Placar   || '';
+  if (typeof updatePlacarDropdown === 'function') {
+    updatePlacarDropdown('formMatchFormato', 'formMatchPlacar', matchData?.Placar || null, matchData?.Resultado || null);
+  } else {
+    get('formMatchPlacar').value  = matchData?.Placar   || '';
+  }
   get('formMatchComentarios').value = matchData?.Comentarios || '';
 
   const colSel = get('formMatchColecao');
@@ -966,20 +1006,20 @@ function populateColecaoSelects() {
     if (quickSel.syncSearchableSelect) quickSel.syncSearchableSelect();
   }
 
-  // 3. Main Filter Coleção Select (#filterColecao) — apenas coleções cadastradas (sem "Todas")
+  // 3. Main Filter Coleção Select (#filterColecao)
   const filterSel = document.getElementById('filterColecao');
   if (filterSel) {
     const cur = filterSel.value;
-    filterSel.innerHTML = '';
+    filterSel.innerHTML = '<option value="">Todas as Coleções</option>';
     allColecoes.forEach(c => {
       const o = document.createElement('option');
       o.value = c; o.textContent = c;
       filterSel.appendChild(o);
     });
-    if (cur && allColecoes.includes(cur)) {
+    if (cur !== undefined && (cur === '' || allColecoes.includes(cur))) {
       filterSel.value = cur;
-    } else if (allColecoes.length > 0) {
-      filterSel.value = allColecoes[0];
+    } else {
+      filterSel.value = '';
     }
     if (filterSel.syncSearchableSelect) filterSel.syncSearchableSelect();
   }
@@ -1012,18 +1052,63 @@ function populateQuickLogDropdowns() {
 
   populateLocalSelects();
   populateColecaoSelects();
+  updatePlacarDropdown('quickLogFormato', 'quickLogPlacar');
+  updatePlacarDropdown('formMatchFormato', 'formMatchPlacar');
 }
+
+const PLACAR_OPTIONS = {
+  MD1: ['1-0', '0-1'],
+  MD3: ['2-0', '2-1', '1-1', '1-0', '0-0', '0-1', '1-2', '0-2']
+};
+
+window.updatePlacarDropdown = function(formatoId, placarId, currentVal = null, outcome = null) {
+  const formatoEl = document.getElementById(formatoId);
+  const placarEl  = document.getElementById(placarId);
+  if (!formatoEl || !placarEl) return;
+
+  const fmt = formatoEl.value || 'MD1';
+  const options = PLACAR_OPTIONS[fmt] || PLACAR_OPTIONS.MD1;
+
+  let selectedVal = currentVal || placarEl.value;
+
+  if (outcome) {
+    if (fmt === 'MD1') {
+      selectedVal = (outcome === 'Vitória') ? '1-0' : (outcome === 'Derrota') ? '0-1' : '1-0';
+    } else {
+      selectedVal = (outcome === 'Vitória') ? '2-0' : (outcome === 'Empate') ? '1-1' : '0-2';
+    }
+  }
+
+  placarEl.innerHTML = '';
+  options.forEach(opt => {
+    const o = document.createElement('option');
+    o.value = opt;
+    o.textContent = opt;
+    placarEl.appendChild(o);
+  });
+
+  if (selectedVal && options.includes(selectedVal)) {
+    placarEl.value = selectedVal;
+  } else {
+    placarEl.value = options[0];
+  }
+
+  if (placarEl.syncSearchableSelect) placarEl.syncSearchableSelect();
+};
 
 window.quickLogMatch = function(resultado) {
   const player   = document.getElementById('quickLogPlayer')?.value;
   const deckName = document.getElementById('quickLogDeck')?.value;
   const advName  = document.getElementById('quickLogAdvName')?.value.trim() || 'Oponente';
   const deckAdv  = document.getElementById('quickLogDeckAdv')?.value;
-  const formato  = document.getElementById('quickLogFormato')?.value || 'MD3';
+  const formato  = document.getElementById('quickLogFormato')?.value || 'MD1';
   const startVal = document.getElementById('quickLogStart')?.value || '1º';
   const colecao  = document.getElementById('quickLogColecao')?.value;
   const local    = document.getElementById('quickLogLocal')?.value;
-  const placarInput = document.getElementById('quickLogPlacar')?.value.trim();
+
+  // Auto-select smart placar based on resultado and formato
+  updatePlacarDropdown('quickLogFormato', 'quickLogPlacar', null, resultado);
+  const placarInput = document.getElementById('quickLogPlacar')?.value || (formato === 'MD1' ? '1-0' : '2-0');
 
   if (!player)   { showToast('⚠️ Selecione seu player.'); return; }
   if (!deckName) { showToast('⚠️ Selecione seu deck.'); return; }
@@ -1586,10 +1671,28 @@ window.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btnQuickDraw')?.addEventListener('click', () => quickLogMatch('Empate'));
   document.getElementById('btnQuickLoss')?.addEventListener('click', () => quickLogMatch('Derrota'));
 
+  // Event: Formato & Placar dropdown sync
+  document.getElementById('quickLogFormato')?.addEventListener('change', () => {
+    updatePlacarDropdown('quickLogFormato', 'quickLogPlacar');
+  });
+
+  document.getElementById('formMatchFormato')?.addEventListener('change', () => {
+    updatePlacarDropdown('formMatchFormato', 'formMatchPlacar', null, document.getElementById('formMatchResultado')?.value);
+  });
+
+  document.getElementById('formMatchResultado')?.addEventListener('change', () => {
+    updatePlacarDropdown('formMatchFormato', 'formMatchPlacar', null, document.getElementById('formMatchResultado')?.value);
+  });
+
+  // Initial placar sync
+  updatePlacarDropdown('quickLogFormato', 'quickLogPlacar');
+  updatePlacarDropdown('formMatchFormato', 'formMatchPlacar');
+
   // Event: quick add deck from dropdowns
-  document.getElementById('btnQuickAddDeckOwn')?.addEventListener('click', () => openNewDeck());
-  document.getElementById('btnQuickAddDeckAdv')?.addEventListener('click', () => openNewDeck());
-  document.getElementById('btnFormAddDeckAdv')?.addEventListener('click', () => openNewDeck());
+  document.getElementById('btnQuickAddDeckOwn')?.addEventListener('click', () => openDeckFormForTarget('quickLogDeck'));
+  document.getElementById('btnQuickAddDeckAdv')?.addEventListener('click', () => openDeckFormForTarget('quickLogDeckAdv'));
+  document.getElementById('btnFormAddDeckOwn')?.addEventListener('click', () => openDeckFormForTarget('formMatchDeck'));
+  document.getElementById('btnFormAddDeckAdv')?.addEventListener('click', () => openDeckFormForTarget('formMatchDeckAdv'));
 
   // Modal close buttons
   document.querySelectorAll('[data-close-modal]').forEach(btn => {
@@ -1766,7 +1869,7 @@ async function submitAdminAuth() {
     }
   }
 
-  if (val === storedPin || val === DEFAULT_MASTER_PIN) {
+  if (val === storedPin) {
     if (remember) {
       sessionStorage.setItem('jornada_admin_unlocked', 'true');
     }
@@ -1841,9 +1944,14 @@ window.importBackup = function(file) {
         players = data.players || [];
         locais  = data.locais || [];
 
-        if (typeof initializeData === 'function') initializeData();
-        if (typeof populateFilters === 'function') populateFilters();
-        if (typeof applyFilters === 'function') applyFilters();
+        if (typeof resetAllFilters === 'function') resetAllFilters();
+        else {
+          if (typeof isExplicitPlayerSelection !== 'undefined') isExplicitPlayerSelection = false;
+          if (typeof isExplicitSelection !== 'undefined') isExplicitSelection = false;
+          if (typeof initializeData === 'function') initializeData();
+          if (typeof populateFilters === 'function') populateFilters();
+          if (typeof applyFilters === 'function') applyFilters();
+        }
         if (typeof populatePlayerSelects === 'function') populatePlayerSelects();
         if (typeof populateDeckSelects === 'function') populateDeckSelects();
         if (typeof populateLocalSelects === 'function') populateLocalSelects();

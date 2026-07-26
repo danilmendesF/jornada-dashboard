@@ -984,15 +984,41 @@ function normalizeStr(str) {
     .replace(/[\u0300-\u036f]/g, '');
 }
 
-window.triggerTableSearch = function() {
+window.tableWRSortState = 'none'; // 'none', 'desc', 'asc'
+
+window.toggleTableWRSort = function() {
+  if (window.tableWRSortState === 'none') {
+    window.tableWRSortState = 'desc';
+  } else if (window.tableWRSortState === 'desc') {
+    window.tableWRSortState = 'asc';
+  } else {
+    window.tableWRSortState = 'none';
+  }
+  updateTableSortButtonUI();
   renderTable(filtered || allData, true);
 };
 
-window.clearTableSearch = function() {
-  const searchInput = document.getElementById('tableSearch');
-  if (searchInput) searchInput.value = '';
-  renderTable(filtered || allData, true);
-};
+function updateTableSortButtonUI() {
+  const icon = document.getElementById('tableSortWRIcon');
+  const label = document.getElementById('tableSortWRLabel');
+  const btn = document.getElementById('btnTableSortWR');
+  if (btn) {
+    if (window.tableWRSortState !== 'none') btn.classList.add('active');
+    else btn.classList.remove('active');
+  }
+  if (icon && label) {
+    if (window.tableWRSortState === 'desc') {
+      icon.textContent = '⬇️';
+      label.textContent = 'Maior WR';
+    } else if (window.tableWRSortState === 'asc') {
+      icon.textContent = '⬆️';
+      label.textContent = 'Menor WR';
+    } else {
+      icon.textContent = '📊';
+      label.textContent = 'Ordenação WR';
+    }
+  }
+}
 
 function changePage(page) {
   currentPage = page;
@@ -1009,6 +1035,44 @@ function renderTable(rows, resetPage = false) {
   const searchInput = document.getElementById('tableSearch');
   const searchRaw = (searchInput?.value || '').trim();
   const searchNorm = normalizeStr(searchRaw);
+
+  window.tableSortState = window.tableSortState || { column: 'id', dir: 'desc' };
+
+window.sortTableByColumn = function(colKey) {
+  if (colKey === 'listas' || colKey === 'acoes') return;
+
+  if (window.tableSortState.column === colKey) {
+    window.tableSortState.dir = (window.tableSortState.dir === 'asc') ? 'desc' : 'asc';
+  } else {
+    window.tableSortState.column = colKey;
+    if (colKey === 'id' || colKey === 'Data' || colKey === 'Placar') {
+      window.tableSortState.dir = 'desc';
+    } else {
+      window.tableSortState.dir = 'asc';
+    }
+  }
+
+  renderTable();
+};
+
+function updateTableHeaderSortUI() {
+  const allSortCols = ['id','Data','Player','Deck','Adversario','DeckAdv','Formato','Colecao','Confiabilidade','Start','Placar','Resultado','Brick','Local'];
+  const { column, dir } = window.tableSortState || { column: 'id', dir: 'desc' };
+
+  allSortCols.forEach(col => {
+    const el = document.getElementById(`sort-icon-${col}`);
+    const th = el?.closest('th');
+    if (el) {
+      if (col === column) {
+        el.textContent = dir === 'asc' ? ' ▲' : ' ▼';
+        if (th) th.classList.add('active-sort');
+      } else {
+        el.textContent = '';
+        if (th) th.classList.remove('active-sort');
+      }
+    }
+  });
+}
 
   const clearBtn = document.getElementById('btnClearTableSearch');
   if (clearBtn) clearBtn.style.display = searchNorm ? 'block' : 'none';
@@ -1075,8 +1139,89 @@ function renderTable(rows, resetPage = false) {
     return visibleValues.some(v => v.includes(searchNorm));
   });
 
-  const reversed = [...toRender].reverse();
-  const totalItems = reversed.length;
+  // Sort rows based on window.tableSortState
+  let sorted = [...toRender];
+  const { column, dir } = window.tableSortState || { column: 'id', dir: 'desc' };
+  const multiplier = (dir === 'asc') ? 1 : -1;
+
+  sorted.sort((a, b) => {
+    let valA, valB;
+
+    switch(column) {
+      case 'id':
+        valA = Number(a.id) || 0;
+        valB = Number(b.id) || 0;
+        break;
+      case 'Data':
+        valA = a.Data || '';
+        valB = b.Data || '';
+        break;
+      case 'Player':
+        valA = a.Player || '';
+        valB = b.Player || '';
+        break;
+      case 'Deck':
+        valA = a.Deck || '';
+        valB = b.Deck || '';
+        break;
+      case 'Adversario':
+        valA = a.Adversario || '';
+        valB = b.Adversario || '';
+        break;
+      case 'DeckAdv':
+        valA = a.DeckAdv || '';
+        valB = b.DeckAdv || '';
+        break;
+      case 'Formato':
+        valA = a.Formato || '';
+        valB = b.Formato || '';
+        break;
+      case 'Colecao':
+        valA = a.Colecao || '';
+        valB = b.Colecao || '';
+        break;
+      case 'Confiabilidade':
+        valA = (a.Confiabilidade || 'Alta').toLowerCase() === 'alta' ? 1 : 0;
+        valB = (b.Confiabilidade || 'Alta').toLowerCase() === 'alta' ? 1 : 0;
+        break;
+      case 'Start':
+        valA = a.Start || '';
+        valB = b.Start || '';
+        break;
+      case 'Placar':
+        valA = a.Placar || '';
+        valB = b.Placar || '';
+        break;
+      case 'Resultado':
+        const rank = r => r === 'Vitória' ? 2 : r === 'Empate' ? 1 : 0;
+        valA = rank(a.Resultado);
+        valB = rank(b.Resultado);
+        break;
+      case 'Brick':
+        valA = (a.Brick === 'Sim' || (a.Brick && a.Brick !== 'Nenhum' && a.Brick !== 'Não')) ? 1 : 0;
+        valB = (b.Brick === 'Sim' || (b.Brick && b.Brick !== 'Nenhum' && b.Brick !== 'Não')) ? 1 : 0;
+        break;
+      case 'Local':
+        valA = a.Local || '';
+        valB = b.Local || '';
+        break;
+      default:
+        valA = Number(a.id) || 0;
+        valB = Number(b.id) || 0;
+    }
+
+    if (typeof valA === 'string') {
+      return valA.localeCompare(valB, 'pt-BR', { numeric: true }) * multiplier;
+    }
+    if (valA !== valB) {
+      return (valA < valB ? -1 : 1) * multiplier;
+    }
+    return (Number(b.id) || 0) - (Number(a.id) || 0);
+  });
+
+  updateTableHeaderSortUI();
+
+  const totalItems = sorted.length;
   const totalPages = Math.max(1, Math.ceil(totalItems / PAGE_SIZE));
 
   if (currentPage > totalPages) currentPage = totalPages;
@@ -1084,7 +1229,7 @@ function renderTable(rows, resetPage = false) {
 
   const startIdx = (currentPage - 1) * PAGE_SIZE;
   const endIdx = Math.min(startIdx + PAGE_SIZE, totalItems);
-  const pagedRows = reversed.slice(startIdx, endIdx);
+  const pagedRows = sorted.slice(startIdx, endIdx);
 
   if (pagedRows.length === 0) {
     tbody.innerHTML = `<tr><td colspan="16" style="text-align:center;padding:2rem;color:var(--text2)">Nenhuma partida encontrada</td></tr>`;
@@ -1324,19 +1469,258 @@ function populateMatchupDeckSelects() {
   if (selOpp.syncSearchableSelect) selOpp.syncSearchableSelect();
 }
 
+window.matchupSortState = 'desc'; // Default: 'desc' (Maior WR primeiro), 'asc' (Menor WR primeiro), 'name' (Alfabética)
+
+window.toggleMatchupSortOrder = function() {
+  if (window.matchupSortState === 'desc') {
+    window.matchupSortState = 'asc';
+  } else if (window.matchupSortState === 'asc') {
+    window.matchupSortState = 'name';
+  } else {
+    window.matchupSortState = 'desc';
+  }
+  updateMatchupSortButtonUI();
+  renderMatchup();
+};
+
+function updateMatchupSortButtonUI() {
+  const icon = document.getElementById('matchupSortIcon');
+  const label = document.getElementById('matchupSortLabel');
+  const btn = document.getElementById('btnMatchupSortToggle');
+  if (btn) {
+    if (window.matchupSortState !== 'desc') btn.classList.add('active');
+    else btn.classList.remove('active');
+  }
+  if (icon && label) {
+    if (window.matchupSortState === 'desc') {
+      icon.textContent = '⬇️';
+      label.textContent = 'Maior WR';
+    } else if (window.matchupSortState === 'asc') {
+      icon.textContent = '⬆️';
+      label.textContent = 'Menor WR';
+    } else {
+      icon.textContent = '🔤';
+      label.textContent = 'Alfabética';
+    }
+  }
+}
+
+window.resetMatchupFilters = function() {
+  const selPlayer = document.getElementById('matchupPlayer');
+  const selMy     = document.getElementById('matchupSelectMyDeck');
+  const selOpp    = document.getElementById('matchupSelectOppDeck');
+
+  if (selPlayer) { selPlayer.value = ''; if (selPlayer.syncSearchableSelect) selPlayer.syncSearchableSelect(); }
+  if (selMy)     { selMy.value = '';     if (selMy.syncSearchableSelect) selMy.syncSearchableSelect(); }
+  if (selOpp)    { selOpp.value = '';    if (selOpp.syncSearchableSelect) selOpp.syncSearchableSelect(); }
+
+  window.matchupSortState = 'desc';
+  updateMatchupSortButtonUI();
+
+  window.activeDeckSort = { deck: null, mode: 'desc' };
+
+  const detailEl = document.getElementById('matchupDetail');
+  if (detailEl) detailEl.style.display = 'none';
+
+  renderMatchup();
+
+  if (typeof showToast === 'function') showToast('🔄 Filtros da Matriz de Matchups resetados!');
+};
+
+window.activeDeckSort = { deck: null, mode: 'desc' };
+
+window.toggleDeckRowSort = function(deckName) {
+  if (window.activeDeckSort.deck === deckName) {
+    if (window.activeDeckSort.mode === 'desc') {
+      window.activeDeckSort.mode = 'asc';
+    } else {
+      window.activeDeckSort.mode = 'desc';
+    }
+  } else {
+    window.activeDeckSort.deck = deckName;
+    window.activeDeckSort.mode = 'desc';
+  }
+
+  const selMy = document.getElementById('matchupSelectMyDeck');
+  if (selMy) {
+    selMy.value = deckName;
+    if (selMy.syncSearchableSelect) selMy.syncSearchableSelect();
+  }
+
+  renderMatchup();
+  showDeckMatchupOverview(deckName, window.activeDeckSort.mode);
+};
+
+window.showDeckMatchupOverview = function(myDeck, mode = 'desc') {
+  const detailEl = document.getElementById('matchupDetail');
+  const titleEl  = document.getElementById('detailTitle');
+  const bodyEl   = document.getElementById('detailBody');
+  if (!detailEl || !titleEl || !bodyEl) return;
+
+  const selectedPlayer = document.getElementById('matchupPlayer')?.value || '';
+  let dataset = getMatchupBaseDataset().filter(m => m.Deck === myDeck);
+  if (selectedPlayer) dataset = dataset.filter(m => m.Player === selectedPlayer);
+
+  if (dataset.length === 0) {
+    detailEl.style.display = 'none';
+    return;
+  }
+
+  const byOpp = groupBy(dataset, 'DeckAdv');
+  const oppSummaries = Object.keys(byOpp).map(opp => {
+    const mList = byOpp[opp];
+    const total = mList.length;
+    const wins = mList.filter(m => m.Resultado === 'Vitória').length;
+    const draws = mList.filter(m => m.Resultado === 'Empate').length;
+    const losses = mList.filter(m => m.Resultado === 'Derrota').length;
+    const wr = Math.round((wins / total) * 100);
+    return { opp, total, wins, draws, losses, wr, matches: mList };
+  });
+
+  // Sort opponent matchups by WR based on mode
+  oppSummaries.sort((a, b) => {
+    if (mode === 'desc') {
+      if (b.wr !== a.wr) return b.wr - a.wr;
+      return b.total - a.total;
+    } else {
+      if (a.wr !== b.wr) return a.wr - b.wr;
+      return a.total - b.total;
+    }
+  });
+
+  const overallWins = dataset.filter(m => m.Resultado === 'Vitória').length;
+  const overallTotal = dataset.length;
+  const overallWR = Math.round((overallWins / overallTotal) * 100);
+  const modeBadge = mode === 'desc' ? '⬇️ Maior Win Rate Contra' : '⬆️ Menor Win Rate Contra';
+
+  const safeDeckName = myDeck.replace(/'/g, "\\'");
+  titleEl.innerHTML = `🃏 ${myDeck} &middot; <span style="font-size:0.85rem;color:var(--accent2);">${modeBadge}</span> <span style="font-size:0.8rem;color:var(--text2);margin-left:0.5rem">(${overallWR}% WR Geral &middot; ${overallTotal} partidas)</span>`;
+
+  let html = `
+    <div style="margin-bottom:1rem;display:flex;gap:0.6rem;align-items:center;flex-wrap:wrap;background:var(--bg3);padding:0.65rem 0.85rem;border-radius:var(--radius-sm);border:1px solid var(--glass-bd);width:100%;box-sizing:border-box;">
+      <span style="font-size:0.78rem;color:var(--text2);font-weight:600;">Ordenação dos confrontos:</span>
+      <button class="btn-deck-sort-toggle" onclick="toggleDeckRowSort('${safeDeckName}')" title="Clique para alternar ordem de Win Rate">
+        <span>${mode === 'desc' ? '⬇️ MAIOR WIN RATE PRIMEIRO' : '⬆️ MENOR WIN RATE PRIMEIRO'}</span>
+        <span style="opacity:0.7;font-size:0.7rem;font-weight:400;">(clique p/ alternar)</span>
+      </button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:1rem;">
+  `;
+
+  oppSummaries.forEach(s => {
+    const wrBorder = wrColor(s.wr, 0.6);
+    const badgeClass = s.wr >= 60 ? 'badge-win' : s.wr >= 40 ? 'badge-draw' : 'badge-loss';
+    const matchText = s.total === 1 ? '1 partida' : `${s.total} partidas`;
+
+    html += `
+      <div style="background:var(--bg3);border:1px solid ${wrBorder};border-radius:var(--radius-sm);padding:0.85rem;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.65rem;flex-wrap:wrap;gap:0.5rem;background:rgba(0,0,0,0.25);padding:0.5rem 0.75rem;border-radius:var(--radius-sm);">
+          <strong style="font-size:0.95rem;color:var(--text)">vs ${s.opp}</strong>
+          <span class="badge ${badgeClass}" style="font-size:0.82rem;padding:4px 10px;font-weight:700;">
+            ${s.wr}% WR &middot; ${s.wins}V - ${s.draws}E - ${s.losses}D (${matchText})
+          </span>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="matrix-table" style="width:100%;font-size:0.78rem;">
+            <thead>
+              <tr>
+                <th>Data</th>
+                <th>Player</th>
+                <th>Adversário</th>
+                <th>Formato</th>
+                <th>Coleção</th>
+                <th>Conf.</th>
+                <th>Placar</th>
+                <th>Resultado</th>
+                <th>Local</th>
+                <th>Brick</th>
+                <th>Listas</th>
+              </tr>
+            </thead>
+            <tbody>
+    `;
+
+    s.matches.forEach(m => {
+      const mBadgeClass = m.Resultado === 'Vitória' ? 'badge-win' : m.Resultado === 'Empate' ? 'badge-draw' : 'badge-loss';
+      const mEmoji = m.Resultado === 'Vitória' ? '✅' : m.Resultado === 'Empate' ? '🤝' : '❌';
+      const brickVal = (m.Brick === 'Sim' || (m.Brick && m.Brick !== 'Nenhum' && m.Brick !== 'Não')) ? '💥 Sim' : '✅ Não';
+      const confVal = (m.Confiabilidade === 'Baixa') ? 'Baixa' : 'Alta';
+      const confBadge = confVal === 'Baixa' ? '🔴 Baixa' : '🟢 Alta';
+
+      let myBtn = m.Deck ? `<button class="list-peek-btn" onclick="openMatchDeckList('${m.id}', 'own')" title="Ver/Editar lista">Meu</button>` : '';
+      let oppBtn = (m.DeckAdv && m.DeckAdv !== '—') ? `<button class="list-peek-btn opp-btn" onclick="openMatchDeckList('${m.id}', 'adv')" title="Ver/Editar lista">Opo</button>` : '';
+      const listasCol = (myBtn || oppBtn) ? `<div style="display:flex;gap:4px;justify-content:center">${myBtn}${oppBtn}</div>` : '—';
+
+      html += `<tr>
+        <td>${m.Data || '—'}</td>
+        <td><strong>${m.Player || '—'}</strong></td>
+        <td>${m.Adversario || '—'}</td>
+        <td>${m.Formato || '—'}</td>
+        <td><span style="color:var(--accent2);font-weight:600">${m.Colecao || '—'}</span></td>
+        <td>${confBadge}</td>
+        <td>${m.Placar || '—'}</td>
+        <td><span class="badge ${mBadgeClass}">${mEmoji} ${m.Resultado}</span></td>
+        <td>${m.Local || '—'}</td>
+        <td>${brickVal}</td>
+        <td>${listasCol}</td>
+      </tr>`;
+    });
+
+    html += `</tbody></table></div></div>`;
+  });
+
+  html += `</div>`;
+  bodyEl.innerHTML = html;
+  detailEl.style.display = 'block';
+
+  detailEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+};
+
 function renderMatchupMatrix(matchupData, myDecks, oppDecks) {
   const container = document.getElementById('matchupMatrix');
   if (!container) return;
 
   const selMy  = document.getElementById('matchupSelectMyDeck')?.value || '';
   const selOpp = document.getElementById('matchupSelectOppDeck')?.value || '';
+  const sortOrder = window.matchupSortState || 'desc';
 
   if (myDecks.length === 0) {
     container.innerHTML = '<div class="empty-state"><div class="empty-icon">⚔️</div><p>Sem dados de matchup suficientes.</p></div>';
     return;
   }
 
-  // Build grid: rows = myDeck, cols = oppDeck
+  // Calculate stats per row for sorting
+  const rowStats = myDecks.map(myDeck => {
+    let rowWins = 0, rowTotal = 0;
+    oppDecks.forEach(opp => {
+      const entry = matchupData[`${myDeck}|||${opp}`];
+      if (entry && entry.total > 0) {
+        rowWins  += entry.wins;
+        rowTotal += entry.total;
+      }
+    });
+    const wr = rowTotal > 0 ? (rowWins / rowTotal) * 100 : -1;
+    return { myDeck, rowWins, rowTotal, wr };
+  });
+
+  // Sort rowStats by WR
+  rowStats.sort((a, b) => {
+    if (sortOrder === 'desc') {
+      if (b.wr !== a.wr) return b.wr - a.wr;
+      if (b.rowTotal !== a.rowTotal) return b.rowTotal - a.rowTotal;
+      return a.myDeck.localeCompare(b.myDeck);
+    } else if (sortOrder === 'asc') {
+      if (a.wr === -1 && b.wr !== -1) return 1;
+      if (b.wr === -1 && a.wr !== -1) return -1;
+      if (a.wr !== b.wr) return a.wr - b.wr;
+      if (a.rowTotal !== b.rowTotal) return a.rowTotal - b.rowTotal;
+      return a.myDeck.localeCompare(b.myDeck);
+    } else {
+      return a.myDeck.localeCompare(b.myDeck);
+    }
+  });
+
+  // Build grid: rows = rowStats, cols = oppDecks
   let html = '<table class="matrix-table">';
 
   // Header row
@@ -1349,10 +1733,20 @@ function renderMatchupMatrix(matchupData, myDecks, oppDecks) {
 
   // Data rows
   html += '<tbody>';
-  myDecks.forEach(myDeck => {
-    let rowWins = 0, rowTotal = 0;
+  rowStats.forEach(({ myDeck, rowWins, rowTotal, wr }) => {
     const isRowActive = selMy === myDeck;
-    html += `<tr><td class="matrix-row-header ${isRowActive ? 'active-header' : ''}">${myDeck}</td>`;
+    const isDeckSortActive = window.activeDeckSort.deck === myDeck;
+    const sortBadge = isDeckSortActive ? (window.activeDeckSort.mode === 'desc' ? ' ⬇️' : ' ⬆️') : '';
+    const clickTitle = isDeckSortActive
+      ? (window.activeDeckSort.mode === 'desc' ? 'Clique para ver Menor Win Rate vs outros decks' : 'Clique para ver Maior Win Rate vs outros decks')
+      : 'Clique para ordenar confrontos por Maior/Menor Win Rate';
+
+    const safeDeckName = myDeck.replace(/'/g, "\\'");
+    html += `<tr><td class="matrix-row-header ${isRowActive || isDeckSortActive ? 'active-header' : ''}" 
+      onclick="toggleDeckRowSort('${safeDeckName}')" 
+      title="${clickTitle}">
+      ${myDeck}${sortBadge}
+    </td>`;
 
     oppDecks.forEach(opp => {
       const key = `${myDeck}|||${opp}`;
@@ -1363,23 +1757,21 @@ function renderMatchupMatrix(matchupData, myDecks, oppDecks) {
       if (!entry || entry.total === 0) {
         html += `<td class="matrix-cell empty${activeClass}" title="Sem dados">—</td>`;
       } else {
-        const wr = Math.round((entry.wins / entry.total) * 100);
-        const bg = wrColor(wr, 0.75);
-        const textColor = (wr >= 40 && wr <= 60) ? '#fff' : (wr > 60 ? '#0b1a0f' : '#1a0b0b');
-        rowWins  += entry.wins;
-        rowTotal += entry.total;
+        const wrVal = Math.round((entry.wins / entry.total) * 100);
+        const bg = wrColor(wrVal, 0.75);
+        const textColor = (wrVal >= 40 && wrVal <= 60) ? '#fff' : (wrVal > 60 ? '#0b1a0f' : '#1a0b0b');
         html += `<td class="matrix-cell${activeClass}" 
           style="background:${bg}; color:${textColor}"
           onclick="showMatchupDetail('${myDeck}', '${opp}')"
-          title="${myDeck} vs ${opp}: ${wr}% (${entry.wins}V-${entry.draws}E-${entry.losses}D / ${entry.total} jogos)">
-          <span class="cell-pct">${wr}%</span>
+          title="${myDeck} vs ${opp}: ${wrVal}% (${entry.wins}V-${entry.draws}E-${entry.losses}D / ${entry.total} jogos)">
+          <span class="cell-pct">${wrVal}%</span>
           <span class="cell-record">${entry.wins}-${entry.draws}-${entry.losses}</span>
         </td>`;
       }
     });
 
     // Row total
-    const rowWR = rowTotal ? Math.round((rowWins / rowTotal) * 100) : null;
+    const rowWR = wr >= 0 ? Math.round(wr) : null;
     const rowBg = wrColor(rowWR, 0.5);
     html += `<td class="matrix-cell total-col" style="background:${rowBg}">${rowWR !== null ? rowWR + '%' : '—'}<br><span class="cell-record">${rowTotal}j</span></td>`;
 
@@ -1677,10 +2069,10 @@ window.resetAllFilters = function() {
     }
   });
 
-  // Reset Coleção: seleciona a primeira coleção cadastrada (sem a opção "Todas")
+  // Reset Coleção: seleciona "Todas as Coleções"
   const colEl = document.getElementById('filterColecao');
-  if (colEl && colEl.options.length > 0) {
-    colEl.selectedIndex = 0;
+  if (colEl) {
+    colEl.value = '';
     if (colEl.syncSearchableSelect) colEl.syncSearchableSelect();
   }
 
