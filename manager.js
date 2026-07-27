@@ -2060,5 +2060,184 @@ window.importBackup = function(file) {
   reader.readAsText(file);
 };
 
+// ── AUTOMATED DAILY BACKUP SYSTEM ────────────────────────────────────────────
+const KEY_AUTO_BACKUPS = 'jornada_auto_backups';
+const KEY_LAST_AUTO_BACKUP_DATE = 'jornada_last_auto_backup_date';
+
+function checkAndRunDailyAutoBackup(force = false) {
+  try {
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const lastBackupDate = localStorage.getItem(KEY_LAST_AUTO_BACKUP_DATE);
+
+    if (!force && lastBackupDate === todayStr) {
+      renderAutoBackupsList();
+      return;
+    }
+
+    const payload = {
+      decks: loadDecks(),
+      manualMatches: loadManual(),
+      players: loadPlayers(),
+      locais: loadLocais(),
+      colecoes: loadColecoes(),
+      deletedIds: [...loadDeleted()],
+      deletedDecks: [...loadDeletedDecks()],
+      deletedPlayers: [...loadDeletedPlayers()],
+      deletedLocais: [...loadDeletedLocais()],
+      deletedColecoes: [...loadDeletedColecoes()],
+      editedMatches: loadEdits(),
+      adminPin: getAdminPin()
+    };
+
+    const matchesCount = (typeof allData !== 'undefined' && Array.isArray(allData)) ? allData.length : payload.manualMatches.length;
+
+    const snapshot = {
+      id: 'auto_' + todayStr + '_' + Date.now(),
+      date: todayStr,
+      timestamp: new Date().toISOString(),
+      type: force ? 'manual_snapshot' : 'auto_daily',
+      decksCount: payload.decks.length,
+      matchesCount: matchesCount,
+      payload
+    };
+
+    let backupsList = [];
+    try {
+      backupsList = JSON.parse(localStorage.getItem(KEY_AUTO_BACKUPS)) || [];
+    } catch (e) {
+      backupsList = [];
+    }
+
+    // Keep unique daily snapshots for last 7 days
+    backupsList = backupsList.filter(b => b.date !== todayStr || force);
+    backupsList.unshift(snapshot);
+    if (backupsList.length > 7) backupsList = backupsList.slice(0, 7);
+
+    safeSetItem(KEY_AUTO_BACKUPS, JSON.stringify(backupsList));
+    safeSetItem(KEY_LAST_AUTO_BACKUP_DATE, todayStr);
+
+    console.log(`💾 Backup Diário Automático (${todayStr}): Criado snapshot com ${snapshot.matchesCount} partidas e ${snapshot.decksCount} decks.`);
+    if (force && typeof showToast === 'function') {
+      showToast(`💾 Snapshot de backup salvo! (${todayStr})`);
+    }
+    renderAutoBackupsList();
+  } catch (err) {
+    console.error('❌ Erro no Backup Diário Automático:', err);
+  }
+}
+
+window.renderAutoBackupsList = function() {
+  const container = document.getElementById('autoBackupsList');
+  if (!container) return;
+
+  let backupsList = [];
+  try {
+    backupsList = JSON.parse(localStorage.getItem(KEY_AUTO_BACKUPS)) || [];
+  } catch (e) {
+    backupsList = [];
+  }
+
+  if (backupsList.length === 0) {
+    container.innerHTML = '<p style="font-size:0.78rem;color:var(--text2);text-align:center;padding:0.75rem;">Nenhum snapshot automático gerado ainda.</p>';
+    return;
+  }
+
+  container.innerHTML = backupsList.map(b => {
+    const formattedDate = new Date(b.timestamp).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    const isToday = b.date === new Date().toISOString().slice(0, 10);
+    return `
+      <div style="display:flex;align-items:center;justify-content:space-between;background:var(--bg3);padding:0.6rem 0.75rem;border-radius:var(--radius-sm);border:1px solid var(--glass-bd);margin-bottom:0.5rem;font-size:0.78rem;">
+        <div>
+          <div style="font-weight:600;color:var(--text);display:flex;align-items:center;gap:0.35rem;">
+            📅 ${b.date} ${isToday ? '<span style="font-size:0.65rem;background:rgba(46,232,160,0.18);color:var(--green);padding:1px 6px;border-radius:10px;">Hoje</span>' : ''}
+          </div>
+          <div style="color:var(--text2);font-size:0.72rem;margin-top:2px;">
+            🕒 ${formattedDate} &middot; 📊 ${b.matchesCount} partidas &middot; 🃏 ${b.decksCount} decks
+          </div>
+        </div>
+        <div style="display:flex;gap:0.35rem;">
+          <button class="icon-btn sm" onclick="downloadAutoBackup('${b.id}')" title="Baixar JSON deste dia">📥</button>
+          <button class="icon-btn sm danger" onclick="restoreAutoBackup('${b.id}')" title="Restaurar dados deste dia">🔄</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+};
+
+window.downloadAutoBackup = function(backupId) {
+  let backupsList = [];
+  try { backupsList = JSON.parse(localStorage.getItem(KEY_AUTO_BACKUPS)) || []; } catch (e) {}
+  const target = backupsList.find(b => b.id === backupId);
+  if (!target || !target.payload) { showToast('⚠️ Snapshot não encontrado.'); return; }
+
+  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(target.payload, null, 2));
+  const downloadAnchor = document.createElement('a');
+  downloadAnchor.setAttribute("href", dataStr);
+  downloadAnchor.setAttribute("download", `jornada_backup_auto_${target.date}.json`);
+  document.body.appendChild(downloadAnchor);
+  downloadAnchor.click();
+  downloadAnchor.remove();
+  showToast(`📥 Backup de ${target.date} baixado com sucesso!`);
+};
+
+window.restoreAutoBackup = function(backupId) {
+  let backupsList = [];
+  try { backupsList = JSON.parse(localStorage.getItem(KEY_AUTO_BACKUPS)) || []; } catch (e) {}
+  const target = backupsList.find(b => b.id === backupId);
+  if (!target || !target.payload) { showToast('⚠️ Snapshot não encontrado.'); return; }
+
+  if (!confirm(`Restaurar o backup do dia ${target.date}? Seus dados atuais serão substituídos pelo estado do dia ${target.date}.`)) return;
+
+  const data = target.payload;
+  safeSetItem(KEY_DECKS, JSON.stringify(data.decks || []));
+  safeSetItem(KEY_MATCHES, JSON.stringify(data.manualMatches || []));
+  safeSetItem(KEY_PLAYERS, JSON.stringify(data.players || []));
+  safeSetItem(KEY_LOCAIS, JSON.stringify(data.locais || []));
+  safeSetItem(KEY_COLECOES, JSON.stringify(data.colecoes || []));
+  safeSetItem(KEY_DELETED, JSON.stringify(data.deletedIds || []));
+  safeSetItem(KEY_DELETED_DECKS, JSON.stringify(data.deletedDecks || []));
+  safeSetItem(KEY_DELETED_PLAYERS, JSON.stringify(data.deletedPlayers || []));
+  safeSetItem(KEY_DELETED_LOCAIS, JSON.stringify(data.deletedLocais || []));
+  safeSetItem(KEY_DELETED_COLECOES, JSON.stringify(data.deletedColecoes || []));
+  safeSetItem(KEY_EDITS, JSON.stringify(data.editedMatches || {}));
+
+  decks = data.decks || [];
+  players = data.players || [];
+  locais = data.locais || [];
+  colecoes = data.colecoes || [];
+
+  if (typeof resetAllFilters === 'function') resetAllFilters();
+  else {
+    if (typeof isExplicitPlayerSelection !== 'undefined') isExplicitPlayerSelection = false;
+    if (typeof isExplicitSelection !== 'undefined') isExplicitSelection = false;
+    if (typeof initializeData === 'function') initializeData();
+    if (typeof populateFilters === 'function') populateFilters();
+    if (typeof applyFilters === 'function') applyFilters();
+  }
+  if (typeof populatePlayerSelects === 'function') populatePlayerSelects();
+  if (typeof populateDeckSelects === 'function') populateDeckSelects();
+  if (typeof populateLocalSelects === 'function') populateLocalSelects();
+  if (typeof populateColecaoSelects === 'function') populateColecaoSelects();
+  if (typeof renderDecksList === 'function') renderDecksList();
+  if (typeof renderPlayersList === 'function') renderPlayersList();
+  if (typeof renderLocaisList === 'function') renderLocaisList();
+  if (typeof renderColecoesList === 'function') renderColecoesList();
+  if (typeof populateQuickLogDropdowns === 'function') populateQuickLogDropdowns();
+
+  triggerSyncPush();
+  showToast(`🔄 Backup de ${target.date} restaurado com sucesso!`);
+};
+
+window.triggerManualSnapshot = function() {
+  checkAndRunDailyAutoBackup(true);
+};
+
+// Check and trigger daily auto-backup on app load
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => setTimeout(checkAndRunDailyAutoBackup, 1500));
+} else {
+  setTimeout(checkAndRunDailyAutoBackup, 1500);
+}
+
 
 

@@ -50,6 +50,15 @@ const LOSS_COLOR = '#f75050';
 function pct(n, d) { return d === 0 ? 0 : Math.round((n / d) * 100); }
 function avg(arr)  { return arr.length ? (arr.reduce((a,b) => a+b, 0) / arr.length) : 0; }
 
+function groupBy(data, key) {
+  return data.reduce((acc, row) => {
+    const k = row[key] ?? 'N/A';
+    if (!acc[k]) acc[k] = [];
+    acc[k].push(row);
+    return acc;
+  }, {});
+}
+
 function isBricked(r) {
   if (!r) return false;
   return r.Brick === 'Sim' || (r.Brick && r.Brick !== 'Nenhum' && r.Brick !== 'Não');
@@ -2118,10 +2127,13 @@ window.resetAllFilters = function() {
 
 // ── 21. INIT ──────────────────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', () => {
-  // File input
-  document.getElementById('fileInput').addEventListener('change', e => {
-    if (e.target.files[0]) handleFile(e.target.files[0]);
-  });
+  // File input guard
+  const fileInput = document.getElementById('fileInput');
+  if (fileInput) {
+    fileInput.addEventListener('change', e => {
+      if (e.target.files[0]) handleFile(e.target.files[0]);
+    });
+  }
 
   // Table search & search button listeners
   const tableSearchEl = document.getElementById('tableSearch');

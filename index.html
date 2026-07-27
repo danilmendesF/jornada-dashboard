@@ -577,18 +577,29 @@
     </div>
 
     <!-- Tab: Backup -->
+    <!-- Tab: Backup & Restauração -->
     <div class="tab-pane" id="tabBackup" style="padding: 1.25rem;">
       <p style="font-size: .8rem; color: var(--text2); line-height: 1.5; margin-bottom: 1rem;">
-        Exporte todos os seus dados locais e online para um arquivo JSON físico no seu dispositivo, ou importe um arquivo de backup existente para restaurar seu progresso.
+        O sistema gera um <strong>backup diário automático</strong> a cada novo dia de uso (mantendo os últimos 7 dias). Você também pode exportar/importar arquivos JSON manualmente a qualquer momento.
       </p>
       
       <div style="display: flex; flex-direction: column; gap: 1rem;">
         <button class="action-btn" id="btnExportBackup" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: .5rem; padding: .65rem;">
-          📥 Exportar Backup (.json)
+          📥 Exportar Backup Completo (.json)
         </button>
         
-        <div style="border-top: 1px solid var(--border); padding-top: 1rem; margin-top: .5rem;">
-          <label class="form-label" style="margin-bottom: .5rem; display: block;">Importar Arquivo de Backup</label>
+        <div style="border-top: 1px solid var(--border); padding-top: 1rem;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.6rem;">
+            <label class="form-label" style="margin: 0; font-weight: 700;">💾 Snapshots Diários Automáticos</label>
+            <button class="icon-btn sm" onclick="triggerManualSnapshot()" title="Criar Snapshot Manual Agora" style="font-size: 0.72rem; padding: 2px 8px;">+ Snapshot</button>
+          </div>
+          <div id="autoBackupsList" style="max-height: 180px; overflow-y: auto;">
+            <!-- Rendered dynamically -->
+          </div>
+        </div>
+
+        <div style="border-top: 1px solid var(--border); padding-top: 1rem;">
+          <label class="form-label" style="margin-bottom: .5rem; display: block;">Importar Arquivo de Backup Manual</label>
           <label class="file-btn" for="backupFileInput" style="width: 100%; justify-content: center; padding: .65rem; background: var(--bg3); border: 1px dashed var(--glass-bd); box-shadow: none; box-sizing: border-box; cursor: pointer;">
             <span>📤 Selecionar Arquivo .json</span>
             <input type="file" id="backupFileInput" accept=".json" style="display:none" />
