@@ -32,11 +32,24 @@ function loadPlayers() { try { return JSON.parse(localStorage.getItem(KEY_PLAYER
 function loadLocais()  { try { return JSON.parse(localStorage.getItem(KEY_LOCAIS))  || ['Regional SP','Regional Curitiba','League Cup','Treino Interno','TCG Live Online']; } catch { return ['Regional SP','Regional Curitiba','League Cup','Treino Interno','TCG Live Online']; } }
 function loadColecoes(){ try { return JSON.parse(localStorage.getItem(KEY_COLECOES))|| ['SV8 Surging Sparks','SV7 Stellar Crown','SV6 Twilight Masquerade','SV5 Temporal Forces','SV4 Paradox Rift']; } catch { return ['SV8 Surging Sparks','SV7 Stellar Crown','SV6 Twilight Masquerade','SV5 Temporal Forces','SV4 Paradox Rift']; } }
 
-function saveDecks(d)   { localStorage.setItem(KEY_DECKS,   JSON.stringify(d)); triggerSyncPush(); }
-function saveManual(m)  { localStorage.setItem(KEY_MATCHES, JSON.stringify(m)); triggerSyncPush(); }
-function savePlayers(p) { localStorage.setItem(KEY_PLAYERS, JSON.stringify(p)); triggerSyncPush(); }
-function saveLocais(l)  { localStorage.setItem(KEY_LOCAIS,  JSON.stringify(l)); triggerSyncPush(); }
-function saveColecoes(c){ localStorage.setItem(KEY_COLECOES,JSON.stringify(c)); triggerSyncPush(); }
+function safeSetItem(key, val) {
+  try {
+    localStorage.setItem(key, val);
+    return true;
+  } catch (err) {
+    console.error(`❌ Erro ao salvar "${key}" no localStorage:`, err);
+    if (typeof showToast === 'function') {
+      showToast('⚠️ Erro ao salvar dados no navegador (armazenamento cheio)');
+    }
+    return false;
+  }
+}
+
+function saveDecks(d)   { safeSetItem(KEY_DECKS,   JSON.stringify(d)); triggerSyncPush(); }
+function saveManual(m)  { safeSetItem(KEY_MATCHES, JSON.stringify(m)); triggerSyncPush(); }
+function savePlayers(p) { safeSetItem(KEY_PLAYERS, JSON.stringify(p)); triggerSyncPush(); }
+function saveLocais(l)  { safeSetItem(KEY_LOCAIS,  JSON.stringify(l)); triggerSyncPush(); }
+function saveColecoes(c){ safeSetItem(KEY_COLECOES,JSON.stringify(c)); triggerSyncPush(); }
 
 function loadDeleted()         { try { return new Set(JSON.parse(localStorage.getItem(KEY_DELETED))          || []); } catch { return new Set(); } }
 function loadDeletedDecks()    { try { return new Set(JSON.parse(localStorage.getItem(KEY_DELETED_DECKS))    || []); } catch { return new Set(); } }
@@ -46,12 +59,12 @@ function loadDeletedColecoes() { try { return new Set(JSON.parse(localStorage.ge
 
 function loadEdits()           { try { return JSON.parse(localStorage.getItem(KEY_EDITS)) || {}; } catch { return {}; } }
 
-function saveDeleted(s)         { localStorage.setItem(KEY_DELETED,          JSON.stringify([...s])); triggerSyncPush(); }
-function saveDeletedDecks(s)    { localStorage.setItem(KEY_DELETED_DECKS,    JSON.stringify([...s])); triggerSyncPush(); }
-function saveDeletedPlayers(s)  { localStorage.setItem(KEY_DELETED_PLAYERS,  JSON.stringify([...s])); triggerSyncPush(); }
-function saveDeletedLocais(s)   { localStorage.setItem(KEY_DELETED_LOCAIS,   JSON.stringify([...s])); triggerSyncPush(); }
-function saveDeletedColecoes(s) { localStorage.setItem(KEY_DELETED_COLECOES, JSON.stringify([...s])); triggerSyncPush(); }
-function saveEdits(e)          { localStorage.setItem(KEY_EDITS,            JSON.stringify(e));      triggerSyncPush(); }
+function saveDeleted(s)         { safeSetItem(KEY_DELETED,          JSON.stringify([...s])); triggerSyncPush(); }
+function saveDeletedDecks(s)    { safeSetItem(KEY_DELETED_DECKS,    JSON.stringify([...s])); triggerSyncPush(); }
+function saveDeletedPlayers(s)  { safeSetItem(KEY_DELETED_PLAYERS,  JSON.stringify([...s])); triggerSyncPush(); }
+function saveDeletedLocais(s)   { safeSetItem(KEY_DELETED_LOCAIS,   JSON.stringify([...s])); triggerSyncPush(); }
+function saveDeletedColecoes(s) { safeSetItem(KEY_DELETED_COLECOES, JSON.stringify([...s])); triggerSyncPush(); }
+function saveEdits(e)          { safeSetItem(KEY_EDITS,            JSON.stringify(e));      triggerSyncPush(); }
 
 // Exposed state
 let decks    = loadDecks();
@@ -158,7 +171,16 @@ function populateDeckSelects() {
       sel.appendChild(o);
     });
     
-    sel.value = cur;
+    // Preserve current selection if valid, or append dynamic option if valid value
+    if (cur && Array.from(sel.options).some(o => o.value === cur)) {
+      sel.value = cur;
+    } else if (cur) {
+      const o = document.createElement('option');
+      o.value = cur;
+      o.textContent = cur;
+      sel.appendChild(o);
+      sel.value = cur;
+    }
     if (sel.syncSearchableSelect) sel.syncSearchableSelect();
   });
 }
@@ -177,6 +199,19 @@ function renderDecksList() {
     return;
   }
 
+  // Optimize performance: Pre-group matches by deck name in a single pass O(M)
+  const matchesByDeck = new Map();
+  const dataset = (typeof allData !== 'undefined' && Array.isArray(allData)) ? allData : [];
+  dataset.forEach(m => {
+    if (!m.Deck) return;
+    let arr = matchesByDeck.get(m.Deck);
+    if (!arr) {
+      arr = [];
+      matchesByDeck.set(m.Deck, arr);
+    }
+    arr.push(m);
+  });
+
   container.innerHTML = decks.map(deck => {
     const parsed  = parsePTCGL(deck.list || '');
     const total   = parsed.total;
@@ -185,8 +220,8 @@ function renderDecksList() {
     const trnCount = parsed.sections['Treinador'].reduce((s, c) => s + c.qty, 0);
     const engCount = parsed.sections['Energia'].reduce((s, c) => s + c.qty, 0);
 
-    // Stats from allData
-    const deckMatches = (typeof allData !== 'undefined' ? allData : []).filter(m => m.Deck === deck.name);
+    // Fast O(1) lookup from pre-grouped Map
+    const deckMatches = matchesByDeck.get(deck.name) || [];
     const wins        = deckMatches.filter(m => m.Resultado === 'Vitória').length;
     const wr          = deckMatches.length ? Math.round((wins / deckMatches.length) * 100) : 0;
 
@@ -289,18 +324,28 @@ window.openMatchDeckList = function(matchId, type) {
 
 window.openDeckListByName = function(deckName, playerName) {
   if (!deckName) return;
-  let deck = decks.find(d => d.name.toLowerCase() === deckName.toLowerCase());
-  if (!deck) {
-    deck = {
-      id: 'deck_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
-      name: deckName,
-      list: ''
-    };
-    decks.push(deck);
-    saveDecks(decks);
-    if (typeof populateDeckSelects === 'function') populateDeckSelects();
+  const deck = decks.find(d => d.name.toLowerCase() === deckName.toLowerCase());
+  if (deck) {
+    openDeckList(deck.id);
+  } else {
+    // Render transient deck view without mutating global decks state
+    currentViewingDeckId = null;
+    currentViewingMatchDeck = { matchId: null, type: 'transient', list: '', name: deckName, player: playerName || '' };
+
+    document.getElementById('deckListTitle').textContent = deckName;
+    document.getElementById('deckListPlayer').textContent = playerName ? `👤 ${playerName}` : '';
+    document.getElementById('deckListCount').textContent = `0/60 cartas`;
+    document.getElementById('deckListCount').className = 'deck-list-count invalid';
+
+    const body = document.getElementById('deckListBody');
+    body.innerHTML = `<p style="color:var(--text2);padding:1.5rem;text-align:center;">O deck <strong>"${deckName}"</strong> ainda não possui uma lista cadastrada no Gerenciador de Decks.</p>`;
+    body.title = "";
+    body.style.cursor = "default";
+    body.onclick = null;
+
+    document.getElementById('deckListSearch').value = '';
+    showModal('modalDeckList');
   }
-  openDeckList(deck.id);
 };
 
 window.openDeckList = function(deckId) {
@@ -661,12 +706,13 @@ function openMatchForm(matchData) {
 }
 
 function saveMatchForm() {
-  const player     = document.getElementById('formMatchPlayer').value;
-  const deckName   = document.getElementById('formMatchDeck').value;
-  const adversario = document.getElementById('formMatchAdv').value.trim();
-  const resultado  = document.getElementById('formMatchResultado').value;
-  const deckAdv    = document.getElementById('formMatchDeckAdv').value;
-  const colecao    = document.getElementById('formMatchColecao').value;
+  const getVal = id => document.getElementById(id)?.value || '';
+  const player     = getVal('formMatchPlayer');
+  const deckName   = getVal('formMatchDeck');
+  const adversario = getVal('formMatchAdv').trim();
+  const resultado  = getVal('formMatchResultado');
+  const deckAdv    = getVal('formMatchDeckAdv');
+  const colecao    = getVal('formMatchColecao');
 
   if (!player)    { alert('Selecione o player.'); return; }
   if (!adversario){ alert('Informe o adversário.'); return; }
@@ -675,14 +721,14 @@ function saveMatchForm() {
     return;
   }
 
-  const localSel = document.getElementById('formMatchLocal').value;
-  const localCustom = document.getElementById('formMatchLocalCustom').value.trim();
+  const localSel = getVal('formMatchLocal');
+  const localCustom = getVal('formMatchLocalCustom').trim();
   const local    = localSel === '__outro__' ? localCustom : localSel;
   const pontos   = resultado === 'Vitória' ? 1 : resultado === 'Empate' ? 0.5 : 0;
 
   // Save Optional per-match deck lists directly to matchData
-  const ownListRaw = document.getElementById('formMatchDeckOwnList')?.value.trim() || '';
-  const advListRaw = document.getElementById('formMatchDeckAdvList')?.value.trim() || '';
+  const ownListRaw = getVal('formMatchDeckOwnList').trim();
+  const advListRaw = getVal('formMatchDeckAdvList').trim();
 
   // Register deck names in global list if new
   let decksChanged = false;
@@ -1283,6 +1329,16 @@ async function pullFromCloud(quiet = false) {
       const combinedDeletedLocais   = new Set([...localDeletedLocais, ...cloudDeletedLocais]);
       const combinedDeletedColecoes = new Set([...localDeletedColecoes, ...cloudDeletedColecoes]);
 
+      // ── CRITICAL FIX: Local live decks override cloud deletion markers ───────
+      // If a deck exists in localDecks (user just created/saved it), it must
+      // NEVER be treated as deleted — even if the cloud still has its name/id in
+      // deletedDecks (e.g. race condition between push and pull, or previous
+      // deletion that hasn't been propagated yet from the cloud side).
+      localDecks.forEach(d => {
+        if (d?.id)   combinedDeletedDecks.delete(d.id);
+        if (d?.name) combinedDeletedDecks.delete(d.name);
+      });
+
       // 2. Combine edit overrides from both
       const combinedEdits = { ...localEdits, ...cloudEdits };
 
@@ -1295,16 +1351,24 @@ async function pullFromCloud(quiet = false) {
       });
       const finalMatches = Array.from(matchesMap.values());
 
-      // 4. Merge Decks (excluding deleted decks by ID or Name; local decks take precedence over cloud)
+      // 4. Merge Decks (excluding deleted decks by ID or Name; local decks take precedence over cloud and deduplicate by name)
       const decksMap = new Map();
+      const getDeckKey = d => (typeof d === 'string' ? d : d?.name || d?.id || '').toLowerCase().trim();
+
       cloudDecks.forEach(d => {
-        if (combinedDeletedDecks.has(d.id) || combinedDeletedDecks.has(d.name)) return;
-        decksMap.set(d.id || d.name, d);
+        const name = typeof d === 'string' ? d : d?.name;
+        const id = typeof d === 'object' ? d?.id : null;
+        if (combinedDeletedDecks.has(id) || combinedDeletedDecks.has(name)) return;
+        const key = getDeckKey(d);
+        if (key) decksMap.set(key, typeof d === 'string' ? { id: Date.now().toString(), name: d, list: '' } : d);
       });
+
       localDecks.forEach(d => {
-        if (combinedDeletedDecks.has(d.id) || combinedDeletedDecks.has(d.name)) return;
-        decksMap.set(d.id || d.name, d);
+        // Local decks are always kept — they were already cleared from combinedDeletedDecks above
+        const key = getDeckKey(d);
+        if (key) decksMap.set(key, typeof d === 'string' ? { id: Date.now().toString(), name: d, list: '' } : d);
       });
+
       const finalDecks = Array.from(decksMap.values());
 
       // 5. Merge Players (excluding deleted players)
@@ -1316,32 +1380,43 @@ async function pullFromCloud(quiet = false) {
       // 7. Merge Colecoes (excluding deleted colecoes)
       const finalColecoes = [...new Set([...localColecoes, ...cloudColecoes])].filter(c => !combinedDeletedColecoes.has(c));
 
-      // Convert to strings for comparison
-      const localDecksStr    = JSON.stringify(localDecks);
-      const localMatchesStr  = JSON.stringify(localMatches);
-      const localPlayersStr  = JSON.stringify(localPlayers);
-      const localLocaisStr   = JSON.stringify(localLocais);
-      const localColecoesStr = JSON.stringify(localColecoes);
+      // Helper for deterministic JSON comparisons (sorted keys prevent false-positive sync loops)
+      const canonicalStringify = (obj) => JSON.stringify(obj, (key, value) => {
+        if (value && typeof value === 'object' && !Array.isArray(value)) {
+          return Object.keys(value).sort().reduce((acc, k) => {
+            acc[k] = value[k];
+            return acc;
+          }, {});
+        }
+        return value;
+      });
 
-      const localDeletedStr         = JSON.stringify(localDeleted);
-      const localDeletedDecksStr    = JSON.stringify(localDeletedDecks);
-      const localDeletedPlayersStr  = JSON.stringify(localDeletedPlayers);
-      const localDeletedLocaisStr   = JSON.stringify(localDeletedLocais);
-      const localDeletedColecoesStr = JSON.stringify(localDeletedColecoes);
-      const localEditsStr           = JSON.stringify(localEdits);
+      // Convert to deterministic strings for comparison
+      const localDecksStr    = canonicalStringify(localDecks);
+      const localMatchesStr  = canonicalStringify(localMatches);
+      const localPlayersStr  = canonicalStringify(localPlayers);
+      const localLocaisStr   = canonicalStringify(localLocais);
+      const localColecoesStr = canonicalStringify(localColecoes);
 
-      const finalDecksStr    = JSON.stringify(finalDecks);
-      const finalMatchesStr  = JSON.stringify(finalMatches);
-      const finalPlayersStr  = JSON.stringify(finalPlayers);
-      const finalLocaisStr   = JSON.stringify(finalLocais);
-      const finalColecoesStr = JSON.stringify(finalColecoes);
+      const localDeletedStr         = canonicalStringify(localDeleted);
+      const localDeletedDecksStr    = canonicalStringify(localDeletedDecks);
+      const localDeletedPlayersStr  = canonicalStringify(localDeletedPlayers);
+      const localDeletedLocaisStr   = canonicalStringify(localDeletedLocais);
+      const localDeletedColecoesStr = canonicalStringify(localDeletedColecoes);
+      const localEditsStr           = canonicalStringify(localEdits);
 
-      const finalDeletedStr         = JSON.stringify([...combinedDeleted]);
-      const finalDeletedDecksStr    = JSON.stringify([...combinedDeletedDecks]);
-      const finalDeletedPlayersStr  = JSON.stringify([...combinedDeletedPlayers]);
-      const finalDeletedLocaisStr   = JSON.stringify([...combinedDeletedLocais]);
-      const finalDeletedColecoesStr = JSON.stringify([...combinedDeletedColecoes]);
-      const finalEditsStr           = JSON.stringify(combinedEdits);
+      const finalDecksStr    = canonicalStringify(finalDecks);
+      const finalMatchesStr  = canonicalStringify(finalMatches);
+      const finalPlayersStr  = canonicalStringify(finalPlayers);
+      const finalLocaisStr   = canonicalStringify(finalLocais);
+      const finalColecoesStr = canonicalStringify(finalColecoes);
+
+      const finalDeletedStr         = canonicalStringify([...combinedDeleted]);
+      const finalDeletedDecksStr    = canonicalStringify([...combinedDeletedDecks]);
+      const finalDeletedPlayersStr  = canonicalStringify([...combinedDeletedPlayers]);
+      const finalDeletedLocaisStr   = canonicalStringify([...combinedDeletedLocais]);
+      const finalDeletedColecoesStr = canonicalStringify([...combinedDeletedColecoes]);
+      const finalEditsStr           = canonicalStringify(combinedEdits);
 
       const hasLocalChanges = (localDecksStr !== finalDecksStr || localMatchesStr !== finalMatchesStr ||
                                localPlayersStr !== finalPlayersStr || localLocaisStr !== finalLocaisStr || localColecoesStr !== finalColecoesStr ||
@@ -1349,7 +1424,7 @@ async function pullFromCloud(quiet = false) {
                                localDeletedPlayersStr !== finalDeletedPlayersStr || localDeletedLocaisStr !== finalDeletedLocaisStr ||
                                localDeletedColecoesStr !== finalDeletedColecoesStr || localEditsStr !== finalEditsStr);
 
-      const hasCloudChanges = (JSON.stringify(cloudDecks) !== finalDecksStr || JSON.stringify(cloudMatches) !== finalMatchesStr ||
+      const hasCloudChanges = (canonicalStringify(cloudDecks) !== finalDecksStr || canonicalStringify(cloudMatches) !== finalMatchesStr ||
                                JSON.stringify(cloudPlayers) !== finalPlayersStr || JSON.stringify(cloudLocais) !== finalLocaisStr || JSON.stringify(cloudColecoes) !== finalColecoesStr ||
                                JSON.stringify(cloudDeleted) !== finalDeletedStr || JSON.stringify(cloudDeletedDecks) !== finalDeletedDecksStr ||
                                JSON.stringify(cloudDeletedPlayers) !== finalDeletedPlayersStr || JSON.stringify(cloudDeletedLocais) !== finalDeletedLocaisStr ||

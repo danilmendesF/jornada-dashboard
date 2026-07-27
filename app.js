@@ -47,16 +47,23 @@ const DRAW_COLOR = '#f5c842';
 const LOSS_COLOR = '#f75050';
 
 // ── 4. UTILITY ───────────────────────────────────────────────────────────────
-function pct(n, d) { return d === 0 ? 0 : Math.round((n / d) * 100); }
-function avg(arr)  { return arr.length ? (arr.reduce((a,b) => a+b, 0) / arr.length) : 0; }
+function isBricked(r) {
+  if (!r) return false;
+  return r.Brick === 'Sim' || (r.Brick && r.Brick !== 'Nenhum' && r.Brick !== 'Não');
+}
 
-function groupBy(data, key) {
-  return data.reduce((acc, row) => {
-    const k = row[key] ?? 'N/A';
-    if (!acc[k]) acc[k] = [];
-    acc[k].push(row);
-    return acc;
-  }, {});
+function calculateStats(matches) {
+  if (!Array.isArray(matches) || matches.length === 0) {
+    return { wins: 0, draws: 0, losses: 0, total: 0, wr: 0, brickWins: 0, totalBricks: 0 };
+  }
+  const total = matches.length;
+  const wins = matches.filter(m => m.Resultado === 'Vitória').length;
+  const draws = matches.filter(m => m.Resultado === 'Empate').length;
+  const losses = matches.filter(m => m.Resultado === 'Derrota').length;
+  const wr = pct(wins, total);
+  const brickMatches = matches.filter(m => isBricked(m));
+  const brickWins = brickMatches.filter(m => m.Resultado === 'Vitória').length;
+  return { wins, draws, losses, total, wr, brickWins, totalBricks: brickMatches.length };
 }
 
 function destroyChart(id) {
@@ -94,7 +101,7 @@ function makeSearchableSelect(selectEl) {
     if (selectedOpt) {
       input.value = selectedOpt.text;
     } else {
-      input.value = "Todos";
+      input.value = selectEl.options[0]?.text || "Selecione…";
     }
   }
 
@@ -202,11 +209,17 @@ function makeSearchableSelect(selectEl) {
     });
   }
 
-  document.addEventListener("click", (e) => {
-    if (!wrap.contains(e.target) && e.target !== selectEl) {
-      closeDropdown();
-    }
-  });
+  // Close dropdown handler attached to document once
+  if (!window._searchableSelectGlobalClickSet) {
+    window._searchableSelectGlobalClickSet = true;
+    document.addEventListener("click", (e) => {
+      document.querySelectorAll(".searchable-select-wrap.open").forEach(w => {
+        if (!w.contains(e.target)) {
+          w.classList.remove("open");
+        }
+      });
+    });
+  }
 
   selectEl.addEventListener("change", updateInputFromSelect);
   updateInputFromSelect();
@@ -569,19 +582,14 @@ function applyFilters() {
 
 // ── 7. KPI CARDS ─────────────────────────────────────────────────────────────
 function renderKPIs() {
-  const total  = filtered.length;
-  const wins   = filtered.filter(d => d.Resultado === 'Vitória').length;
-  const draws  = filtered.filter(d => d.Resultado === 'Empate').length;
-  const losses = filtered.filter(d => d.Resultado === 'Derrota').length;
-  const wr     = pct(wins, total);
-  const brickCount = filtered.filter(d => d.Brick && d.Brick !== 'Nenhum' && d.Brick !== 'Não').length;
-  const brickPct   = pct(brickCount, total);
+  const stats = calculateStats(filtered);
+  const brickPct = pct(stats.totalBricks, stats.total);
 
-  animCount('kpiTotal', total);
-  animCount('kpiWin',   wins);
-  animCount('kpiDraw',  draws);
-  animCount('kpiLoss',  losses);
-  document.getElementById('kpiWR').textContent    = wr + '%';
+  animCount('kpiTotal', stats.total);
+  animCount('kpiWin',   stats.wins);
+  animCount('kpiDraw',  stats.draws);
+  animCount('kpiLoss',  stats.losses);
+  document.getElementById('kpiWR').textContent = stats.wr + '%';
   const bEl = document.getElementById('kpiBrick');
   if (bEl) bEl.textContent = brickPct + '%';
 }
@@ -603,12 +611,10 @@ function renderDeckWR() {
   destroyChart('deckWR');
   const byDeck = groupBy(filtered, 'Deck');
 
-  // Calculate WR stats for each deck
+  // Calculate WR stats for each deck using calculateStats helper
   const deckStats = Object.keys(byDeck).map(d => {
-    const tot = byDeck[d].length;
-    const wins = byDeck[d].filter(r => r.Resultado === 'Vitória').length;
-    const wr = pct(wins, tot);
-    return { deck: d, wr, wins, tot };
+    const s = calculateStats(byDeck[d]);
+    return { deck: d, wr: s.wr, wins: s.wins, tot: s.total };
   });
 
   // Sort descending by Win Rate, then by total matches
