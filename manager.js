@@ -1111,9 +1111,9 @@ function populateQuickLogDropdowns() {
 
 const PLACAR_RULES = {
   MD1: {
-    'ALL':     ['1-0', '0-1', '0-0', '1-1'],
+    'ALL':     ['1-0', '0-1', '0-0'],
     'Vitória': ['1-0'],
-    'Empate':  ['0-0', '1-1'],
+    'Empate':  ['0-0'],
     'Derrota': ['0-1']
   },
   MD3: {
