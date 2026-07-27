@@ -378,7 +378,7 @@ function populateMultiDeckFilter() {
 
   const dataDecks    = relevantData.map(d => d.Deck).filter(Boolean);
   const oppDecks     = relevantData.map(d => d.DeckAdv).filter(Boolean);
-  const managerDecks = (typeof decks !== 'undefined') ? decks.filter(d => selectedPlayers.size === 0 || selectedPlayers.has(d.player)).map(d => d.name) : [];
+  const managerDecks = (typeof decks !== 'undefined') ? decks.filter(d => selectedPlayers.size === 0 || !d.player || selectedPlayers.has(d.player)).map(d => d.name) : [];
   
   allAvailableDecks = [...new Set([...dataDecks, ...oppDecks, ...managerDecks])].sort((a, b) => a.localeCompare(b));
 

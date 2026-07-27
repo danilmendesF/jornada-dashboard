@@ -511,6 +511,13 @@ function saveDeckForm() {
     decks.push({ id: Date.now().toString(), name, list, createdAt: new Date().toISOString() });
   }
 
+  // Ensure deck is removed from deleted tracking sets if re-adding/editing
+  const delDecks = loadDeletedDecks();
+  let delChanged = false;
+  if (delDecks.has(name)) { delDecks.delete(name); delChanged = true; }
+  if (editingDeckId && delDecks.has(editingDeckId)) { delDecks.delete(editingDeckId); delChanged = true; }
+  if (delChanged) saveDeletedDecks(delDecks);
+
   saveDecks(decks);
   populateDeckSelects();
   renderDecksList();
@@ -1288,9 +1295,13 @@ async function pullFromCloud(quiet = false) {
       });
       const finalMatches = Array.from(matchesMap.values());
 
-      // 4. Merge Decks (excluding deleted decks by ID or Name)
+      // 4. Merge Decks (excluding deleted decks by ID or Name; local decks take precedence over cloud)
       const decksMap = new Map();
-      [...localDecks, ...cloudDecks].forEach(d => {
+      cloudDecks.forEach(d => {
+        if (combinedDeletedDecks.has(d.id) || combinedDeletedDecks.has(d.name)) return;
+        decksMap.set(d.id || d.name, d);
+      });
+      localDecks.forEach(d => {
         if (combinedDeletedDecks.has(d.id) || combinedDeletedDecks.has(d.name)) return;
         decksMap.set(d.id || d.name, d);
       });
