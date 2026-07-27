@@ -1109,28 +1109,48 @@ function populateQuickLogDropdowns() {
   updatePlacarDropdown('formMatchFormato', 'formMatchPlacar');
 }
 
-const PLACAR_OPTIONS = {
-  MD1: ['1-0', '0-1'],
-  MD3: ['2-0', '2-1', '1-1', '1-0', '0-0', '0-1', '1-2', '0-2']
+const PLACAR_RULES = {
+  MD1: {
+    'Vitória': ['1-0'],
+    'Empate':  ['0-0', '1-1'],
+    'Derrota': ['0-1']
+  },
+  MD3: {
+    'Vitória': ['2-0', '2-1', '1-0'],
+    'Empate':  ['1-1', '0-0'],
+    'Derrota': ['0-2', '1-2', '0-1']
+  }
 };
 
-window.updatePlacarDropdown = function(formatoId, placarId, currentVal = null, outcome = null) {
+window.updatePlacarDropdown = function(formatoId, placarId, currentVal = null, outcome = null, resultadoId = null) {
   const formatoEl = document.getElementById(formatoId);
   const placarEl  = document.getElementById(placarId);
   if (!formatoEl || !placarEl) return;
 
   const fmt = formatoEl.value || 'MD1';
-  const options = PLACAR_OPTIONS[fmt] || PLACAR_OPTIONS.MD1;
 
-  let selectedVal = currentVal || placarEl.value;
-
-  if (outcome) {
-    if (fmt === 'MD1') {
-      selectedVal = (outcome === 'Vitória') ? '1-0' : (outcome === 'Derrota') ? '0-1' : '1-0';
+  // Determine active outcome
+  let activeOutcome = outcome;
+  if (!activeOutcome && resultadoId) {
+    activeOutcome = document.getElementById(resultadoId)?.value;
+  }
+  if (!activeOutcome) {
+    if (formatoId === 'formMatchFormato') {
+      activeOutcome = document.getElementById('formMatchResultado')?.value || 'Vitória';
     } else {
-      selectedVal = (outcome === 'Vitória') ? '2-0' : (outcome === 'Empate') ? '1-1' : '0-2';
+      activeOutcome = 'Vitória';
     }
   }
+
+  // Normalize outcome string
+  if (activeOutcome.includes('Vitória')) activeOutcome = 'Vitória';
+  else if (activeOutcome.includes('Empate')) activeOutcome = 'Empate';
+  else if (activeOutcome.includes('Derrota')) activeOutcome = 'Derrota';
+
+  const fmtRules = PLACAR_RULES[fmt] || PLACAR_RULES.MD1;
+  const options = fmtRules[activeOutcome] || fmtRules['Vitória'];
+
+  let selectedVal = currentVal || placarEl.value;
 
   placarEl.innerHTML = '';
   options.forEach(opt => {
@@ -1763,16 +1783,16 @@ window.addEventListener('DOMContentLoaded', () => {
   });
 
   document.getElementById('formMatchFormato')?.addEventListener('change', () => {
-    updatePlacarDropdown('formMatchFormato', 'formMatchPlacar', null, document.getElementById('formMatchResultado')?.value);
+    updatePlacarDropdown('formMatchFormato', 'formMatchPlacar', null, null, 'formMatchResultado');
   });
 
   document.getElementById('formMatchResultado')?.addEventListener('change', () => {
-    updatePlacarDropdown('formMatchFormato', 'formMatchPlacar', null, document.getElementById('formMatchResultado')?.value);
+    updatePlacarDropdown('formMatchFormato', 'formMatchPlacar', null, null, 'formMatchResultado');
   });
 
   // Initial placar sync
   updatePlacarDropdown('quickLogFormato', 'quickLogPlacar');
-  updatePlacarDropdown('formMatchFormato', 'formMatchPlacar');
+  updatePlacarDropdown('formMatchFormato', 'formMatchPlacar', null, null, 'formMatchResultado');
 
   // Event: quick add deck from dropdowns
   document.getElementById('btnQuickAddDeckOwn')?.addEventListener('click', () => openDeckFormForTarget('quickLogDeck'));
