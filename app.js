@@ -47,6 +47,9 @@ const DRAW_COLOR = '#f5c842';
 const LOSS_COLOR = '#f75050';
 
 // ── 4. UTILITY ───────────────────────────────────────────────────────────────
+function pct(n, d) { return d === 0 ? 0 : Math.round((n / d) * 100); }
+function avg(arr)  { return arr.length ? (arr.reduce((a,b) => a+b, 0) / arr.length) : 0; }
+
 function isBricked(r) {
   if (!r) return false;
   return r.Brick === 'Sim' || (r.Brick && r.Brick !== 'Nenhum' && r.Brick !== 'Não');
