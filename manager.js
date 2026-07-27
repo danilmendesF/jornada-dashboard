@@ -1111,11 +1111,13 @@ function populateQuickLogDropdowns() {
 
 const PLACAR_RULES = {
   MD1: {
+    'ALL':     ['1-0', '0-1', '0-0', '1-1'],
     'Vitória': ['1-0'],
     'Empate':  ['0-0', '1-1'],
     'Derrota': ['0-1']
   },
   MD3: {
+    'ALL':     ['2-0', '2-1', '1-1', '1-0', '0-0', '0-1', '1-2', '0-2'],
     'Vitória': ['2-0', '2-1', '1-0'],
     'Empate':  ['1-1', '0-0'],
     'Derrota': ['0-2', '1-2', '0-1']
@@ -1128,27 +1130,26 @@ window.updatePlacarDropdown = function(formatoId, placarId, currentVal = null, o
   if (!formatoEl || !placarEl) return;
 
   const fmt = formatoEl.value || 'MD1';
+  const fmtRules = PLACAR_RULES[fmt] || PLACAR_RULES.MD1;
 
   // Determine active outcome
   let activeOutcome = outcome;
   if (!activeOutcome && resultadoId) {
     activeOutcome = document.getElementById(resultadoId)?.value;
   }
-  if (!activeOutcome) {
-    if (formatoId === 'formMatchFormato') {
-      activeOutcome = document.getElementById('formMatchResultado')?.value || 'Vitória';
-    } else {
-      activeOutcome = 'Vitória';
-    }
+
+  let options;
+  if (formatoId === 'quickLogFormato' && !outcome) {
+    // Quick Log: show all valid scores for that format so user can choose score before clicking Vit/Emp/Der
+    options = fmtRules['ALL'];
+  } else {
+    // Modal or explicit outcome: filter by exact outcome
+    if (!activeOutcome) activeOutcome = 'Vitória';
+    if (activeOutcome.includes('Vitória')) activeOutcome = 'Vitória';
+    else if (activeOutcome.includes('Empate')) activeOutcome = 'Empate';
+    else if (activeOutcome.includes('Derrota')) activeOutcome = 'Derrota';
+    options = fmtRules[activeOutcome] || fmtRules['Vitória'];
   }
-
-  // Normalize outcome string
-  if (activeOutcome.includes('Vitória')) activeOutcome = 'Vitória';
-  else if (activeOutcome.includes('Empate')) activeOutcome = 'Empate';
-  else if (activeOutcome.includes('Derrota')) activeOutcome = 'Derrota';
-
-  const fmtRules = PLACAR_RULES[fmt] || PLACAR_RULES.MD1;
-  const options = fmtRules[activeOutcome] || fmtRules['Vitória'];
 
   let selectedVal = currentVal || placarEl.value;
 
