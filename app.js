@@ -608,6 +608,7 @@ function renderKPIs() {
 
 function animCount(id, target) {
   const el = document.getElementById(id);
+  if (!el) return;
   let start = 0;
   const step = Math.ceil(target / 20);
   const tick = () => {

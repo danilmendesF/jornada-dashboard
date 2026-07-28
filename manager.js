@@ -748,25 +748,25 @@ function saveMatchForm() {
 
   const matchData = {
     id:             editingMatchId || Date.now().toString(),
-    Data:           document.getElementById('formMatchData').value,
+    Data:           getVal('formMatchData') || new Date().toISOString().slice(0, 10),
     Player:         player,
     Deck:           deckName,
     Adversario:     adversario,
     DeckAdv:        deckAdv,
     Luck:           0,
-    Formato:        document.getElementById('formMatchFormato').value,
-    Start:          document.getElementById('formMatchStart').value,
+    Formato:        getVal('formMatchFormato') || 'MD1',
+    Start:          getVal('formMatchStart') || '1º',
     Resultado:      resultado,
     Pontos:         pontos,
-    Placar:         document.getElementById('formMatchPlacar').value.trim(),
+    Placar:         getVal('formMatchPlacar').trim(),
     Local:          local,
     Colecao:        colecao,
-    Brick:          document.getElementById('formMatchBrick').value,
-    BrickOp:        document.getElementById('formMatchBrickOp').value,
-    Confiabilidade: document.getElementById('formMatchConfiabilidade')?.value || 'Alta',
+    Brick:          getVal('formMatchBrick') || 'Não',
+    BrickOp:        getVal('formMatchBrickOp') || 'Não',
+    Confiabilidade: getVal('formMatchConfiabilidade') || 'Alta',
     ListaMeuDeck:   ownListRaw,
     ListaDeckAdv:   advListRaw,
-    Comentarios:    document.getElementById('formMatchComentarios').value.trim(),
+    Comentarios:    getVal('formMatchComentarios').trim(),
     _manual:        true,
   };
 
@@ -798,6 +798,9 @@ function saveMatchForm() {
     if (typeof allData !== 'undefined') allData.push(matchData);
     showToast('✅ Partida registrada com sucesso!');
   }
+
+  // Reset editing ID
+  editingMatchId = null;
 
   if (typeof populateFilters === 'function') populateFilters();
   if (typeof applyFilters    === 'function') applyFilters();
