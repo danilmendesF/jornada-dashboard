@@ -120,11 +120,52 @@ function showModal(id) {
   el.classList.add('open');
 }
 
-function closeModal(id) {
+function getMatchFormStateSnapshot() {
+  const get = id => document.getElementById(id)?.value || '';
+  return {
+    Data:           get('formMatchData'),
+    Player:         get('formMatchPlayer'),
+    Deck:           get('formMatchDeck'),
+    Adversario:     get('formMatchAdv'),
+    DeckAdv:        get('formMatchDeckAdv'),
+    Formato:        get('formMatchFormato'),
+    Start:          get('formMatchStart'),
+    Resultado:      get('formMatchResultado'),
+    Placar:         get('formMatchPlacar'),
+    Colecao:        get('formMatchColecao'),
+    Local:          get('formMatchLocal'),
+    LocalCustom:    get('formMatchLocalCustom'),
+    Brick:          get('formMatchBrick'),
+    BrickOp:        get('formMatchBrickOp'),
+    Confiabilidade: get('formMatchConfiabilidade'),
+    ListaMeuDeck:   get('formMatchDeckOwnList'),
+    ListaDeckAdv:   get('formMatchDeckAdvList'),
+    Comentarios:    get('formMatchComentarios')
+  };
+}
+
+function isMatchFormDirty() {
+  if (!window.initialMatchFormSnapshot) return false;
+  const current = getMatchFormStateSnapshot();
+  return JSON.stringify(current) !== JSON.stringify(window.initialMatchFormSnapshot);
+}
+
+function closeModal(id, force = false) {
   const el = document.getElementById(id);
-  if (!el) return;
+  if (!el) return false;
+
+  if (id === 'modalMatchForm' && !force && isMatchFormDirty()) {
+    if (!confirm('⚠️ Você possui dados/alterações não salvas no registro da partida.\n\nDeseja realmente cancelar e fechar sem salvar?')) {
+      return false;
+    }
+  }
+
   el.classList.remove('open');
   el.style.zIndex = '';
+  if (id === 'modalMatchForm') {
+    window.initialMatchFormSnapshot = null;
+  }
+  return true;
 }
 
 // ── POPULATE PLAYER SELECTS ──────────────────────────────────────────────────
@@ -703,6 +744,7 @@ function openMatchForm(matchData) {
   });
 
   showModal('modalMatchForm');
+  window.initialMatchFormSnapshot = getMatchFormStateSnapshot();
 }
 
 function saveMatchForm() {
@@ -804,7 +846,7 @@ function saveMatchForm() {
 
   if (typeof populateFilters === 'function') populateFilters();
   if (typeof applyFilters    === 'function') applyFilters();
-  closeModal('modalMatchForm');
+  closeModal('modalMatchForm', true);
 }
 
 // ── DELETE MATCH ──────────────────────────────────────────────────────────────

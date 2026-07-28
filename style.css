@@ -1670,15 +1670,21 @@ select.form-input option {
 .legend-hint { font-size: .68rem; color: var(--text2); opacity: .6; margin-left: auto; }
 
 /* ── Matrix Scroll Container ── */
-.matrix-scroll { overflow-x: auto; border-radius: var(--radius-sm); border: 1px solid var(--border); }
+.matrix-scroll {
+  overflow: auto;
+  max-height: 550px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+}
 
 /* ── Matrix Table ── */
 .matrix-table { border-collapse: separate; border-spacing: 0; min-width: 100%; font-size: .78rem; }
 
 .matrix-corner {
   position: sticky;
+  top: 0;
   left: 0;
-  z-index: 12;
+  z-index: 35;
   background: #080d1a;
   background-clip: border-box;
   padding: .6rem 1rem;
@@ -1690,21 +1696,29 @@ select.form-input option {
   font-weight: 600;
   white-space: nowrap;
   text-align: left;
-  border-bottom: 1px solid #152238;
+  border-bottom: 2px solid #1a3668;
   border-right: 2px solid #1a3668;
-  box-shadow: 4px 0 12px rgba(0,0,0,0.6);
+  box-shadow: 4px 4px 12px rgba(0,0,0,0.6);
   min-width: 140px;
 }
 .matrix-col-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: #0c172b;
+  background-clip: border-box;
   padding: .5rem .4rem;
-  background: rgba(26,127,255,.06);
-  border-bottom: 1px solid #152238;
+  border-bottom: 2px solid #1a3668;
   border-right: 1px solid rgba(255,255,255,.04);
   text-align: center;
   min-width: 90px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
 }
 .matrix-col-header.total-col {
-  background: rgba(26,127,255,.12);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: #11203d;
   border-left: 2px solid #1a3668;
 }
 .col-label {
