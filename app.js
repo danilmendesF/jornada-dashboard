@@ -1422,7 +1422,7 @@ function updateTableHeaderSortUI() {
         <td style="display:none;">${r.Adversario}</td>
         <td>${r.DeckAdv}</td>
         <td>${r.Formato}</td>
-        <td style="display:none;"><span style="font-size:.8rem;color:var(--accent2);font-weight:600">${r.Colecao || '—'}</span></td>
+        <td><span style="font-size:.8rem;color:var(--accent2);font-weight:600">${r.Colecao || '—'}</span></td>
         <td>${confBadge}</td>
         <td>${r.Start}</td>
         <td>${r.Placar}</td>

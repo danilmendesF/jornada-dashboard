@@ -1010,11 +1010,15 @@ function saveMatchForm() {
   const adversario = getVal('formMatchAdv').trim() || 'Oponente';
   const resultado  = getVal('formMatchResultado');
   const deckAdv    = getVal('formMatchDeckAdv');
-  const colecao    = getVal('formMatchColecao') || 'Geral';
+  const colecao    = getVal('formMatchColecao');
 
   if (!player)   { alert('⚠️ Selecione o player.'); return; }
   if (!deckName) { alert('⚠️ Selecione o seu deck (Arquétipo).'); return; }
   if (!deckAdv)  { alert('⚠️ Selecione o deck do adversário (Arquétipo).'); return; }
+  if (!colecao || colecao === '' || colecao.toLowerCase().includes('toda')) {
+    alert('⚠️ A coleção é obrigatória. Selecione uma coleção específica (não pode ser vazia nem "Todas").');
+    return;
+  }
 
   const localSel = getVal('formMatchLocal');
   const localCustom = getVal('formMatchLocalCustom').trim();
@@ -1516,7 +1520,7 @@ window.quickLogMatch = function(resultado) {
   const deckAdv  = document.getElementById('quickLogDeckAdv')?.value;
   const formato  = document.getElementById('quickLogFormato')?.value || 'MD1';
   const startVal = document.getElementById('quickLogStart')?.value || '1º';
-  const colecao  = document.getElementById('quickLogColecao')?.value || 'Geral';
+  const colecao  = document.getElementById('quickLogColecao')?.value;
   const local    = document.getElementById('quickLogLocal')?.value;
 
   // Auto-select smart placar based on resultado and formato
@@ -1527,6 +1531,7 @@ window.quickLogMatch = function(resultado) {
   if (!deckName) { showToast('⚠️ Selecione seu deck.'); return; }
   if (!deckAdv)  { showToast('⚠️ Selecione o deck do oponente.'); return; }
   if (!formato)  { showToast('⚠️ Selecione o formato (MD1 ou MD3).'); return; }
+  if (!colecao || colecao === '' || colecao.toLowerCase().includes('toda')) { showToast('⚠️ Selecione a coleção da partida (não pode ser vazia nem "Todas").'); return; }
   if (!local)    { showToast('⚠️ Selecione o local da partida.'); return; }
   if (!placarInput) { showToast('⚠️ Informe o placar da partida (ex: 2-1).'); return; }
 
