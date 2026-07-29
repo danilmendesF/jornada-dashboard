@@ -2643,22 +2643,32 @@ window.submitUnifyArchetypes = function() {
   let updatedCount = 0;
   const manual = loadManual();
   manual.forEach(m => {
-    if (m.Deck === fromDeck || m.Arquetipo === fromDeck) {
+    let touched = false;
+    if (m.Deck === fromDeck || m.Arquetipo === fromDeck || (typeof getMatchDeck === 'function' && getMatchDeck(m) === fromDeck)) {
       m.Arquetipo = targetArchetype;
-      updatedCount++;
+      m.Deck = m.Subtipo ? `${targetArchetype} (${m.Subtipo})` : targetArchetype;
+      touched = true;
     }
-    if (m.DeckAdv === fromDeck || m.DeckAdvArquetipo === fromDeck) {
+    if (m.DeckAdv === fromDeck || m.DeckAdvArquetipo === fromDeck || (typeof getMatchOppDeck === 'function' && getMatchOppDeck(m) === fromDeck)) {
       m.DeckAdvArquetipo = targetArchetype;
-      updatedCount++;
+      m.DeckAdv = m.SubtipoAdv ? `${targetArchetype} (${m.SubtipoAdv})` : targetArchetype;
+      touched = true;
     }
+    if (touched) updatedCount++;
   });
   saveManual(manual);
 
   // 2. Update edits overrides if any
   const edits = loadEdits();
   Object.values(edits).forEach(m => {
-    if (m.Deck === fromDeck || m.Arquetipo === fromDeck) m.Arquetipo = targetArchetype;
-    if (m.DeckAdv === fromDeck || m.DeckAdvArquetipo === fromDeck) m.DeckAdvArquetipo = targetArchetype;
+    if (m.Deck === fromDeck || m.Arquetipo === fromDeck || (typeof getMatchDeck === 'function' && getMatchDeck(m) === fromDeck)) {
+      m.Arquetipo = targetArchetype;
+      m.Deck = m.Subtipo ? `${targetArchetype} (${m.Subtipo})` : targetArchetype;
+    }
+    if (m.DeckAdv === fromDeck || m.DeckAdvArquetipo === fromDeck || (typeof getMatchOppDeck === 'function' && getMatchOppDeck(m) === fromDeck)) {
+      m.DeckAdvArquetipo = targetArchetype;
+      m.DeckAdv = m.SubtipoAdv ? `${targetArchetype} (${m.SubtipoAdv})` : targetArchetype;
+    }
   });
   saveEdits(edits);
 
@@ -2666,6 +2676,7 @@ window.submitUnifyArchetypes = function() {
   decks.forEach(d => {
     if (d.name === fromDeck || d.arquetipo === fromDeck) {
       d.arquetipo = targetArchetype;
+      d.name = d.subtipo ? `${targetArchetype} (${d.subtipo})` : targetArchetype;
     }
   });
   saveDecks(decks);
@@ -2673,8 +2684,14 @@ window.submitUnifyArchetypes = function() {
   // 4. Update in-memory allData
   if (typeof allData !== 'undefined' && Array.isArray(allData)) {
     allData.forEach(m => {
-      if (m.Deck === fromDeck || m.Arquetipo === fromDeck) m.Arquetipo = targetArchetype;
-      if (m.DeckAdv === fromDeck || m.DeckAdvArquetipo === fromDeck) m.DeckAdvArquetipo = targetArchetype;
+      if (m.Deck === fromDeck || m.Arquetipo === fromDeck || (typeof getMatchDeck === 'function' && getMatchDeck(m) === fromDeck)) {
+        m.Arquetipo = targetArchetype;
+        m.Deck = m.Subtipo ? `${targetArchetype} (${m.Subtipo})` : targetArchetype;
+      }
+      if (m.DeckAdv === fromDeck || m.DeckAdvArquetipo === fromDeck || (typeof getMatchOppDeck === 'function' && getMatchOppDeck(m) === fromDeck)) {
+        m.DeckAdvArquetipo = targetArchetype;
+        m.DeckAdv = m.SubtipoAdv ? `${targetArchetype} (${m.SubtipoAdv})` : targetArchetype;
+      }
     });
   }
 

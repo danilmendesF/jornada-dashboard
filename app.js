@@ -1709,7 +1709,9 @@ window.showDeckMatchupOverview = function(myDeck, mode = 'desc') {
   if (!detailEl || !titleEl || !bodyEl) return;
 
   const selectedPlayer = document.getElementById('matchupPlayer')?.value || '';
-  let dataset = getMatchupBaseDataset().filter(m => m.Deck === myDeck);
+  let dataset = getMatchupBaseDataset().filter(m => 
+    getMatchDeck(m) === myDeck || m.Arquetipo === myDeck || m.Deck === myDeck
+  );
   if (selectedPlayer) dataset = dataset.filter(m => m.Player === selectedPlayer);
 
   if (dataset.length === 0) {
@@ -1717,7 +1719,7 @@ window.showDeckMatchupOverview = function(myDeck, mode = 'desc') {
     return;
   }
 
-  const byOpp = groupBy(dataset, 'DeckAdv');
+  const byOpp = groupBy(dataset, m => getMatchOppDeck(m) || m.DeckAdv || 'Outros');
   const oppSummaries = Object.keys(byOpp).map(opp => {
     const mList = byOpp[opp];
     const total = mList.length;
