@@ -1419,7 +1419,6 @@ function updateTableHeaderSortUI() {
         <td>${r.Data}</td>
         <td>${r.Player}</td>
         <td><strong>${r.Deck}</strong></td>
-        <td style="display:none;">${r.Adversario}</td>
         <td>${r.DeckAdv}</td>
         <td>${r.Formato}</td>
         <td><span style="font-size:.8rem;color:var(--accent2);font-weight:600">${r.Colecao || '—'}</span></td>
@@ -1429,8 +1428,8 @@ function updateTableHeaderSortUI() {
         <td><span class="badge ${badgeClass}">${emoji} ${r.Resultado}</span></td>
         <td>${brickVal}</td>
         <td>${r.Local}</td>
-        <td>${listasCol}</td>
-        <td>${actionsCol}</td>
+        <td style="text-align:center;">${listasCol}</td>
+        <td style="text-align:center;">${actionsCol}</td>
       </tr>`;
     }).join('');
   }

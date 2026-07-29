@@ -487,18 +487,17 @@
               <th class="sortable-th" onclick="sortTableByColumn('Data')" title="Ordenar por data">Data <span id="sort-icon-Data"></span></th>
               <th class="sortable-th" onclick="sortTableByColumn('Player')" title="Ordenar por player">Player <span id="sort-icon-Player"></span></th>
               <th class="sortable-th" onclick="sortTableByColumn('Deck')" title="Ordenar por deck">Deck <span id="sort-icon-Deck"></span></th>
-              <th class="sortable-th" onclick="sortTableByColumn('Adversario')" title="Ordenar por adversário" style="display:none;">Adversário <span id="sort-icon-Adversario"></span></th>
               <th class="sortable-th" onclick="sortTableByColumn('DeckAdv')" title="Ordenar por deck oponente">Deck Adv. <span id="sort-icon-DeckAdv"></span></th>
               <th class="sortable-th" onclick="sortTableByColumn('Formato')" title="Ordenar por formato">Formato <span id="sort-icon-Formato"></span></th>
-              <th class="sortable-th" onclick="sortTableByColumn('Colecao')" title="Ordenar por coleção" style="display:none;">Coleção <span id="sort-icon-Colecao"></span></th>
+              <th class="sortable-th" onclick="sortTableByColumn('Colecao')" title="Ordenar por coleção">Coleção <span id="sort-icon-Colecao"></span></th>
               <th class="sortable-th" onclick="sortTableByColumn('Confiabilidade')" title="Ordenar por confiabilidade">Conf. <span id="sort-icon-Confiabilidade"></span></th>
               <th class="sortable-th" onclick="sortTableByColumn('Start')" title="Ordenar por quem começou">Start <span id="sort-icon-Start"></span></th>
               <th class="sortable-th" onclick="sortTableByColumn('Placar')" title="Ordenar por placar">Placar <span id="sort-icon-Placar"></span></th>
               <th class="sortable-th" onclick="sortTableByColumn('Resultado')" title="Ordenar por resultado">Resultado <span id="sort-icon-Resultado"></span></th>
               <th class="sortable-th" onclick="sortTableByColumn('Brick')" title="Ordenar por brick">Brick <span id="sort-icon-Brick"></span></th>
               <th class="sortable-th" onclick="sortTableByColumn('Local')" title="Ordenar por local">Local <span id="sort-icon-Local"></span></th>
-              <th style="cursor:default;" title="Lista de cartas (não ordenável)">Listas</th>
-              <th style="cursor:default;" title="Ações">Ações</th>
+              <th style="cursor:default; text-align:center;" title="Lista de cartas (não ordenável)">Listas</th>
+              <th style="cursor:default; text-align:center;" title="Ações">Ações</th>
             </tr>
           </thead>
           <tbody id="tableBody"></tbody>
@@ -914,7 +913,7 @@ Total de cartas: 60"
         <!-- Row 5: Local & Coleção -->
         <div class="form-row two-col">
           <div class="form-group">
-            <label class="form-label">Coleção</label>
+            <label class="form-label">Coleção *</label>
             <select id="formMatchColecao" class="form-input">
               <option value="">Selecione…</option>
             </select>
