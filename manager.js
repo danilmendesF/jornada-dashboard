@@ -126,8 +126,10 @@ function getMatchFormStateSnapshot() {
     Data:           get('formMatchData'),
     Player:         get('formMatchPlayer'),
     Deck:           get('formMatchDeck'),
+    Subtipo:        get('formMatchSubtipo'),
     Adversario:     get('formMatchAdv'),
     DeckAdv:        get('formMatchDeckAdv'),
+    SubtipoAdv:     get('formMatchSubtipoAdv'),
     Formato:        get('formMatchFormato'),
     Start:          get('formMatchStart'),
     Resultado:      get('formMatchResultado'),
@@ -203,12 +205,16 @@ function populateDeckSelects() {
     const cur = sel.value;
     sel.innerHTML = `<option value="">${selInfo.placeholder}</option>`;
     
-    const sortedDecks = [...decks].sort((a, b) => a.name.localeCompare(b.name));
-    
-    sortedDecks.forEach(d => {
+    // Extract unique clean Archetype names from registered decks and matches
+    const dataset = (typeof allData !== 'undefined' && Array.isArray(allData)) ? allData : [];
+    const registeredArchetypes = decks.map(d => d.arquetipo || d.name).filter(Boolean);
+    const matchArchetypes = dataset.map(m => m.Arquetipo || m.Deck).filter(Boolean);
+    const uniqueArchetypes = [...new Set([...registeredArchetypes, ...matchArchetypes])].sort((a, b) => a.localeCompare(b));
+
+    uniqueArchetypes.forEach(arq => {
       const o = document.createElement('option');
-      o.value = d.name;
-      o.textContent = d.name + (d.player ? ` (${d.player})` : '');
+      o.value = arq;
+      o.textContent = arq;
       sel.appendChild(o);
     });
     
@@ -226,31 +232,81 @@ function populateDeckSelects() {
   });
 }
 
-// ── RENDER DECKS LIST ────────────────────────────────────────────────────────
+// ── RENDER DECKS & ARCHETYPES LISTS ──────────────────────────────────────────
+function renderArchetypesList() {
+  const container = document.getElementById('archetypesList');
+  if (!container) return;
+
+  const dataset = (typeof allData !== 'undefined' && Array.isArray(allData)) ? allData : [];
+  const registeredArchetypes = decks.map(d => d.arquetipo || d.name).filter(Boolean);
+  const matchArchetypes = dataset.map(m => m.Arquetipo || m.Deck).filter(Boolean);
+  const uniqueArchetypes = [...new Set([...registeredArchetypes, ...matchArchetypes])].sort((a, b) => a.localeCompare(b));
+
+  if (uniqueArchetypes.length === 0) {
+    container.innerHTML = `<div class="empty-state"><div class="empty-icon">🃏</div><p>Nenhum arquétipo cadastrado ainda.</p></div>`;
+    return;
+  }
+
+  container.innerHTML = uniqueArchetypes.map(arq => {
+    const variantDecks = decks.filter(d => (d.arquetipo || d.name) === arq);
+    const arqMatches   = dataset.filter(m => (m.Arquetipo || m.Deck) === arq);
+    const wins         = arqMatches.filter(m => m.Resultado === 'Vitória').length;
+    const wr           = arqMatches.length ? Math.round((wins / arqMatches.length) * 100) : 0;
+
+    return `<div class="deck-card" style="border-left: 4px solid var(--accent2);">
+      <div class="deck-card-header">
+        <div class="deck-card-name">
+          <span class="deck-dot" style="background:var(--accent2);"></span>
+          <strong>${arq}</strong>
+          <span class="deck-player-tag" style="background:rgba(0,200,248,0.12); color:var(--accent2); font-weight:700;">${variantDecks.length} variante(s) / lista(s)</span>
+        </div>
+        <div class="deck-card-actions">
+          <button class="icon-btn" onclick="openUnifyArchetypesModal()" title="Unificar com outro arquétipo">🔗 Unificar</button>
+        </div>
+      </div>
+      <div class="deck-card-stats">
+        <span class="deck-stat">📊 ${arqMatches.length} partidas no total</span>
+        ${arqMatches.length ? `<span class="deck-stat wr-stat">📈 ${wr}% WR (${wins}V)</span>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
 function renderDecksList() {
+  renderArchetypesList();
+
   const container = document.getElementById('decksList');
   if (!container) return;
 
   if (decks.length === 0) {
     container.innerHTML = `<div class="empty-state">
-      <div class="empty-icon">🃏</div>
-      <p>Nenhum deck cadastrado ainda.</p>
-      <p class="empty-sub">Clique em "+ Novo Deck" para começar.</p>
+      <div class="empty-icon">📜</div>
+      <p>Nenhuma variante / lista cadastrada ainda.</p>
+      <p class="empty-sub">Clique em "+ Nova Variante / Deck" para começar.</p>
     </div>`;
     return;
   }
 
-  // Optimize performance: Pre-group matches by deck name in a single pass O(M)
+  // Optimize performance: Pre-group matches by deck name and archetype in a single pass O(M)
   const matchesByDeck = new Map();
   const dataset = (typeof allData !== 'undefined' && Array.isArray(allData)) ? allData : [];
   dataset.forEach(m => {
-    if (!m.Deck) return;
-    let arr = matchesByDeck.get(m.Deck);
+    const dName = m.Arquetipo || m.Deck;
+    if (!dName) return;
+    let arr = matchesByDeck.get(dName);
     if (!arr) {
       arr = [];
-      matchesByDeck.set(m.Deck, arr);
+      matchesByDeck.set(dName, arr);
     }
     arr.push(m);
+    if (m.Deck && m.Deck !== dName) {
+      let arr2 = matchesByDeck.get(m.Deck);
+      if (!arr2) {
+        arr2 = [];
+        matchesByDeck.set(m.Deck, arr2);
+      }
+      arr2.push(m);
+    }
   });
 
   container.innerHTML = decks.map(deck => {
@@ -265,12 +321,13 @@ function renderDecksList() {
     const deckMatches = matchesByDeck.get(deck.name) || [];
     const wins        = deckMatches.filter(m => m.Resultado === 'Vitória').length;
     const wr          = deckMatches.length ? Math.round((wins / deckMatches.length) * 100) : 0;
+    const arqTag      = (deck.arquetipo && deck.arquetipo !== deck.name) ? ` [${deck.arquetipo}]` : '';
 
     return `<div class="deck-card" data-id="${deck.id}">
       <div class="deck-card-header">
         <div class="deck-card-name">
           <span class="deck-dot"></span>
-          <strong>${deck.name}</strong>
+          <strong>${deck.name}</strong>${arqTag ? `<span style="font-size:0.75rem; color:var(--accent2); margin-left:0.3rem;">${arqTag}</span>` : ''}
           <span class="deck-player-tag">${deck.player || ''}</span>
         </div>
         <div class="deck-card-actions">
@@ -536,8 +593,21 @@ window.openDeckFormForTarget = function(targetSelectId) {
 window.openNewDeck = function() {
   editingDeckId = null;
   document.getElementById('deckFormTitle').textContent = '+ Novo Deck';
-  document.getElementById('formDeckName').value   = '';
-  document.getElementById('formDeckList').value   = '';
+
+  const arqEl = document.getElementById('formDeckArquetipo');
+  if (arqEl) arqEl.value = '';
+
+  const subEl = document.getElementById('formDeckSubtipo');
+  if (subEl) subEl.value = '';
+
+  const playerEl = document.getElementById('formDeckPlayer');
+  if (playerEl) {
+    playerEl.innerHTML = '<option value="">Sem player atribuído</option>' + (players || []).map(p => `<option value="${p}">👤 ${p}</option>`).join('');
+    playerEl.value = '';
+    if (playerEl.syncSearchableSelect) playerEl.syncSearchableSelect();
+  }
+
+  document.getElementById('formDeckList').value = '';
   updateCardCounter();
   showModal('modalDeckForm');
 };
@@ -547,8 +617,21 @@ window.openEditDeck = function(deckId) {
   if (!deck) return;
   editingDeckId = deckId;
   document.getElementById('deckFormTitle').textContent = '✏️ Editar Deck';
-  document.getElementById('formDeckName').value   = deck.name;
-  document.getElementById('formDeckList').value   = deck.list  || '';
+
+  const arqEl = document.getElementById('formDeckArquetipo');
+  if (arqEl) arqEl.value = deck.arquetipo || deck.name || '';
+
+  const subEl = document.getElementById('formDeckSubtipo');
+  if (subEl) subEl.value = deck.subtipo || '';
+
+  const playerEl = document.getElementById('formDeckPlayer');
+  if (playerEl) {
+    playerEl.innerHTML = '<option value="">Sem player atribuído</option>' + (players || []).map(p => `<option value="${p}">👤 ${p}</option>`).join('');
+    playerEl.value = deck.player || '';
+    if (playerEl.syncSearchableSelect) playerEl.syncSearchableSelect();
+  }
+
+  document.getElementById('formDeckList').value = deck.list || '';
   updateCardCounter();
   showModal('modalDeckForm');
 };
@@ -585,22 +668,27 @@ function updateCardCounter() {
 }
 
 function saveDeckForm() {
-  const name = document.getElementById('formDeckName').value.trim();
-  const list = document.getElementById('formDeckList').value.trim();
+  const arquetipo = document.getElementById('formDeckArquetipo')?.value.trim();
+  const subtipo   = document.getElementById('formDeckSubtipo')?.value.trim();
+  const player    = document.getElementById('formDeckPlayer')?.value.trim();
+  const list      = document.getElementById('formDeckList')?.value.trim();
 
-  if (!name) { alert('Nome do deck é obrigatório.'); return; }
+  if (!arquetipo) { alert('⚠️ Arquétipo do Deck é obrigatório.'); return; }
+
+  const name = subtipo ? `${arquetipo} (${subtipo})` : arquetipo;
 
   if (editingDeckId) {
     const idx = decks.findIndex(d => d.id === editingDeckId);
-    if (idx >= 0) decks[idx] = { ...decks[idx], name, list };
+    if (idx >= 0) decks[idx] = { ...decks[idx], name, arquetipo, subtipo, player, list };
   } else {
-    decks.push({ id: Date.now().toString(), name, list, createdAt: new Date().toISOString() });
+    decks.push({ id: Date.now().toString(), name, arquetipo, subtipo, player, list, createdAt: new Date().toISOString() });
   }
 
   // Ensure deck is removed from deleted tracking sets if re-adding/editing
   const delDecks = loadDeletedDecks();
   let delChanged = false;
   if (delDecks.has(name)) { delDecks.delete(name); delChanged = true; }
+  if (delDecks.has(arquetipo)) { delDecks.delete(arquetipo); delChanged = true; }
   if (editingDeckId && delDecks.has(editingDeckId)) { delDecks.delete(editingDeckId); delChanged = true; }
   if (delChanged) saveDeletedDecks(delDecks);
 
@@ -612,7 +700,7 @@ function saveDeckForm() {
   if (deckSelectTargetId) {
     const targetSelect = document.getElementById(deckSelectTargetId);
     if (targetSelect) {
-      targetSelect.value = name;
+      targetSelect.value = arquetipo;
       if (targetSelect.syncSearchableSelect) targetSelect.syncSearchableSelect();
     }
     deckSelectTargetId = null;
@@ -666,7 +754,8 @@ function openMatchForm(matchData) {
   get('formMatchData').value      = matchData?.Data     || new Date().toISOString().slice(0, 10);
   get('formMatchPlayer').value    = matchData?.Player   || '';
   get('formMatchAdv').value       = matchData?.Adversario || '';
-  get('formMatchDeckAdv').value   = matchData?.DeckAdv  || '';
+  get('formMatchDeckAdv').value   = matchData?.DeckAdvArquetipo || matchData?.DeckAdv  || '';
+  if (get('formMatchSubtipoAdv')) get('formMatchSubtipoAdv').value = matchData?.SubtipoAdv || '';
   get('formMatchFormato').value   = matchData?.Formato  || 'MD1';
   get('formMatchStart').value     = matchData?.Start    || '1º';
   get('formMatchResultado').value = matchData?.Resultado|| 'Vitória';
@@ -706,8 +795,9 @@ function openMatchForm(matchData) {
   }
   if (localSel.syncSearchableSelect) localSel.syncSearchableSelect();
 
-  // Deck select — match by name directly
-  get('formMatchDeck').value = matchData?.Deck || '';
+  // Deck select — match by archetype or deck name
+  get('formMatchDeck').value = matchData?.Arquetipo || matchData?.Deck || '';
+  if (get('formMatchSubtipo')) get('formMatchSubtipo').value = matchData?.Subtipo || '';
 
   // Optional Deck lists textareas for Meu Deck and Deck Oponente
   const ownDeckObj = matchData?.Deck ? decks.find(d => d.name === matchData.Deck) : null;
@@ -743,73 +833,277 @@ function openMatchForm(matchData) {
     b.classList.toggle('active', b.dataset.value.toLowerCase() === confVal.toLowerCase());
   });
 
+  // Sync ALL custom searchable selects in the modal so visual display text matches actual element values
+  [
+    'formMatchPlayer',
+    'formMatchDeck',
+    'formMatchDeckAdv',
+    'formMatchFormato',
+    'formMatchStart',
+    'formMatchResultado',
+    'formMatchPlacar',
+    'formMatchColecao',
+    'formMatchLocal'
+  ].forEach(id => {
+    const el = get(id);
+    if (el && typeof el.syncSearchableSelect === 'function') {
+      el.syncSearchableSelect();
+    }
+  });
+
+  updateSubtipoOptions();
+
   showModal('modalMatchForm');
   window.initialMatchFormSnapshot = getMatchFormStateSnapshot();
 }
+
+window.updateSubtipoOptions = function() {
+  const player    = document.getElementById('formMatchPlayer')?.value || '';
+  const arquetipo = document.getElementById('formMatchDeck')?.value || '';
+
+  const dlOwn = document.getElementById('subtipoOptionsOwn');
+  if (dlOwn) {
+    dlOwn.innerHTML = '';
+    if (arquetipo) {
+      const dataset = (typeof allData !== 'undefined' && Array.isArray(allData)) ? allData : [];
+      const deckSubtipos = decks
+        .filter(d => (d.arquetipo || d.name) === arquetipo && (!d.player || !player || d.player === player))
+        .map(d => d.subtipo)
+        .filter(Boolean);
+
+      const matchSubtipos = dataset
+        .filter(m => (m.Arquetipo || m.Deck) === arquetipo && (!player || m.Player === player))
+        .map(m => m.Subtipo)
+        .filter(Boolean);
+
+      const uniqueSubtipos = [...new Set([...deckSubtipos, ...matchSubtipos])].sort((a, b) => a.localeCompare(b));
+
+      uniqueSubtipos.forEach(sub => {
+        const opt = document.createElement('option');
+        opt.value = sub;
+        dlOwn.appendChild(opt);
+      });
+    }
+  }
+
+  const arquetipoAdv = document.getElementById('formMatchDeckAdv')?.value || '';
+  const dlAdv = document.getElementById('subtipoOptionsAdv');
+  if (dlAdv) {
+    dlAdv.innerHTML = '';
+    if (arquetipoAdv) {
+      const dataset = (typeof allData !== 'undefined' && Array.isArray(allData)) ? allData : [];
+      const oppDeckSubtipos = decks
+        .filter(d => (d.arquetipo || d.name) === arquetipoAdv)
+        .map(d => d.subtipo)
+        .filter(Boolean);
+
+      const oppMatchSubtipos = dataset
+        .filter(m => (m.DeckAdvArquetipo || m.DeckAdv) === arquetipoAdv)
+        .map(m => m.SubtipoAdv)
+        .filter(Boolean);
+
+      const uniqueAdvSubtipos = [...new Set([...oppDeckSubtipos, ...oppMatchSubtipos])].sort((a, b) => a.localeCompare(b));
+
+      uniqueAdvSubtipos.forEach(sub => {
+        const opt = document.createElement('option');
+        opt.value = sub;
+        dlAdv.appendChild(opt);
+      });
+    }
+  }
+};
+
+window.findRegisteredDeck = function(player, arquetipo, subtipo) {
+  if (!arquetipo) return null;
+  // 1. Match on arquetipo + subtipo + player
+  let found = decks.find(d => 
+    (d.arquetipo || d.name) === arquetipo && 
+    (d.subtipo || '') === subtipo && 
+    d.player === player
+  );
+  if (found) return found;
+
+  // 2. Match on arquetipo + subtipo
+  found = decks.find(d => 
+    (d.arquetipo || d.name) === arquetipo && 
+    (d.subtipo || '') === subtipo
+  );
+  if (found) return found;
+
+  // 3. Match on full name format: `${arquetipo} (${subtipo})`
+  const fullName = subtipo ? `${arquetipo} (${subtipo})` : arquetipo;
+  found = decks.find(d => d.name === fullName);
+  if (found) return found;
+
+  // 4. Fallback to arquetipo
+  if (!subtipo) {
+    found = decks.find(d => (d.arquetipo || d.name) === arquetipo);
+    if (found) return found;
+  }
+
+  return null;
+};
+
+window.autoFetchMatchDeckLists = function(forceUpdate = false) {
+  const player    = document.getElementById('formMatchPlayer')?.value || '';
+  const arquetipo = document.getElementById('formMatchDeck')?.value || '';
+  const subtipo   = document.getElementById('formMatchSubtipo')?.value || '';
+
+  const ownListTA = document.getElementById('formMatchDeckOwnList');
+  if (ownListTA) {
+    const deck = findRegisteredDeck(player, arquetipo, subtipo);
+    if (deck && deck.list) {
+      ownListTA.value = deck.list;
+    } else if (forceUpdate && !editingMatchId) {
+      ownListTA.value = '';
+    }
+  }
+
+  const arquetipoAdv = document.getElementById('formMatchDeckAdv')?.value || '';
+  const subtipoAdv   = document.getElementById('formMatchSubtipoAdv')?.value || '';
+
+  const advListTA = document.getElementById('formMatchDeckAdvList');
+  if (advListTA) {
+    const deckAdv = findRegisteredDeck(null, arquetipoAdv, subtipoAdv);
+    if (deckAdv && deckAdv.list) {
+      advListTA.value = deckAdv.list;
+    } else if (forceUpdate && !editingMatchId) {
+      advListTA.value = '';
+    }
+  }
+
+  if (typeof updateMatchDeckCounters === 'function') updateMatchDeckCounters();
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+  ['formMatchPlayer', 'formMatchDeck', 'formMatchSubtipo'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.addEventListener('change', () => {
+        if (typeof updateSubtipoOptions === 'function') updateSubtipoOptions();
+        if (typeof autoFetchMatchDeckLists === 'function') autoFetchMatchDeckLists(true);
+      });
+      el.addEventListener('input', () => {
+        if (typeof autoFetchMatchDeckLists === 'function') autoFetchMatchDeckLists(true);
+      });
+    }
+  });
+
+  ['formMatchDeckAdv', 'formMatchSubtipoAdv'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.addEventListener('change', () => {
+        if (typeof updateSubtipoOptions === 'function') updateSubtipoOptions();
+        if (typeof autoFetchMatchDeckLists === 'function') autoFetchMatchDeckLists(true);
+      });
+      el.addEventListener('input', () => {
+        if (typeof autoFetchMatchDeckLists === 'function') autoFetchMatchDeckLists(true);
+      });
+    }
+  });
+});
 
 function saveMatchForm() {
   const getVal = id => document.getElementById(id)?.value || '';
   const player     = getVal('formMatchPlayer');
   const deckName   = getVal('formMatchDeck');
-  const adversario = getVal('formMatchAdv').trim();
+  const adversario = getVal('formMatchAdv').trim() || 'Oponente';
   const resultado  = getVal('formMatchResultado');
   const deckAdv    = getVal('formMatchDeckAdv');
-  const colecao    = getVal('formMatchColecao');
+  const colecao    = getVal('formMatchColecao') || 'Geral';
 
-  if (!player)    { alert('Selecione o player.'); return; }
-  if (!adversario){ alert('Informe o adversário.'); return; }
-  if (!colecao || colecao === '' || colecao.toLowerCase().includes('toda')) {
-    alert('⚠️ A coleção é obrigatória. Selecione uma coleção específica (não pode ser vazia nem "Todas").');
-    return;
-  }
+  if (!player)   { alert('⚠️ Selecione o player.'); return; }
+  if (!deckName) { alert('⚠️ Selecione o seu deck (Arquétipo).'); return; }
+  if (!deckAdv)  { alert('⚠️ Selecione o deck do adversário (Arquétipo).'); return; }
 
   const localSel = getVal('formMatchLocal');
   const localCustom = getVal('formMatchLocalCustom').trim();
   const local    = localSel === '__outro__' ? localCustom : localSel;
   const pontos   = resultado === 'Vitória' ? 1 : resultado === 'Empate' ? 0.5 : 0;
 
-  // Save Optional per-match deck lists directly to matchData
+  // Save Optional per-match deck lists directly to matchData and sync to global decks catalog
   const ownListRaw = getVal('formMatchDeckOwnList').trim();
   const advListRaw = getVal('formMatchDeckAdvList').trim();
 
-  // Register deck names in global list if new
+  const arquetipo    = deckName;
+  const subtipo      = getVal('formMatchSubtipo').trim();
+  const arquetipoAdv = deckAdv;
+  const subtipoAdv   = getVal('formMatchSubtipoAdv').trim();
+
+  const deckFullName    = subtipo ? `${arquetipo} (${subtipo})` : arquetipo;
+  const deckAdvFullName = subtipoAdv ? `${arquetipoAdv} (${subtipoAdv})` : arquetipoAdv;
+
   let decksChanged = false;
-  if (deckName && !decks.some(d => d.name === deckName)) {
-    decks.push({ id: 'deck_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6), name: deckName, list: '' });
+
+  // 1. Sync or Create Own Deck in global decks catalog
+  let ownDeck = findRegisteredDeck(player, arquetipo, subtipo);
+  if (!ownDeck) {
+    ownDeck = {
+      id: 'deck_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
+      name: deckFullName,
+      arquetipo: arquetipo,
+      subtipo: subtipo,
+      player: player,
+      list: ownListRaw,
+      createdAt: new Date().toISOString()
+    };
+    decks.push(ownDeck);
+    decksChanged = true;
+  } else if (ownListRaw && ownDeck.list !== ownListRaw) {
+    ownDeck.list = ownListRaw;
     decksChanged = true;
   }
-  if (deckAdv && !decks.some(d => d.name === deckAdv)) {
-    decks.push({ id: 'deck_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6), name: deckAdv, list: '' });
+
+  // 2. Sync or Create Opponent Deck in global decks catalog
+  let advDeck = findRegisteredDeck(null, arquetipoAdv, subtipoAdv);
+  if (!advDeck) {
+    advDeck = {
+      id: 'deck_' + (Date.now() + 1) + '_' + Math.random().toString(36).substring(2, 6),
+      name: deckAdvFullName,
+      arquetipo: arquetipoAdv,
+      subtipo: subtipoAdv,
+      list: advListRaw,
+      createdAt: new Date().toISOString()
+    };
+    decks.push(advDeck);
+    decksChanged = true;
+  } else if (advListRaw && advDeck.list !== advListRaw) {
+    advDeck.list = advListRaw;
     decksChanged = true;
   }
 
   if (decksChanged) {
     saveDecks(decks);
     if (typeof populateDeckSelects === 'function') populateDeckSelects();
+    if (typeof renderDecksList === 'function') renderDecksList();
   }
 
   const matchData = {
-    id:             editingMatchId || Date.now().toString(),
-    Data:           getVal('formMatchData') || new Date().toISOString().slice(0, 10),
-    Player:         player,
-    Deck:           deckName,
-    Adversario:     adversario,
-    DeckAdv:        deckAdv,
-    Luck:           0,
-    Formato:        getVal('formMatchFormato') || 'MD1',
-    Start:          getVal('formMatchStart') || '1º',
-    Resultado:      resultado,
-    Pontos:         pontos,
-    Placar:         getVal('formMatchPlacar').trim(),
-    Local:          local,
-    Colecao:        colecao,
-    Brick:          getVal('formMatchBrick') || 'Não',
-    BrickOp:        getVal('formMatchBrickOp') || 'Não',
-    Confiabilidade: getVal('formMatchConfiabilidade') || 'Alta',
-    ListaMeuDeck:   ownListRaw,
-    ListaDeckAdv:   advListRaw,
-    Comentarios:    getVal('formMatchComentarios').trim(),
-    _manual:        true,
+    id:               editingMatchId || Date.now().toString(),
+    Data:             getVal('formMatchData') || new Date().toISOString().slice(0, 10),
+    Player:           player,
+    Deck:             deckFullName,
+    Arquetipo:        arquetipo,
+    Subtipo:          subtipo,
+    Adversario:       adversario,
+    DeckAdv:          deckAdvFullName,
+    DeckAdvArquetipo: arquetipoAdv,
+    SubtipoAdv:       subtipoAdv,
+    Luck:             0,
+    Formato:          getVal('formMatchFormato') || 'MD1',
+    Start:            getVal('formMatchStart') || '1º',
+    Resultado:        resultado,
+    Pontos:           pontos,
+    Placar:           getVal('formMatchPlacar').trim(),
+    Local:            local,
+    Colecao:          colecao,
+    Brick:            getVal('formMatchBrick') || 'Não',
+    BrickOp:          getVal('formMatchBrickOp') || 'Não',
+    Confiabilidade:   getVal('formMatchConfiabilidade') || 'Alta',
+    ListaMeuDeck:     ownListRaw,
+    ListaDeckAdv:     advListRaw,
+    Comentarios:      getVal('formMatchComentarios').trim(),
+    _manual:          true,
   };
 
   if (editingMatchId) {
@@ -1222,7 +1516,7 @@ window.quickLogMatch = function(resultado) {
   const deckAdv  = document.getElementById('quickLogDeckAdv')?.value;
   const formato  = document.getElementById('quickLogFormato')?.value || 'MD1';
   const startVal = document.getElementById('quickLogStart')?.value || '1º';
-  const colecao  = document.getElementById('quickLogColecao')?.value;
+  const colecao  = document.getElementById('quickLogColecao')?.value || 'Geral';
   const local    = document.getElementById('quickLogLocal')?.value;
 
   // Auto-select smart placar based on resultado and formato
@@ -1233,19 +1527,25 @@ window.quickLogMatch = function(resultado) {
   if (!deckName) { showToast('⚠️ Selecione seu deck.'); return; }
   if (!deckAdv)  { showToast('⚠️ Selecione o deck do oponente.'); return; }
   if (!formato)  { showToast('⚠️ Selecione o formato (MD1 ou MD3).'); return; }
-  if (!colecao || colecao === '' || colecao.toLowerCase().includes('toda')) { showToast('⚠️ Selecione a coleção da partida (não pode ser vazia nem "Todas").'); return; }
   if (!local)    { showToast('⚠️ Selecione o local da partida.'); return; }
   if (!placarInput) { showToast('⚠️ Informe o placar da partida (ex: 2-1).'); return; }
 
   const pontos = resultado === 'Vitória' ? 1 : resultado === 'Empate' ? 0.5 : 0;
+
+  const ownDeckObj = decks.find(d => d.name === deckName);
+  const advDeckObj = decks.find(d => d.name === deckAdv);
+  const arquetipo    = ownDeckObj?.arquetipo || deckName;
+  const arquetipoAdv = advDeckObj?.arquetipo || deckAdv;
 
   const matchData = {
     id:             Date.now().toString(),
     Data:           new Date().toISOString().slice(0, 10),
     Player:         player,
     Deck:           deckName,
+    Arquetipo:      arquetipo,
     Adversario:     advName,
     DeckAdv:        deckAdv,
+    DeckAdvArquetipo: arquetipoAdv,
     Luck:           0,
     Formato:        formato,
     Start:          startVal,
@@ -2296,6 +2596,97 @@ window.restoreAutoBackup = function(backupId) {
 
 window.triggerManualSnapshot = function() {
   checkAndRunDailyAutoBackup(true);
+};
+
+// ── BATCH ARCHETYPE UNIFICATION TOOL ─────────────────────────────────────────
+window.openUnifyArchetypesModal = function() {
+  const selFrom = document.getElementById('unifyFromDeckSelect');
+  const inputTarget = document.getElementById('unifyTargetArchetypeInput');
+  if (!selFrom || !inputTarget) return;
+
+  const dataset = (typeof allData !== 'undefined' && Array.isArray(allData)) ? allData : [];
+  const registeredDeckNames = (typeof decks !== 'undefined' && Array.isArray(decks))
+    ? decks.map(d => d.name).filter(Boolean)
+    : [];
+
+  const dataDecks = dataset.map(d => d.Deck).filter(Boolean);
+  const oppDecks  = dataset.map(d => d.DeckAdv).filter(Boolean);
+
+  const allNames = [...new Set([...registeredDeckNames, ...dataDecks, ...oppDecks])].sort((a, b) => a.localeCompare(b));
+
+  selFrom.innerHTML = '<option value="">Selecione o deck para unificar…</option>';
+  allNames.forEach(name => {
+    const o = document.createElement('option');
+    o.value = name;
+    o.textContent = name;
+    selFrom.appendChild(o);
+  });
+
+  inputTarget.value = '';
+  showModal('modalUnifyArchetypes');
+};
+
+window.submitUnifyArchetypes = function() {
+  const fromDeck = document.getElementById('unifyFromDeckSelect')?.value;
+  const targetArchetype = document.getElementById('unifyTargetArchetypeInput')?.value.trim();
+
+  if (!fromDeck) { alert('Selecione o deck atual que deseja unificar.'); return; }
+  if (!targetArchetype) { alert('Informe o arquétipo principal alvo.'); return; }
+
+  if (!confirm(`Tem certeza que deseja unificar todas as partidas e registros de "${fromDeck}" para o arquétipo "${targetArchetype}"?`)) {
+    return;
+  }
+
+  lastWriteTime = Date.now();
+
+  // 1. Update manual matches
+  let updatedCount = 0;
+  const manual = loadManual();
+  manual.forEach(m => {
+    if (m.Deck === fromDeck || m.Arquetipo === fromDeck) {
+      m.Arquetipo = targetArchetype;
+      updatedCount++;
+    }
+    if (m.DeckAdv === fromDeck || m.DeckAdvArquetipo === fromDeck) {
+      m.DeckAdvArquetipo = targetArchetype;
+      updatedCount++;
+    }
+  });
+  saveManual(manual);
+
+  // 2. Update edits overrides if any
+  const edits = loadEdits();
+  Object.values(edits).forEach(m => {
+    if (m.Deck === fromDeck || m.Arquetipo === fromDeck) m.Arquetipo = targetArchetype;
+    if (m.DeckAdv === fromDeck || m.DeckAdvArquetipo === fromDeck) m.DeckAdvArquetipo = targetArchetype;
+  });
+  saveEdits(edits);
+
+  // 3. Update decks in manager
+  decks.forEach(d => {
+    if (d.name === fromDeck || d.arquetipo === fromDeck) {
+      d.arquetipo = targetArchetype;
+    }
+  });
+  saveDecks(decks);
+
+  // 4. Update in-memory allData
+  if (typeof allData !== 'undefined' && Array.isArray(allData)) {
+    allData.forEach(m => {
+      if (m.Deck === fromDeck || m.Arquetipo === fromDeck) m.Arquetipo = targetArchetype;
+      if (m.DeckAdv === fromDeck || m.DeckAdvArquetipo === fromDeck) m.DeckAdvArquetipo = targetArchetype;
+    });
+  }
+
+  triggerSyncPush();
+
+  if (typeof populateDeckSelects === 'function') populateDeckSelects();
+  if (typeof renderDecksList     === 'function') renderDecksList();
+  if (typeof populateFilters     === 'function') populateFilters();
+  if (typeof applyFilters        === 'function') applyFilters();
+
+  closeModal('modalUnifyArchetypes');
+  showToast(`🔗 Arquétipo "${fromDeck}" unificado em "${targetArchetype}" com sucesso! (${updatedCount} registros atualizados)`);
 };
 
 // Check and trigger daily auto-backup on app load

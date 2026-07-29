@@ -50,9 +50,21 @@ const LOSS_COLOR = '#f75050';
 function pct(n, d) { return d === 0 ? 0 : Math.round((n / d) * 100); }
 function avg(arr)  { return arr.length ? (arr.reduce((a,b) => a+b, 0) / arr.length) : 0; }
 
-function groupBy(data, key) {
+function getMatchDeck(d) {
+  if (!d) return '';
+  return d.Arquetipo || d.Deck || '';
+}
+window.getMatchDeck = getMatchDeck;
+
+function getMatchOppDeck(d) {
+  if (!d) return '';
+  return d.DeckAdvArquetipo || d.DeckAdv || '';
+}
+window.getMatchOppDeck = getMatchOppDeck;
+
+function groupBy(data, keyOrFn) {
   return data.reduce((acc, row) => {
-    const k = row[key] ?? 'N/A';
+    const k = (typeof keyOrFn === 'function' ? keyOrFn(row) : row[keyOrFn]) ?? 'N/A';
     if (!acc[k]) acc[k] = [];
     acc[k].push(row);
     return acc;
@@ -401,9 +413,9 @@ function populateMultiDeckFilter() {
     ? allData.filter(d => d.Player && selectedPlayers.has(d.Player))
     : allData;
 
-  const dataDecks    = relevantData.map(d => d.Deck).filter(Boolean);
-  const oppDecks     = relevantData.map(d => d.DeckAdv).filter(Boolean);
-  const managerDecks = (typeof decks !== 'undefined') ? decks.filter(d => selectedPlayers.size === 0 || !d.player || selectedPlayers.has(d.player)).map(d => d.name) : [];
+  const dataDecks    = relevantData.map(d => getMatchDeck(d)).filter(Boolean);
+  const oppDecks     = relevantData.map(d => getMatchOppDeck(d)).filter(Boolean);
+  const managerDecks = (typeof decks !== 'undefined') ? decks.filter(d => selectedPlayers.size === 0 || !d.player || selectedPlayers.has(d.player)).map(d => d.arquetipo || d.name) : [];
   
   allAvailableDecks = [...new Set([...dataDecks, ...oppDecks, ...managerDecks])].sort((a, b) => a.localeCompare(b));
 
@@ -579,7 +591,8 @@ function applyFilters() {
     const matchFormato = !formato || fName === formato;
     const matchLocal   = !local   || lName === local;
     const matchColecao = !colecao || cName === colecao;
-    const matchDeck    = selectedDecks.has(d.Deck);
+    const dArchetype   = getMatchDeck(d);
+    const matchDeck    = selectedDecks.has(dArchetype) || selectedDecks.has(d.Deck);
     const matchConf    = (confVal === 'Alta' && confAltaChecked) || (confVal === 'Baixa' && confBaixaChecked);
 
     let matchDate = true;
@@ -622,7 +635,7 @@ function animCount(id, target) {
 // ── 8. CHART: DECK WIN RATE ──────────────────────────────────────────────────
 function renderDeckWR() {
   destroyChart('deckWR');
-  const byDeck = groupBy(filtered, 'Deck');
+  const byDeck = groupBy(filtered, getMatchDeck);
 
   // Calculate WR stats for each deck using calculateStats helper
   const deckStats = Object.keys(byDeck).map(d => {
@@ -749,6 +762,123 @@ function renderPlayerPerf() {
   });
 }
 
+// ── 9b. INDIVIDUAL PLAYER SUBTYPE / VARIANT BREAKDOWN ────────────────────────
+function renderPlayerSubtypeBreakdown() {
+  const sectionEl = document.getElementById('playerSubtypeSection');
+  const titleEl   = document.getElementById('playerSubtypeTitle');
+  const bodyEl    = document.getElementById('playerSubtypeBody');
+  if (!sectionEl || !bodyEl) return;
+
+  // Condition: ONLY visible when exactly 1 player is selected in selectedPlayers filter
+  const isSinglePlayer = typeof selectedPlayers !== 'undefined' && selectedPlayers.size === 1;
+
+  if (!isSinglePlayer) {
+    sectionEl.style.display = 'none';
+    return;
+  }
+
+  const playerName = Array.from(selectedPlayers)[0];
+  sectionEl.style.display = 'block';
+
+  if (titleEl) {
+    titleEl.textContent = `📊 Desempenho por Variante & Subtipo (${playerName})`;
+  }
+
+  // Filter matches for this single player
+  const playerMatches = filtered.filter(m => (m.Player || '').trim() === playerName);
+
+  if (playerMatches.length === 0) {
+    bodyEl.innerHTML = '<div class="empty-state" style="padding:1.5rem;"><p>Nenhuma partida encontrada para este jogador com os filtros atuais.</p></div>';
+    return;
+  }
+
+  // Group by Archetype first, then list exact Deck variants
+  const byArchetype = groupBy(playerMatches, getMatchDeck);
+  const sortedArchetypes = Object.keys(byArchetype).sort((a, b) => byArchetype[b].length - byArchetype[a].length);
+
+  let html = `<div style="display:flex; flex-direction:column; gap:1rem;">`;
+
+  sortedArchetypes.forEach(arq => {
+    const arqMatches = byArchetype[arq];
+    const arqStats   = calculateStats(arqMatches);
+    const wrColorStyle = arqStats.wr >= 60 ? 'color:var(--green)' : arqStats.wr >= 50 ? 'color:var(--yellow)' : 'color:var(--red)';
+
+    // Group variants (exact m.Deck name) within this Archetype
+    const byVariant = groupBy(arqMatches, 'Deck');
+    const variantKeys = Object.keys(byVariant).sort((a, b) => byVariant[b].length - byVariant[a].length);
+
+    html += `
+      <div style="background:var(--bg3); border-radius:var(--radius-sm); border:1px solid var(--glass-bd); padding:0.9rem 1.1rem;">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem; border-bottom:1px solid rgba(255,255,255,0.06); padding-bottom:0.6rem; margin-bottom:0.6rem;">
+          <div style="display:flex; align-items:center; gap:0.6rem;">
+            <strong style="font-size:0.95rem; color:var(--text);">${arq}</strong>
+            <span style="font-size:0.75rem; color:var(--text2);">(${arqStats.total} jogos)</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:0.75rem; font-size:0.82rem;">
+            <span style="color:var(--green)">${arqStats.wins}V</span>
+            <span style="color:var(--yellow)">${arqStats.draws}E</span>
+            <span style="color:var(--red)">${arqStats.losses}D</span>
+            <span style="font-size:0.9rem; font-weight:800; ${wrColorStyle}">${arqStats.wr}% WR</span>
+          </div>
+        </div>
+        
+        <div style="display:flex; flex-direction:column; gap:0.4rem;">
+    `;
+
+    variantKeys.forEach(vName => {
+      const vMatches = byVariant[vName];
+      const vStats   = calculateStats(vMatches);
+      const vLabel   = (vName === arq) ? `${vName} (Versão Padrão)` : vName;
+
+      // Group matches of this variant by opponent archetype
+      const byOpp = groupBy(vMatches, getMatchOppDeck);
+      const oppKeys = Object.keys(byOpp).sort((a, b) => byOpp[b].length - byOpp[a].length);
+
+      let oppHtml = `<div style="display:flex; flex-wrap:wrap; gap:0.4rem; margin-top:0.45rem;">`;
+
+      oppKeys.forEach(oppName => {
+        const oppM = byOpp[oppName];
+        const oppStats = calculateStats(oppM);
+        const oppWrColor = oppStats.wr >= 60 ? 'var(--green)' : oppStats.wr >= 50 ? 'var(--yellow)' : 'var(--red)';
+
+        // Build list of opponent results preview for tooltip hover
+        const oppDetails = oppM.map(m => {
+          const icon = m.Resultado === 'Vitória' ? '✅' : m.Resultado === 'Empate' ? '🤝' : '❌';
+          return `${icon} vs ${m.Adversario} (${m.Placar || m.Resultado})`;
+        }).join('\n');
+
+        oppHtml += `
+          <div style="background:rgba(26,127,255,0.08); border:1px solid rgba(26,127,255,0.22); border-radius:6px; padding:0.3rem 0.6rem; font-size:0.75rem; display:flex; align-items:center; gap:0.45rem;" title="${oppDetails}">
+            <span style="color:var(--text2);">vs <strong style="color:var(--accent2);">${oppName}</strong>:</span>
+            <span style="font-weight:600; color:var(--text);">${oppStats.wins}V-${oppStats.draws}E-${oppStats.losses}D</span>
+            <span style="font-weight:800; color:${oppWrColor}; font-size:0.72rem; padding:1px 6px; border-radius:10px; background:rgba(0,0,0,0.35);">${oppStats.wr}% WR</span>
+          </div>
+        `;
+      });
+
+      oppHtml += `</div>`;
+
+      html += `
+        <div style="background:rgba(255,255,255,0.02); border-radius:8px; padding:0.6rem 0.85rem; border-left:3px solid var(--accent2); margin-bottom:0.35rem;">
+          <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.82rem; flex-wrap:wrap; gap:0.4rem;">
+            <span style="color:var(--text); font-weight:600;">↳ ${vLabel}</span>
+            <div style="display:flex; gap:0.75rem; align-items:center;">
+              <span style="color:var(--text2); font-size:0.75rem;">Total da Variante: ${vStats.wins}V - ${vStats.draws}E - ${vStats.losses}D (${vStats.total} jogos)</span>
+              <span style="font-weight:800; color:${vStats.wr >= 50 ? 'var(--green)' : 'var(--red)'}; min-width:45px; text-align:right;">${vStats.wr}% WR</span>
+            </div>
+          </div>
+          ${oppHtml}
+        </div>
+      `;
+    });
+
+    html += `</div></div>`;
+  });
+
+  html += `</div>`;
+  bodyEl.innerHTML = html;
+}
+
 // ── 10. CHART: RESULT PIE ────────────────────────────────────────────────────
 function renderResultPie() {
   destroyChart('resultPie');
@@ -846,7 +976,7 @@ function renderFormato() {
 // ── 14. CHART: DECK COUNT ───────────────────────────────────────────────────
 function renderDeckCount() {
   destroyChart('deckCount');
-  const byDeck = groupBy(filtered, 'Deck');
+  const byDeck = groupBy(filtered, getMatchDeck);
   const sorted = Object.entries(byDeck).sort((a,b) => b[1].length - a[1].length);
   const labels = sorted.map(([k]) => k);
   const counts = sorted.map(([,v]) => v.length);
@@ -1289,10 +1419,10 @@ function updateTableHeaderSortUI() {
         <td>${r.Data}</td>
         <td>${r.Player}</td>
         <td><strong>${r.Deck}</strong></td>
-        <td>${r.Adversario}</td>
+        <td style="display:none;">${r.Adversario}</td>
         <td>${r.DeckAdv}</td>
         <td>${r.Formato}</td>
-        <td><span style="font-size:.8rem;color:var(--accent2);font-weight:600">${r.Colecao || '—'}</span></td>
+        <td style="display:none;"><span style="font-size:.8rem;color:var(--accent2);font-weight:600">${r.Colecao || '—'}</span></td>
         <td>${confBadge}</td>
         <td>${r.Start}</td>
         <td>${r.Placar}</td>
@@ -1366,9 +1496,11 @@ let matchupCurrentView = 'matrix';
 function buildMatchupData(data) {
   const map = {};
   data.forEach(r => {
-    if (!r.Deck || !r.DeckAdv || r.DeckAdv === '—' || r.DeckAdv === '') return;
-    const key = `${r.Deck}|||${r.DeckAdv}`;
-    if (!map[key]) map[key] = { deck: r.Deck, opp: r.DeckAdv, wins: 0, draws: 0, losses: 0, total: 0, matches: [] };
+    const myDeck = getMatchDeck(r);
+    const oppDeck = getMatchOppDeck(r);
+    if (!myDeck || !oppDeck || oppDeck === '—' || oppDeck === '') return;
+    const key = `${myDeck}|||${oppDeck}`;
+    if (!map[key]) map[key] = { deck: myDeck, opp: oppDeck, wins: 0, draws: 0, losses: 0, total: 0, matches: [] };
     const entry = map[key];
     entry.total++;
     if (r.Resultado === 'Vitória') entry.wins++;
@@ -1435,8 +1567,8 @@ function renderMatchup() {
 
   const matchupData = buildMatchupData(matchupDataset);
   
-  let myDecks  = [...new Set(matchupDataset.map(d => d.Deck).filter(Boolean))].sort();
-  let oppDecks = [...new Set(matchupDataset.map(d => d.DeckAdv).filter(Boolean))].sort();
+  let myDecks  = [...new Set(matchupDataset.map(d => getMatchDeck(d)).filter(Boolean))].sort();
+  let oppDecks = [...new Set(matchupDataset.map(d => getMatchOppDeck(d)).filter(Boolean))].sort();
 
   const selectedMyDeck  = document.getElementById('matchupSelectMyDeck')?.value || '';
   const selectedOppDeck = document.getElementById('matchupSelectOppDeck')?.value || '';
@@ -1463,11 +1595,11 @@ function populateMatchupDeckSelects() {
   const curOpp = selOpp.value;
 
   const registeredDeckNames = (typeof decks !== 'undefined' && Array.isArray(decks))
-    ? decks.map(d => d.name).filter(Boolean)
+    ? decks.map(d => d.arquetipo || d.name).filter(Boolean)
     : [];
 
-  const myDecks  = [...new Set([...registeredDeckNames, ...allData.map(d => d.Deck).filter(Boolean)])].sort((a, b) => a.localeCompare(b));
-  const oppDecks = [...new Set([...registeredDeckNames, ...allData.map(d => d.DeckAdv).filter(Boolean)])].sort((a, b) => a.localeCompare(b));
+  const myDecks  = [...new Set([...registeredDeckNames, ...allData.map(d => getMatchDeck(d)).filter(Boolean)])].sort((a, b) => a.localeCompare(b));
+  const oppDecks = [...new Set([...registeredDeckNames, ...allData.map(d => getMatchOppDeck(d)).filter(Boolean)])].sort((a, b) => a.localeCompare(b));
 
   selMy.innerHTML = '<option value="">Todos os Decks</option>';
   myDecks.forEach(d => {
@@ -1827,7 +1959,10 @@ window.showMatchupDetail = function(myDeck, oppDeck, scroll = true) {
   if (!detailEl || !titleEl || !bodyEl) return;
 
   const selectedPlayer = document.getElementById('matchupPlayer')?.value || '';
-  let dataset = getMatchupBaseDataset().filter(m => m.Deck === myDeck && m.DeckAdv === oppDeck);
+  let dataset = getMatchupBaseDataset().filter(m => 
+    (getMatchDeck(m) === myDeck || m.Deck === myDeck) && 
+    (getMatchOppDeck(m) === oppDeck || m.DeckAdv === oppDeck)
+  );
   if (selectedPlayer) dataset = dataset.filter(m => m.Player === selectedPlayer);
 
   if (dataset.length === 0) {
@@ -1947,6 +2082,7 @@ function renderAll() {
   renderKPIs();
   renderDeckWR();
   renderPlayerPerf();
+  renderPlayerSubtypeBreakdown();
   renderResultPie();
   renderLocal();
   renderFormato();

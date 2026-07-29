@@ -342,6 +342,20 @@
       </div>
     </section>
 
+    <!-- Individual Player Subtype/Variant Breakdown (Visible ONLY when exactly 1 player is selected) -->
+    <section class="charts-grid one-col" id="playerSubtypeSection" style="display:none; margin-top: 1.2rem;">
+      <div class="chart-card" style="border: 1px solid rgba(0,200,248,0.3); background: linear-gradient(135deg, var(--bg2) 0%, rgba(13,26,48,0.75) 100%);">
+        <div class="chart-header" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.5rem;">
+          <div>
+            <h2 class="chart-title" id="playerSubtypeTitle">📊 Variantes & Subtipos do Player</h2>
+            <span class="chart-sub" id="playerSubtypeSub">Desempenho individual detalhado por versão de deck de um único jogador</span>
+          </div>
+          <span class="badge" style="background:rgba(0,200,248,0.15); color:var(--accent2); font-weight:700;" id="playerSubtypeBadge">👤 Visão Individual de Player</span>
+        </div>
+        <div id="playerSubtypeBody" style="padding-top: 0.5rem;"></div>
+      </div>
+    </section>
+
     <!-- Charts Row 2 -->
     <section class="charts-grid three-col">
       <div class="chart-card">
@@ -473,10 +487,10 @@
               <th class="sortable-th" onclick="sortTableByColumn('Data')" title="Ordenar por data">Data <span id="sort-icon-Data"></span></th>
               <th class="sortable-th" onclick="sortTableByColumn('Player')" title="Ordenar por player">Player <span id="sort-icon-Player"></span></th>
               <th class="sortable-th" onclick="sortTableByColumn('Deck')" title="Ordenar por deck">Deck <span id="sort-icon-Deck"></span></th>
-              <th class="sortable-th" onclick="sortTableByColumn('Adversario')" title="Ordenar por adversário">Adversário <span id="sort-icon-Adversario"></span></th>
+              <th class="sortable-th" onclick="sortTableByColumn('Adversario')" title="Ordenar por adversário" style="display:none;">Adversário <span id="sort-icon-Adversario"></span></th>
               <th class="sortable-th" onclick="sortTableByColumn('DeckAdv')" title="Ordenar por deck oponente">Deck Adv. <span id="sort-icon-DeckAdv"></span></th>
               <th class="sortable-th" onclick="sortTableByColumn('Formato')" title="Ordenar por formato">Formato <span id="sort-icon-Formato"></span></th>
-              <th class="sortable-th" onclick="sortTableByColumn('Colecao')" title="Ordenar por coleção">Coleção <span id="sort-icon-Colecao"></span></th>
+              <th class="sortable-th" onclick="sortTableByColumn('Colecao')" title="Ordenar por coleção" style="display:none;">Coleção <span id="sort-icon-Colecao"></span></th>
               <th class="sortable-th" onclick="sortTableByColumn('Confiabilidade')" title="Ordenar por confiabilidade">Conf. <span id="sort-icon-Confiabilidade"></span></th>
               <th class="sortable-th" onclick="sortTableByColumn('Start')" title="Ordenar por quem começou">Start <span id="sort-icon-Start"></span></th>
               <th class="sortable-th" onclick="sortTableByColumn('Placar')" title="Ordenar por placar">Placar <span id="sort-icon-Placar"></span></th>
@@ -533,7 +547,8 @@
 
     <!-- Tabs -->
     <div class="tab-bar">
-      <button class="tab-btn active" data-tab="tabDecks">Decks</button>
+      <button class="tab-btn active" data-tab="tabDecks">🃏 Arquétipos</button>
+      <button class="tab-btn" data-tab="tabVariantes">📜 Variantes & Listas</button>
       <button class="tab-btn" data-tab="tabPlayers">Players</button>
       <button class="tab-btn" data-tab="tabLocais">Locais</button>
       <button class="tab-btn" data-tab="tabColecoes">Coleções</button>
@@ -541,10 +556,19 @@
       <button class="tab-btn" data-tab="tabSeguranca">🔒 Segurança</button>
     </div>
 
-    <!-- Tab: Decks -->
+    <!-- Tab: Arquétipos Principais -->
     <div class="tab-pane active" id="tabDecks">
-      <div class="panel-toolbar">
-        <button class="action-btn" onclick="openNewDeck()">+ Novo Deck</button>
+      <div class="panel-toolbar" style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
+        <div style="font-size:0.8rem; color:var(--text2); font-weight:600;">🃏 Arquétipos Principais da Equipe</div>
+        <button class="action-btn" onclick="openUnifyArchetypesModal()" style="margin-left:auto;background:rgba(0,200,248,0.15);border:1px solid rgba(0,200,248,0.3);color:var(--accent2);">🔗 Unificar Arquétipos</button>
+      </div>
+      <div id="archetypesList" class="decks-list"></div>
+    </div>
+
+    <!-- Tab: Variantes & Listas -->
+    <div class="tab-pane" id="tabVariantes">
+      <div class="panel-toolbar" style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
+        <button class="action-btn" onclick="openNewDeck()">+ Nova Variante / Deck</button>
       </div>
       <div id="decksList" class="decks-list"></div>
     </div>
@@ -687,9 +711,21 @@
         <h3 id="deckFormTitle">+ Novo Deck</h3>
       </div>
       <div class="modal-body">
-        <div class="form-group" style="margin-bottom: 1rem;">
-          <label class="form-label">Nome do Deck *</label>
-          <input type="text" id="formDeckName" class="form-input" placeholder="Ex: Zoroark ex" />
+        <div class="form-row three-col">
+          <div class="form-group">
+            <label class="form-label">Arquétipo do Deck *</label>
+            <input type="text" id="formDeckArquetipo" class="form-input" placeholder="Ex: Zoroark ex, Mega Excadrill" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Subtipo / Apelido (Opcional)</label>
+            <input type="text" id="formDeckSubtipo" class="form-input" placeholder="Ex: Versão Dusknoir, teste 1" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Player (Opcional)</label>
+            <select id="formDeckPlayer" class="form-input">
+              <option value="">Sem player atribuído</option>
+            </select>
+          </div>
         </div>
 
         <div class="form-group">
@@ -784,29 +820,33 @@ Total de cartas: 60"
           </div>
           <div class="form-group">
             <div style="display:flex; justify-content:space-between; align-items:center;">
-              <label class="form-label">Meu Deck</label>
+              <label class="form-label">Meu Deck (Arquétipo)</label>
               <button type="button" class="btn-add-deck" id="btnFormAddDeckOwn" title="Cadastrar novo deck">+</button>
             </div>
             <select id="formMatchDeck" class="form-input">
               <option value="">Sem deck cadastrado</option>
             </select>
+            <input list="subtipoOptionsOwn" id="formMatchSubtipo" class="form-input" placeholder="Subtipo / Apelido (Selecione da lista ou digite um novo...)" style="margin-top:0.35rem; font-size:0.78rem;" autocomplete="off" />
+            <datalist id="subtipoOptionsOwn"></datalist>
           </div>
         </div>
 
         <!-- Row 2 -->
         <div class="form-row two-col">
-          <div class="form-group">
-            <label class="form-label">Adversário *</label>
-            <input type="text" id="formMatchAdv" class="form-input" placeholder="Nome do adversário" />
+          <div class="form-group" style="display:none;">
+            <label class="form-label">Adversário</label>
+            <input type="text" id="formMatchAdv" class="form-input" placeholder="Nome do adversário" value="Oponente" />
           </div>
-          <div class="form-group">
+          <div class="form-group" style="grid-column: 1 / -1;">
             <div style="display:flex; justify-content:space-between; align-items:center;">
-              <label class="form-label">Deck do Adversário</label>
+              <label class="form-label">Deck do Adversário (Arquétipo)</label>
               <button type="button" class="btn-add-deck" id="btnFormAddDeckAdv" title="Cadastrar novo deck">+</button>
             </div>
             <select id="formMatchDeckAdv" class="form-input">
               <option value="">Selecione…</option>
             </select>
+            <input list="subtipoOptionsAdv" id="formMatchSubtipoAdv" class="form-input" placeholder="Subtipo Oponente (Selecione da lista ou digite um novo...)" style="margin-top:0.35rem; font-size:0.78rem;" autocomplete="off" />
+            <datalist id="subtipoOptionsAdv"></datalist>
           </div>
         </div>
 
@@ -873,13 +913,13 @@ Total de cartas: 60"
 
         <!-- Row 5: Local & Coleção -->
         <div class="form-row two-col">
-          <div class="form-group">
-            <label class="form-label">Coleção *</label>
+          <div class="form-group" style="display:none;">
+            <label class="form-label">Coleção</label>
             <select id="formMatchColecao" class="form-input">
               <option value="">Selecione…</option>
             </select>
           </div>
-          <div class="form-group">
+          <div class="form-group" style="grid-column: 1 / -1;">
             <label class="form-label">Local</label>
             <select id="formMatchLocal" class="form-input">
               <option value="">Selecione…</option>
@@ -983,6 +1023,43 @@ Total de cartas: 60"
       </div>
       <div class="modal-footer">
         <button class="cancel-btn" data-close-modal="modalSync" style="width: 100%; text-align: center;">✕ Fechar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================
+       MODAL: UNIFICAR ARQUÉTIPOS
+       =================================================== -->
+  <div class="modal-overlay" id="modalUnifyArchetypes">
+    <div class="modal modal-wide">
+      <div class="modal-header">
+        <h3>🔗 Unificar Arquétipos em Lote</h3>
+      </div>
+      <div class="modal-body">
+        <p class="modal-sub" style="margin-bottom: 1rem;">
+          Selecione o deck/variante que deseja unificar e escolha o arquétipo principal para onde todas as estatísticas históricas devem ser associadas.
+        </p>
+
+        <div class="form-row two-col" style="margin-bottom: 1rem;">
+          <div class="form-group">
+            <label class="form-label">Deck / Variante Atual *</label>
+            <select id="unifyFromDeckSelect" class="form-input">
+              <option value="">Selecione o deck para unificar…</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Arquétipo Principal Alvo *</label>
+            <input type="text" id="unifyTargetArchetypeInput" class="form-input" placeholder="Ex: Mega Excadrill" />
+          </div>
+        </div>
+
+        <div style="background: rgba(26,127,255,0.08); border: 1px solid var(--glass-bd); padding: 0.8rem; border-radius: var(--radius-sm); font-size: 0.78rem; color: var(--text2);">
+          💡 <strong>Como funciona:</strong> Todas as partidas registradas no histórico que usavam esse deck passarão a agrupar sob o arquétipo principal nos gráficos, matriz de matchups e estatísticas gerais.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="cancel-btn" data-close-modal="modalUnifyArchetypes">Cancelar</button>
+        <button class="save-btn" id="btnSubmitUnifyArchetypes" onclick="submitUnifyArchetypes()">🔗 Unificar em Lote</button>
       </div>
     </div>
   </div>

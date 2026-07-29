@@ -1183,24 +1183,37 @@ tbody tr:last-child td { border-bottom: none; }
   color: var(--accent2);
 }
 
-/* Tabs */
 .tab-bar {
   display: flex;
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
+  overflow-x: auto;
+  flex-wrap: nowrap;
+  gap: 0.2rem;
+  padding: 0 0.5rem;
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent2) transparent;
+}
+.tab-bar::-webkit-scrollbar {
+  height: 4px;
+}
+.tab-bar::-webkit-scrollbar-thumb {
+  background: var(--accent2);
+  border-radius: 4px;
 }
 .tab-btn {
-  flex: 1;
-  padding: .75rem;
+  flex: 0 0 auto;
+  padding: .65rem .8rem;
   background: transparent;
   border: none;
   color: var(--text2);
   font-family: 'Outfit', sans-serif;
-  font-size: .875rem;
+  font-size: .8rem;
   font-weight: 600;
   cursor: pointer;
   border-bottom: 2px solid transparent;
   transition: all .2s;
+  white-space: nowrap;
 }
 .tab-btn.active { color: var(--accent2); border-bottom-color: var(--accent2); }
 
