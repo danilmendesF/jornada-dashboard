@@ -1,0 +1,8 @@
+# Cursor IDE Rules — Jornada Dashboard
+
+# Project Instructions
+- Read `.ai/PROJECT_INDEX.md` first to locate functions and files.
+- Read `.ai/ARCHITECTURE.md` before editing data logic.
+- Keep module files inside `js/` under 300 lines.
+- Always validate JS syntax with `node -c` after making changes.
+- Never remove global function exports attached to `window`.

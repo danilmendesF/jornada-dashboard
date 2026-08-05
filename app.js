@@ -31,6 +31,9 @@ function initializeData() {
   const manual = (typeof loadManual === 'function') ? loadManual() : [];
   allData = applyDataOverrides(manual);
   filtered = [...allData];
+  if (typeof initAuthSession === 'function') {
+    initAuthSession();
+  }
 }
 
 // ── MULTI-TAB SYNC ───────────────────────────────────────────────────────────

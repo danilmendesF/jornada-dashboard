@@ -15,6 +15,73 @@
 </head>
 <body>
 
+  <!-- ===== TELA DE LOGIN FULLSCREEN (AUTH WALL) ===== -->
+  <div id="authPageWall" class="auth-wall-container" style="display: flex;">
+    <div class="auth-wall-card">
+      <div class="auth-wall-brand">
+        <img src="logo.png" alt="Jornada TCG Team" class="auth-wall-logo" />
+        <h1 class="auth-wall-title">Jornada Dashboard</h1>
+        <p class="auth-wall-sub">TCG Team &middot; Análise Regional & Matchups</p>
+      </div>
+
+      <!-- Tabs Header -->
+      <div style="display: flex; gap: 0.5rem; margin: 1.2rem 0; border-bottom: 1px solid var(--border);">
+        <button id="tabWallLogin" class="tab-btn active" style="flex: 1; text-align: center; padding: 0.6rem;" onclick="switchAuthTab('login')">🔑 Entrar</button>
+        <button id="tabWallRegister" class="tab-btn" style="flex: 1; text-align: center; padding: 0.6rem;" onclick="switchAuthTab('register')">📝 Cadastrar-se</button>
+      </div>
+
+      <!-- Login Form -->
+      <div id="wallLoginForm" style="display: flex; flex-direction: column; gap: 0.9rem;">
+        <div class="form-group">
+          <label class="form-label">E-mail do Jogador *</label>
+          <input type="email" id="wallLoginEmail" class="form-input" placeholder="seu.email@jornada.com" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Senha *</label>
+          <div class="password-input-wrap">
+            <input type="password" id="wallLoginPassword" class="form-input" placeholder="••••••••" />
+            <button type="button" class="toggle-password-btn" onclick="togglePasswordVisibility('wallLoginPassword', this)" title="Mostrar / Ocultar Senha">👁️</button>
+          </div>
+        </div>
+        <button class="save-btn" style="width: 100%; margin-top: 0.5rem; justify-content: center; height: 48px; font-size: 1rem;" onclick="submitWallLogin()">
+          ⚡ Entrar no Painel
+        </button>
+      </div>
+
+      <!-- Register Form -->
+      <div id="wallRegisterForm" style="display: none; flex-direction: column; gap: 0.9rem;">
+        <div class="form-group">
+          <label class="form-label">Vincular Jogador do Time *</label>
+          <select id="wallRegName" class="form-select"></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">E-mail *</label>
+          <input type="email" id="wallRegEmail" class="form-input" placeholder="seu.email@jornada.com" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Senha *</label>
+          <div class="password-input-wrap">
+            <input type="password" id="wallRegPassword" class="form-input" placeholder="Mínimo 6 caracteres" oninput="checkPasswordMatch('wall')" />
+            <button type="button" class="toggle-password-btn" onclick="togglePasswordVisibility('wallRegPassword', this)" title="Mostrar / Ocultar Senha">👁️</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Confirmar Senha *</label>
+          <div class="password-input-wrap">
+            <input type="password" id="wallRegConfirm" class="form-input" placeholder="Confirme sua senha" oninput="checkPasswordMatch('wall')" />
+            <button type="button" class="toggle-password-btn" onclick="togglePasswordVisibility('wallRegConfirm', this)" title="Mostrar / Ocultar Senha">👁️</button>
+          </div>
+          <div id="wallPasswordMatchHint" class="password-match-hint"></div>
+        </div>
+        <button class="save-btn" style="width: 100%; margin-top: 0.5rem; justify-content: center; height: 48px; font-size: 1rem;" onclick="submitWallRegister()">
+          📝 Finalizar Cadastro
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== DASHBOARD CONTAINER (LIBERADO APÓS LOGIN) ===== -->
+  <div id="appDashboardContainer" style="display: none;">
   <!-- ===== HEADER ===== -->
   <header class="header">
     <div class="header-inner">
@@ -28,6 +95,7 @@
         </div>
       </div>
       <div class="header-actions">
+        <div id="userProfileBadge"></div>
         <button class="manager-btn" id="btnOpenSync" style="display: inline-flex; align-items: center; gap: .4rem;">
           <span id="headerSyncDot" style="width: 8px; height: 8px; border-radius: 50%; background: var(--text2); display: inline-block;"></span>
           <span>&#x26A1; Sincronizar</span>
@@ -1087,8 +1155,89 @@ Total de cartas: 60"
       </div>
     </div>
   </div>
+  </div> <!-- Fim de #appDashboardContainer -->
 
-  <!-- Scripts -->
+  <!-- ===== MODAL: LOGIN / CADASTRO DE JOGADOR ===== -->
+  <div class="modal-overlay" id="modalAuth" style="display:none;">
+    <div class="modal" style="max-width: 420px; border: 1px solid var(--accent); background: var(--bg2); backdrop-filter: blur(16px);">
+      <div class="modal-header" style="border-bottom: 1px solid var(--border); padding-bottom: 0.8rem;">
+        <h2 class="modal-title" style="font-size: 1.1rem; color: var(--accent2);">⚡ Acesso do Time</h2>
+        <button class="modal-close" data-close-modal="modalAuth">✕</button>
+      </div>
+      <div class="modal-body" style="padding: 1.2rem;">
+        <!-- Tabs Header -->
+        <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border);">
+          <button id="tabAuthLogin" class="tab-btn active" style="flex: 1; text-align: center;" onclick="switchAuthTab('login')">🔑 Entrar</button>
+          <button id="tabAuthRegister" class="tab-btn" style="flex: 1; text-align: center;" onclick="switchAuthTab('register')">📝 Cadastrar-se</button>
+        </div>
+
+        <!-- Login Form -->
+        <div id="authLoginForm" style="display: flex; flex-direction: column; gap: 0.85rem;">
+          <div class="form-group">
+            <label class="form-label">E-mail *</label>
+            <input type="email" id="authLoginEmail" class="form-input" placeholder="seu.email@jornada.com" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Senha *</label>
+            <div class="password-input-wrap">
+              <input type="password" id="authLoginPassword" class="form-input" placeholder="••••••••" />
+              <button type="button" class="toggle-password-btn" onclick="togglePasswordVisibility('authLoginPassword', this)" title="Mostrar / Ocultar Senha">👁️</button>
+            </div>
+          </div>
+          <button class="save-btn" style="width: 100%; margin-top: 0.5rem; justify-content: center;" onclick="submitUserLogin()">
+            ⚡ Entrar no Painel
+          </button>
+        </div>
+
+        <!-- Register Form -->
+        <div id="authRegisterForm" style="display: none; flex-direction: column; gap: 0.85rem;">
+          <div class="form-group">
+            <label class="form-label">Vincular Jogador do Time *</label>
+            <select id="authRegName" class="form-select"></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">E-mail *</label>
+            <input type="email" id="authRegEmail" class="form-input" placeholder="seu.email@jornada.com" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Senha *</label>
+            <div class="password-input-wrap">
+              <input type="password" id="authRegPassword" class="form-input" placeholder="Mínimo 6 caracteres" oninput="checkPasswordMatch('auth')" />
+              <button type="button" class="toggle-password-btn" onclick="togglePasswordVisibility('authRegPassword', this)" title="Mostrar / Ocultar Senha">👁️</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Confirmar Senha *</label>
+            <div class="password-input-wrap">
+              <input type="password" id="authRegConfirm" class="form-input" placeholder="Confirme sua senha" oninput="checkPasswordMatch('auth')" />
+              <button type="button" class="toggle-password-btn" onclick="togglePasswordVisibility('authRegConfirm', this)" title="Mostrar / Ocultar Senha">👁️</button>
+            </div>
+            <div id="authPasswordMatchHint" class="password-match-hint"></div>
+          </div>
+          <button class="save-btn" style="width: 100%; margin-top: 0.5rem; justify-content: center;" onclick="submitUserRegister()">
+            📝 Finalizar Cadastro
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SDD Modular Scripts -->
+  <script src="js/config.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/stats.js"></script>
+  <script src="js/mirror.js"></script>
+  <script src="js/md3.js"></script>
+  <script src="js/quicklog.js"></script>
+  <script src="js/filters.js"></script>
+  <script src="js/table.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/matchup.js"></script>
+  <script src="js/manager_forms.js"></script>
+  <script src="js/sync_cloud.js"></script>
+  <script src="js/auth.js"></script>
+
+  <!-- Dashboard Orchestrator Scripts -->
   <script src="app.js"></script>
   <script src="manager.js"></script>
 </body>
