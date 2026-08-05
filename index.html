@@ -161,8 +161,8 @@
               </select>
             </div>
             <div class="form-group">
-              <label class="form-label">⚔️ Oponente *</label>
-              <input type="text" id="quickLogAdvName" class="form-input" placeholder="Ex: GreatBall" value="Oponente" />
+              <label class="form-label">⚔️ Oponente (ou Jogador do Time)</label>
+              <input list="playerOptionsAdv" id="quickLogAdvName" class="form-input" placeholder="Ex: GuiVaz ou Oponente" autocomplete="off" />
             </div>
             <div class="form-group">
               <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -218,6 +218,17 @@
               </select>
             </div>
           </div>
+          <!-- Touch-Optimized Games Strip for Quick Log (MD1 & MD3) -->
+          <div id="quickLogGamesStrip" class="quick-log-games-strip">
+            <div class="strip-header">
+              <span class="strip-title">🎮 Detalhes dos Games <span id="quickLogFormatoLabel" style="color:var(--text2); font-weight:normal;">(MD1)</span></span>
+              <span class="strip-subtitle" id="quickLogGamesHint">Toque nas pílulas para alternar</span>
+            </div>
+            <div id="quickLogGamesPillGrid" class="pill-grid-wrap">
+              <!-- Touch Pills rendered dynamically by JS -->
+            </div>
+          </div>
+
           <div class="quick-log-actions">
             <button class="quick-log-btn win" id="btnQuickWin">🏆 VITÓRIA</button>
             <button class="quick-log-btn draw" id="btnQuickDraw">🤝 EMPATE</button>
@@ -832,11 +843,12 @@ Total de cartas: 60"
 
         <!-- Row 2 -->
         <div class="form-row two-col">
-          <div class="form-group" style="display:none;">
-            <label class="form-label">Adversário</label>
-            <input type="text" id="formMatchAdv" class="form-input" placeholder="Nome do adversário" value="Oponente" />
+          <div class="form-group">
+            <label class="form-label">Adversário / Treinador Oponente</label>
+            <input list="playerOptionsAdv" id="formMatchAdv" class="form-input" placeholder="Digite o nome ou selecione um jogador do time..." autocomplete="off" />
+            <datalist id="playerOptionsAdv"></datalist>
           </div>
-          <div class="form-group" style="grid-column: 1 / -1;">
+          <div class="form-group">
             <div style="display:flex; justify-content:space-between; align-items:center;">
               <label class="form-label">Deck do Adversário (Arquétipo)</label>
               <button type="button" class="btn-add-deck" id="btnFormAddDeckAdv" title="Cadastrar novo deck">+</button>
@@ -883,8 +895,8 @@ Total de cartas: 60"
         </div>
 
         <!-- Row 4: Brick & Confiabilidade toggles -->
-        <div class="form-row three-col">
-          <div class="form-group">
+        <div class="form-row three-col" id="singleMatchParametersRow">
+          <div class="form-group" id="singleMatchBrickGroup">
             <label class="form-label">Brickei?</label>
             <div class="brick-toggle-group" id="brickToggleGroup">
               <button type="button" class="brick-toggle active" data-value="Não" id="brickNo">✅ Não</button>
@@ -892,8 +904,8 @@ Total de cartas: 60"
             </div>
             <input type="hidden" id="formMatchBrick" value="Não" />
           </div>
-          <div class="form-group">
-            <label class="form-label">Oponente brickeiou?</label>
+          <div class="form-group" id="singleMatchBrickOpGroup">
+            <label class="form-label">Oponente brickou?</label>
             <div class="brick-toggle-group" id="brickOpToggleGroup">
               <button type="button" class="brick-toggle active" data-value="Não" id="brickOpNo">✅ Não</button>
               <button type="button" class="brick-toggle" data-value="Sim" id="brickOpYes">💥 Sim</button>
@@ -907,6 +919,19 @@ Total de cartas: 60"
               <button type="button" class="brick-toggle" data-value="Baixa" id="confBaixaBtn">🔴 Baixa</button>
             </div>
             <input type="hidden" id="formMatchConfiabilidade" value="Alta" />
+          </div>
+        </div>
+
+        <!-- MD3 Games Breakdown Section (Shown dynamically when Formato == MD3) -->
+        <div id="md3GamesSection" style="display:none; margin: 0.85rem 0; padding: 0.85rem 1rem; border: 1px dashed var(--accent2); border-radius: 8px; background: rgba(0, 200, 248, 0.04);">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 0.75rem;">
+            <h4 style="margin:0; font-size:0.9rem; color:var(--accent2); font-weight:600; display:flex; align-items:center; gap:0.4rem;">
+              🎮 Detalhamento dos Games da MD3
+            </h4>
+            <span style="font-size:0.75rem; color:var(--text2);" id="md3GamesCountHint">0 games conforme placar</span>
+          </div>
+          <div id="md3GamesGrid" style="display:flex; flex-direction:column; gap:0.75rem;">
+            <!-- Rendered dynamically by manager.js -->
           </div>
         </div>
 

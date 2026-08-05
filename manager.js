@@ -187,8 +187,136 @@ function populatePlayerSelects() {
     sel.value = cur;
     if (sel.syncSearchableSelect) sel.syncSearchableSelect();
   });
+
+  const dlAdv = document.getElementById('playerOptionsAdv');
+  if (dlAdv) {
+    dlAdv.innerHTML = '';
+    players.forEach(p => {
+      const opt = document.createElement('option');
+      opt.value = p;
+      dlAdv.appendChild(opt);
+    });
+  }
+
   if (typeof populateQuickLogDropdowns === 'function') populateQuickLogDropdowns();
 }
+
+// ── MIRROR MATCH AUTOMATION ───────────────────────────────────────────────────
+window.invertPlacar = function(placar) {
+  if (!placar || typeof placar !== 'string') return placar || '';
+  const parts = placar.split(/[-:]/);
+  if (parts.length === 2) {
+    return `${parts[1].trim()}-${parts[0].trim()}`;
+  }
+  return placar;
+};
+
+window.buildMirrorMatch = function(primaryMatch) {
+  if (!primaryMatch || !primaryMatch.Player || !primaryMatch.Adversario) return null;
+  const teamPlayers = (typeof players !== 'undefined' && Array.isArray(players)) ? players : [];
+  const advName = primaryMatch.Adversario.trim();
+
+  // Check if opponent is a registered team player
+  const isTeamPlayer = teamPlayers.some(p => p.toLowerCase() === advName.toLowerCase());
+  if (!isTeamPlayer || advName.toLowerCase() === primaryMatch.Player.trim().toLowerCase()) {
+    return null; // Not an internal team duel
+  }
+
+  const teamPlayerName = teamPlayers.find(p => p.toLowerCase() === advName.toLowerCase()) || advName;
+
+  // Invert outcome & score
+  const res = primaryMatch.Resultado;
+  const mirrorRes = res === 'Vitória' ? 'Derrota' : res === 'Derrota' ? 'Vitória' : 'Empate';
+  const mirrorPontos = mirrorRes === 'Vitória' ? 1 : mirrorRes === 'Empate' ? 0.5 : 0;
+  const mirrorPlacar = invertPlacar(primaryMatch.Placar);
+
+  // Invert MD3 GamesDetail if available
+  let mirrorGamesDetail = null;
+  let mirrorStart = primaryMatch.Start === '1º' ? '2º' : primaryMatch.Start === '2º' ? '1º' : primaryMatch.Start;
+  let mirrorBrick = primaryMatch.BrickOp || 'Não';
+  let mirrorBrickOp = primaryMatch.Brick || 'Não';
+
+  if (primaryMatch.GamesDetail && Array.isArray(primaryMatch.GamesDetail) && primaryMatch.GamesDetail.length > 0) {
+    mirrorGamesDetail = primaryMatch.GamesDetail.map(g => ({
+      game: g.game,
+      start: g.start === '1º' ? '2º' : '1º',
+      brick: g.brickOp || 'Não',
+      brickOp: g.brick || 'Não'
+    }));
+    mirrorStart = mirrorGamesDetail.map(g => g.start).join(', ');
+    mirrorBrick = mirrorGamesDetail.some(g => g.brick === 'Sim') ? 'Sim' : 'Não';
+    mirrorBrickOp = mirrorGamesDetail.some(g => g.brickOp === 'Sim') ? 'Sim' : 'Não';
+  }
+
+  let mirrorId = primaryMatch._mirrorId;
+  if (!mirrorId) {
+    const baseNum = Number(primaryMatch.id);
+    mirrorId = (!isNaN(baseNum) && baseNum > 0) ? (baseNum + 1).toString() : (Date.now() + 1).toString();
+  }
+
+  return {
+    id:               mirrorId,
+    _mirroredFrom:    primaryMatch.id,
+    Data:             primaryMatch.Data,
+    Player:           teamPlayerName,
+    Deck:             primaryMatch.DeckAdv,
+    Arquetipo:        primaryMatch.DeckAdvArquetipo || primaryMatch.DeckAdv,
+    Subtipo:          primaryMatch.SubtipoAdv || '',
+    Adversario:       primaryMatch.Player,
+    DeckAdv:          primaryMatch.Deck,
+    DeckAdvArquetipo: primaryMatch.Arquetipo || primaryMatch.Deck,
+    SubtipoAdv:       primaryMatch.Subtipo || '',
+    Luck:             primaryMatch.Luck || 0,
+    Formato:          primaryMatch.Formato || 'MD1',
+    Start:            mirrorStart,
+    Resultado:        mirrorRes,
+    Pontos:           mirrorPontos,
+    Placar:           mirrorPlacar,
+    Local:            primaryMatch.Local || '—',
+    Colecao:          primaryMatch.Colecao || '—',
+    Brick:            mirrorBrick,
+    BrickOp:          mirrorBrickOp,
+    Confiabilidade:   primaryMatch.Confiabilidade || 'Alta',
+    GamesDetail:      mirrorGamesDetail,
+    ListaMeuDeck:     primaryMatch.ListaDeckAdv || '',
+    ListaDeckAdv:     primaryMatch.ListaMeuDeck || '',
+    Comentarios:      primaryMatch.Comentarios ? `[Espelho vs ${primaryMatch.Player}] ${primaryMatch.Comentarios}` : `Partida interna vs ${primaryMatch.Player}`,
+    _manual:          true
+  };
+};
+
+window.syncAllTeamMirrorMatches = function() {
+  if (typeof players === 'undefined' || !Array.isArray(players) || players.length === 0) return;
+  const manual = loadManual();
+  let addedCount = 0;
+
+  manual.forEach(m => {
+    if (!m || !m.Player || !m.Adversario) return;
+    const mirror = buildMirrorMatch(m);
+    if (mirror) {
+      const exists = manual.some(existing => 
+        existing.id === mirror.id || 
+        existing._mirroredFrom === m.id || 
+        m._mirrorId === existing.id ||
+        (existing.Player.toLowerCase() === mirror.Player.toLowerCase() &&
+         existing.Adversario.toLowerCase() === mirror.Adversario.toLowerCase() &&
+         existing.Data === mirror.Data &&
+         existing.Deck === mirror.Deck)
+      );
+
+      if (!exists) {
+        m._mirrorId = mirror.id;
+        manual.push(mirror);
+        addedCount++;
+      }
+    }
+  });
+
+  if (addedCount > 0) {
+    saveManual(manual);
+    console.log(`⚔️ Sync retroativo criou ${addedCount} partidas espelho para o time!`);
+  }
+};
 
 // ── POPULATE DECK SELECTS ────────────────────────────────────────────────────
 function populateDeckSelects() {
@@ -852,10 +980,138 @@ function openMatchForm(matchData) {
   });
 
   updateSubtipoOptions();
+  renderMD3GamesUI(matchData?.GamesDetail);
 
   showModal('modalMatchForm');
   window.initialMatchFormSnapshot = getMatchFormStateSnapshot();
 }
+
+window.getGameCountFromPlacar = function(formato, placar, userOverriddenCount = null) {
+  if (formato !== 'MD3') return 1;
+  const cleanPlacar = (placar || '').trim();
+
+  if (userOverriddenCount) {
+    if ((cleanPlacar === '1-0' || cleanPlacar === '0-1') && (userOverriddenCount === 1 || userOverriddenCount === 2)) {
+      return userOverriddenCount;
+    }
+    if (cleanPlacar === '1-1' && (userOverriddenCount === 2 || userOverriddenCount === 3)) {
+      return userOverriddenCount;
+    }
+  }
+
+  // Exact Placar Rules
+  if (cleanPlacar === '0-0') return 1;
+  if (cleanPlacar === '1-0' || cleanPlacar === '0-1') return 1;
+  if (cleanPlacar === '1-1') return 2;
+  if (cleanPlacar === '2-0' || cleanPlacar === '0-2') return 2;
+  if (cleanPlacar === '2-1' || cleanPlacar === '1-2') return 3;
+
+  return 2;
+};
+
+window.renderMD3GamesUI = function(existingGamesDetail = null, userCountOverride = null) {
+  const formato = document.getElementById('formMatchFormato')?.value || 'MD1';
+  const placar = document.getElementById('formMatchPlacar')?.value || '1-0';
+  const sec = document.getElementById('md3GamesSection');
+  const grid = document.getElementById('md3GamesGrid');
+  const hint = document.getElementById('md3GamesCountHint');
+  const singleStartGroup = document.getElementById('formMatchStart')?.closest('.form-group');
+  const singleBrickGroup = document.getElementById('singleMatchBrickGroup');
+  const singleBrickOpGroup = document.getElementById('singleMatchBrickOpGroup');
+
+  if (!sec || !grid) return;
+
+  if (formato !== 'MD3') {
+    sec.style.display = 'none';
+    if (singleStartGroup) singleStartGroup.style.display = 'block';
+    if (singleBrickGroup) singleBrickGroup.style.display = 'block';
+    if (singleBrickOpGroup) singleBrickOpGroup.style.display = 'block';
+    return;
+  }
+
+  // MD3 Mode: Hide single start & single brick/brickOp toggles
+  sec.style.display = 'block';
+  if (singleStartGroup) singleStartGroup.style.display = 'none';
+  if (singleBrickGroup) singleBrickGroup.style.display = 'none';
+  if (singleBrickOpGroup) singleBrickOpGroup.style.display = 'none';
+
+  let count = userCountOverride;
+  if (!count && existingGamesDetail && Array.isArray(existingGamesDetail) && existingGamesDetail.length > 0) {
+    count = existingGamesDetail.length;
+  }
+  if (!count) {
+    count = getGameCountFromPlacar('MD3', placar);
+  }
+
+  window._activeMD3GameCount = count;
+
+  const cleanPlacar = (placar || '').trim();
+  let toggleHtml = '';
+  if (cleanPlacar === '1-0' || cleanPlacar === '0-1') {
+    toggleHtml = `
+      <div style="display:inline-flex; gap:4px; margin-left:8px;">
+        <button type="button" class="icon-btn sm" onclick="renderMD3GamesUI(null, 1)" style="${count === 1 ? 'background:var(--accent2);color:#000;font-weight:bold;' : ''}">1 Game</button>
+        <button type="button" class="icon-btn sm" onclick="renderMD3GamesUI(null, 2)" style="${count === 2 ? 'background:var(--accent2);color:#000;font-weight:bold;' : ''}">2 Games</button>
+      </div>
+    `;
+  } else if (cleanPlacar === '1-1') {
+    toggleHtml = `
+      <div style="display:inline-flex; gap:4px; margin-left:8px;">
+        <button type="button" class="icon-btn sm" onclick="renderMD3GamesUI(null, 2)" style="${count === 2 ? 'background:var(--accent2);color:#000;font-weight:bold;' : ''}">2 Games</button>
+        <button type="button" class="icon-btn sm" onclick="renderMD3GamesUI(null, 3)" style="${count === 3 ? 'background:var(--accent2);color:#000;font-weight:bold;' : ''}">3 Games</button>
+      </div>
+    `;
+  }
+
+  if (hint) {
+    hint.innerHTML = `${count} game${count > 1 ? 's' : ''} jogado${count > 1 ? 's' : ''} (Placar: ${placar}) ${toggleHtml}`;
+  }
+
+  grid.innerHTML = '';
+  for (let i = 1; i <= count; i++) {
+    const existingGame = (existingGamesDetail && Array.isArray(existingGamesDetail))
+      ? existingGamesDetail.find(g => g.game === i)
+      : null;
+
+    const defaultStart = existingGame ? existingGame.start : (i === 1 ? '1º' : '2º');
+    const defaultBrick = existingGame ? existingGame.brick : 'Não';
+    const defaultBrickOp = existingGame ? existingGame.brickOp : 'Não';
+
+    const card = document.createElement('div');
+    card.className = 'md3-game-card';
+    card.style.cssText = 'background:var(--bg3); padding:0.6rem 0.85rem; border-radius:6px; display:flex; align-items:center; justify-content:space-between; gap:0.5rem; flex-wrap:wrap; border:1px solid var(--border);';
+
+    card.innerHTML = `
+      <span style="font-weight:600; font-size:0.82rem; color:var(--accent2); display:flex; align-items:center; gap:0.3rem;">
+        🎮 Game ${i}
+      </span>
+      <div style="display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap;">
+        <div style="display:flex; align-items:center; gap:0.3rem;">
+          <span style="font-size:0.75rem; color:var(--text2);">Start:</span>
+          <select id="md3GameStart_${i}" class="form-input" style="padding:0.25rem 0.4rem; font-size:0.78rem; width: auto;">
+            <option value="1º" ${defaultStart === '1º' ? 'selected' : ''}>1º (Começou)</option>
+            <option value="2º" ${defaultStart === '2º' ? 'selected' : ''}>2º (Segundo)</option>
+          </select>
+        </div>
+        <div style="display:flex; align-items:center; gap:0.3rem;">
+          <span style="font-size:0.75rem; color:var(--text2);">Brickei:</span>
+          <select id="md3GameBrick_${i}" class="form-input" style="padding:0.25rem 0.4rem; font-size:0.78rem; width: auto;">
+            <option value="Não" ${defaultBrick === 'Não' ? 'selected' : ''}>✅ Não</option>
+            <option value="Sim" ${defaultBrick === 'Sim' ? 'selected' : ''}>💥 Sim</option>
+          </select>
+        </div>
+        <div style="display:flex; align-items:center; gap:0.3rem;">
+          <span style="font-size:0.75rem; color:var(--text2);">Oponente brickou:</span>
+          <select id="md3GameBrickOp_${i}" class="form-input" style="padding:0.25rem 0.4rem; font-size:0.78rem; width: auto;">
+            <option value="Não" ${defaultBrickOp === 'Não' ? 'selected' : ''}>✅ Não</option>
+            <option value="Sim" ${defaultBrickOp === 'Sim' ? 'selected' : ''}>💥 Sim</option>
+          </select>
+        </div>
+      </div>
+    `;
+    grid.appendChild(card);
+  }
+};
 
 window.updateSubtipoOptions = function() {
   const player    = document.getElementById('formMatchPlayer')?.value || '';
@@ -1001,6 +1257,15 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
   });
+
+  ['formMatchFormato', 'formMatchPlacar'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.addEventListener('change', () => {
+        if (typeof renderMD3GamesUI === 'function') renderMD3GamesUI();
+      });
+    }
+  });
 });
 
 function saveMatchForm() {
@@ -1082,8 +1347,37 @@ function saveMatchForm() {
     if (typeof renderDecksList === 'function') renderDecksList();
   }
 
+  const formato = getVal('formMatchFormato') || 'MD1';
+  const placar  = getVal('formMatchPlacar').trim();
+  let gamesDetail = null;
+
+  if (formato === 'MD3') {
+    const count = getGameCountFromPlacar('MD3', placar);
+    gamesDetail = [];
+    for (let i = 1; i <= count; i++) {
+      gamesDetail.push({
+        game: i,
+        start: getVal(`md3GameStart_${i}`) || '1º',
+        brick: getVal(`md3GameBrick_${i}`) || 'Não',
+        brickOp: getVal(`md3GameBrickOp_${i}`) || 'Não'
+      });
+    }
+  }
+
+  const startVal = (formato === 'MD3' && gamesDetail && gamesDetail.length > 0)
+    ? gamesDetail.map(g => g.start).join(', ')
+    : (getVal('formMatchStart') || '1º');
+
+  const brickVal = (formato === 'MD3' && gamesDetail && gamesDetail.length > 0)
+    ? (gamesDetail.some(g => g.brick === 'Sim') ? 'Sim' : 'Não')
+    : (getVal('formMatchBrick') || 'Não');
+
+  const brickOpVal = (formato === 'MD3' && gamesDetail && gamesDetail.length > 0)
+    ? (gamesDetail.some(g => g.brickOp === 'Sim') ? 'Sim' : 'Não')
+    : (getVal('formMatchBrickOp') || 'Não');
+
   const matchData = {
-    id:               editingMatchId || Date.now().toString(),
+    id:               editingMatchId || (Date.now().toString() + Math.random().toString(36).substr(2, 4)),
     Data:             getVal('formMatchData') || new Date().toISOString().slice(0, 10),
     Player:           player,
     Deck:             deckFullName,
@@ -1094,48 +1388,76 @@ function saveMatchForm() {
     DeckAdvArquetipo: arquetipoAdv,
     SubtipoAdv:       subtipoAdv,
     Luck:             0,
-    Formato:          getVal('formMatchFormato') || 'MD1',
-    Start:            getVal('formMatchStart') || '1º',
+    Formato:          formato,
+    Start:            startVal,
     Resultado:        resultado,
     Pontos:           pontos,
-    Placar:           getVal('formMatchPlacar').trim(),
+    Placar:           placar,
     Local:            local,
     Colecao:          colecao,
-    Brick:            getVal('formMatchBrick') || 'Não',
-    BrickOp:          getVal('formMatchBrickOp') || 'Não',
+    Brick:            brickVal,
+    BrickOp:          brickOpVal,
     Confiabilidade:   getVal('formMatchConfiabilidade') || 'Alta',
+    GamesDetail:      gamesDetail,
     ListaMeuDeck:     ownListRaw,
     ListaDeckAdv:     advListRaw,
     Comentarios:      getVal('formMatchComentarios').trim(),
     _manual:          true,
   };
 
+  const mirrorMatch = buildMirrorMatch(matchData);
+  if (mirrorMatch) {
+    matchData._mirrorId = mirrorMatch.id;
+  }
+
+  const manual = loadManual();
   if (editingMatchId) {
     // --- EDIT mode ---
-    // 1. Update manual store if it's a manual match
-    const manual = loadManual();
-    const midx   = manual.findIndex(m => m.id === editingMatchId);
+    const midx = manual.findIndex(m => m.id === editingMatchId);
     if (midx >= 0) {
       manual[midx] = matchData;
-      saveManual(manual);
     } else {
-      // Imported match — save as an edit override
       const edits = loadEdits();
       edits[editingMatchId] = matchData;
       saveEdits(edits);
     }
-    // 2. Update in-memory allData
-    if (typeof allData !== 'undefined') {
-      const aidx = allData.findIndex(m => m.id === editingMatchId);
-      if (aidx >= 0) allData[aidx] = matchData;
-    }
-    showToast('✏️ Partida atualizada!');
   } else {
     // --- NEW match ---
-    const manual = loadManual();
     manual.push(matchData);
-    saveManual(manual);
-    if (typeof allData !== 'undefined') allData.push(matchData);
+  }
+
+  // Sync Mirror Match in manual store
+  if (mirrorMatch) {
+    const mIdx = manual.findIndex(m => m.id === mirrorMatch.id || m._mirroredFrom === matchData.id);
+    if (mIdx >= 0) manual[mIdx] = mirrorMatch;
+    else manual.push(mirrorMatch);
+  } else {
+    const mIdx = manual.findIndex(m => m._mirroredFrom === matchData.id);
+    if (mIdx >= 0) manual.splice(mIdx, 1);
+  }
+  saveManual(manual);
+
+  // Sync in-memory allData
+  if (typeof allData !== 'undefined' && Array.isArray(allData)) {
+    const aidx = allData.findIndex(m => m.id === matchData.id);
+    if (aidx >= 0) allData[aidx] = matchData;
+    else allData.push(matchData);
+
+    if (mirrorMatch) {
+      const maidx = allData.findIndex(m => m.id === mirrorMatch.id || m._mirroredFrom === matchData.id);
+      if (maidx >= 0) allData[maidx] = mirrorMatch;
+      else allData.push(mirrorMatch);
+    } else {
+      const maidx = allData.findIndex(m => m._mirroredFrom === matchData.id);
+      if (maidx >= 0) allData.splice(maidx, 1);
+    }
+  }
+
+  if (editingMatchId) {
+    showToast('✏️ Partida (e espelho do time) atualizada!');
+  } else if (mirrorMatch) {
+    showToast(`⚔️ Partida registrada para ${matchData.Player} e espelho para ${mirrorMatch.Player}!`);
+  } else {
     showToast('✅ Partida registrada com sucesso!');
   }
 
@@ -1152,30 +1474,43 @@ window.deleteMatch = function(matchId) {
   if (!confirm('Deletar esta partida? Esta ação não pode ser desfeita.')) return;
   lastWriteTime = Date.now();
 
-  // Remove from manual store
   const manual = loadManual();
-  const newManual = manual.filter(m => m.id !== matchId);
-  if (newManual.length < manual.length) saveManual(newManual);
+  const targetMatch = manual.find(m => m.id === matchId) || ((typeof allData !== 'undefined') ? allData.find(m => m.id === matchId) : null);
+  const mirrorId = targetMatch?._mirrorId;
+  const mirroredFromId = targetMatch?._mirroredFrom;
 
-  // Mark as deleted (covers imported matches)
+  const newManual = manual.filter(m => 
+    m.id !== matchId && 
+    (!mirrorId || m.id !== mirrorId) && 
+    (!mirroredFromId || m.id !== mirroredFromId) &&
+    m._mirroredFrom !== matchId
+  );
+  saveManual(newManual);
+
   const deleted = loadDeleted();
   deleted.add(matchId);
+  if (mirrorId) deleted.add(mirrorId);
+  if (mirroredFromId) deleted.add(mirroredFromId);
   saveDeleted(deleted);
 
-  // Remove edits override if any
   const edits = loadEdits();
   delete edits[matchId];
+  if (mirrorId) delete edits[mirrorId];
+  if (mirroredFromId) delete edits[mirroredFromId];
   saveEdits(edits);
 
-  // Update in-memory allData
-  if (typeof allData !== 'undefined') {
-    const idx = allData.findIndex(m => m.id === matchId);
-    if (idx >= 0) allData.splice(idx, 1);
+  if (typeof allData !== 'undefined' && Array.isArray(allData)) {
+    const filterAll = m => 
+      m.id !== matchId && 
+      (!mirrorId || m.id !== mirrorId) && 
+      (!mirroredFromId || m.id !== mirroredFromId) &&
+      m._mirroredFrom !== matchId;
+    allData = allData.filter(filterAll);
   }
 
   if (typeof populateFilters === 'function') populateFilters();
   if (typeof applyFilters    === 'function') applyFilters();
-  showToast('🗑️ Partida deletada.');
+  showToast('🗑️ Partida (e espelho do time) deletada.');
 };
 
 // ── EDIT MATCH ────────────────────────────────────────────────────────────────
@@ -1450,6 +1785,17 @@ function populateQuickLogDropdowns() {
   populateColecaoSelects();
   updatePlacarDropdown('quickLogFormato', 'quickLogPlacar');
   updatePlacarDropdown('formMatchFormato', 'formMatchPlacar');
+  if (typeof renderQuickLogTouchPills === 'function') renderQuickLogTouchPills();
+
+  ['quickLogFormato', 'quickLogPlacar'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el && !el.dataset.quickPillListener) {
+      el.dataset.quickPillListener = "true";
+      el.addEventListener('change', () => {
+        if (typeof renderQuickLogTouchPills === 'function') renderQuickLogTouchPills();
+      });
+    }
+  });
 }
 
 const PLACAR_RULES = {
@@ -1513,13 +1859,76 @@ window.updatePlacarDropdown = function(formatoId, placarId, currentVal = null, o
   if (placarEl.syncSearchableSelect) placarEl.syncSearchableSelect();
 };
 
+window.quickLogPillState = {};
+
+window.renderQuickLogTouchPills = function() {
+  const formato = document.getElementById('quickLogFormato')?.value || 'MD1';
+  const placar = document.getElementById('quickLogPlacar')?.value || '1-0';
+  const grid = document.getElementById('quickLogGamesPillGrid');
+  const label = document.getElementById('quickLogFormatoLabel');
+  const startSelect = document.getElementById('quickLogStart')?.closest('.form-group');
+
+  if (!grid) return;
+
+  if (label) label.textContent = `(${formato})`;
+  if (startSelect) {
+    startSelect.style.display = formato === 'MD3' ? 'none' : 'block';
+  }
+
+  const count = formato === 'MD3' ? getGameCountFromPlacar('MD3', placar) : 1;
+
+  grid.innerHTML = '';
+  for (let i = 1; i <= count; i++) {
+    if (!window.quickLogPillState[i]) {
+      window.quickLogPillState[i] = {
+        start: i === 1 ? '1º' : (i % 2 === 0 ? '2º' : '1º'),
+        brick: false,
+        brickOp: false
+      };
+    }
+    const state = window.quickLogPillState[i];
+
+    const card = document.createElement('div');
+    card.className = 'pill-game-row';
+
+    card.innerHTML = `
+      <div class="pill-game-header">
+        🎮 ${formato === 'MD3' ? 'Game ' + i : 'Game Principal'}
+      </div>
+      <div class="pill-btn-group">
+        <button type="button" class="pill-btn ${state.start === '1º' ? 'active-start' : ''}" onclick="toggleQuickLogPill(${i}, 'start')">
+          🎲 ${state.start === '1º' ? '1º (Começou)' : '2º (Segundo)'}
+        </button>
+        <button type="button" class="pill-btn ${state.brick ? 'active-brick' : ''}" onclick="toggleQuickLogPill(${i}, 'brick')">
+          ${state.brick ? '💥 Meu Brick' : '✅ Meu Brick'}
+        </button>
+        <button type="button" class="pill-btn ${state.brickOp ? 'active-brick' : ''}" onclick="toggleQuickLogPill(${i}, 'brickOp')">
+          ${state.brickOp ? '💥 Opp Brick' : '✅ Opp Brick'}
+        </button>
+      </div>
+    `;
+    grid.appendChild(card);
+  }
+};
+
+window.toggleQuickLogPill = function(gameNum, field) {
+  if (!window.quickLogPillState[gameNum]) return;
+  if (field === 'start') {
+    window.quickLogPillState[gameNum].start = window.quickLogPillState[gameNum].start === '1º' ? '2º' : '1º';
+  } else if (field === 'brick') {
+    window.quickLogPillState[gameNum].brick = !window.quickLogPillState[gameNum].brick;
+  } else if (field === 'brickOp') {
+    window.quickLogPillState[gameNum].brickOp = !window.quickLogPillState[gameNum].brickOp;
+  }
+  renderQuickLogTouchPills();
+};
+
 window.quickLogMatch = function(resultado) {
   const player   = document.getElementById('quickLogPlayer')?.value;
   const deckName = document.getElementById('quickLogDeck')?.value;
   const advName  = document.getElementById('quickLogAdvName')?.value.trim() || 'Oponente';
   const deckAdv  = document.getElementById('quickLogDeckAdv')?.value;
   const formato  = document.getElementById('quickLogFormato')?.value || 'MD1';
-  const startVal = document.getElementById('quickLogStart')?.value || '1º';
   const colecao  = document.getElementById('quickLogColecao')?.value;
   const local    = document.getElementById('quickLogLocal')?.value;
 
@@ -1535,6 +1944,34 @@ window.quickLogMatch = function(resultado) {
   if (!local)    { showToast('⚠️ Selecione o local da partida.'); return; }
   if (!placarInput) { showToast('⚠️ Informe o placar da partida (ex: 2-1).'); return; }
 
+  const count = formato === 'MD3' ? getGameCountFromPlacar('MD3', placarInput) : 1;
+  let gamesDetail = null;
+
+  if (formato === 'MD3') {
+    gamesDetail = [];
+    for (let i = 1; i <= count; i++) {
+      const st = window.quickLogPillState[i] || { start: i === 1 ? '1º' : '2º', brick: false, brickOp: false };
+      gamesDetail.push({
+        game: i,
+        start: st.start,
+        brick: st.brick ? 'Sim' : 'Não',
+        brickOp: st.brickOp ? 'Sim' : 'Não'
+      });
+    }
+  }
+
+  const startVal = (formato === 'MD3' && gamesDetail)
+    ? gamesDetail.map(g => g.start).join(', ')
+    : (window.quickLogPillState[1]?.start || document.getElementById('quickLogStart')?.value || '1º');
+
+  const brickVal = (formato === 'MD3' && gamesDetail)
+    ? (gamesDetail.some(g => g.brick === 'Sim') ? 'Sim' : 'Não')
+    : (window.quickLogPillState[1]?.brick ? 'Sim' : 'Não');
+
+  const brickOpVal = (formato === 'MD3' && gamesDetail)
+    ? (gamesDetail.some(g => g.brickOp === 'Sim') ? 'Sim' : 'Não')
+    : (window.quickLogPillState[1]?.brickOp ? 'Sim' : 'Não');
+
   const pontos = resultado === 'Vitória' ? 1 : resultado === 'Empate' ? 0.5 : 0;
 
   const ownDeckObj = decks.find(d => d.name === deckName);
@@ -1543,7 +1980,7 @@ window.quickLogMatch = function(resultado) {
   const arquetipoAdv = advDeckObj?.arquetipo || deckAdv;
 
   const matchData = {
-    id:             Date.now().toString(),
+    id:             Date.now().toString() + Math.random().toString(36).substr(2, 4),
     Data:           new Date().toISOString().slice(0, 10),
     Player:         player,
     Deck:           deckName,
@@ -1559,19 +1996,27 @@ window.quickLogMatch = function(resultado) {
     Placar:         placarInput,
     Local:          local,
     Colecao:        colecao,
-    Brick:          'Não',
-    BrickOp:        'Não',
+    Brick:          brickVal,
+    BrickOp:        brickOpVal,
     Confiabilidade: document.getElementById('quickLogConfiabilidade')?.value || 'Alta',
-    Comentarios:    'Registrado via Quick Log',
+    GamesDetail:    gamesDetail,
+    Comentarios:    'Registrado via Quick Log (Mobile)',
     _manual:        true
   };
 
+  const mirrorMatch = buildMirrorMatch(matchData);
+  if (mirrorMatch) {
+    matchData._mirrorId = mirrorMatch.id;
+  }
+
   const manual = loadManual();
   manual.push(matchData);
+  if (mirrorMatch) manual.push(mirrorMatch);
   saveManual(manual);
 
-  if (typeof allData !== 'undefined') {
+  if (typeof allData !== 'undefined' && Array.isArray(allData)) {
     allData.push(matchData);
+    if (mirrorMatch) allData.push(mirrorMatch);
   }
 
   const opD = document.getElementById('quickLogDeckAdv');
@@ -1582,7 +2027,11 @@ window.quickLogMatch = function(resultado) {
   if (typeof populateFilters === 'function') populateFilters();
   if (typeof applyFilters    === 'function') applyFilters();
 
-  showToast(`⚡ Partida (${resultado} - ${placarInput} em ${colecao}) registrada!`);
+  if (mirrorMatch) {
+    showToast(`⚡ Partida registrada para ${player} e espelho automático para ${mirrorMatch.Player}!`);
+  } else {
+    showToast(`⚡ Partida (${resultado} - ${placarInput} em ${colecao}) registrada!`);
+  }
 };
 
 function initQuickLogToggle() {

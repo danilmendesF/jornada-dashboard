@@ -25,10 +25,30 @@ function applyDataOverrides(rawData) {
 }
 
 function initializeData() {
+  if (typeof syncAllTeamMirrorMatches === 'function') {
+    syncAllTeamMirrorMatches();
+  }
   const manual = (typeof loadManual === 'function') ? loadManual() : [];
   allData = applyDataOverrides(manual);
   filtered = [...allData];
 }
+
+// ── MULTI-TAB SYNC ───────────────────────────────────────────────────────────
+window.addEventListener('storage', (e) => {
+  if (!e.key || !e.key.startsWith('jornada_')) return;
+  // Reload all data from localStorage (written by another tab)
+  if (typeof loadPlayers === 'function') players = loadPlayers();
+  if (typeof loadDecks === 'function') decks = loadDecks();
+  if (typeof loadColecoes === 'function') colecoes = loadColecoes();
+  if (typeof loadLocais === 'function') locais = loadLocais();
+  initializeData();
+  if (typeof populateFilters === 'function') populateFilters();
+  if (typeof populateDeckSelects === 'function') populateDeckSelects();
+  if (typeof populatePlayerSelects === 'function') populatePlayerSelects();
+  if (typeof populateQuickLogDropdowns === 'function') populateQuickLogDropdowns();
+  if (typeof applyFilters === 'function') applyFilters();
+  if (typeof showToast === 'function') showToast('🔄 Dados atualizados de outra sessão.');
+});
 
 
 // ── 3. CHART DEFAULTS ────────────────────────────────────────────────────────
@@ -73,12 +93,15 @@ function groupBy(data, keyOrFn) {
 
 function isBricked(r) {
   if (!r) return false;
+  if (r.GamesDetail && Array.isArray(r.GamesDetail) && r.GamesDetail.length > 0) {
+    return r.GamesDetail.some(g => g.brick === 'Sim');
+  }
   return r.Brick === 'Sim' || (r.Brick && r.Brick !== 'Nenhum' && r.Brick !== 'Não');
 }
 
 function calculateStats(matches) {
   if (!Array.isArray(matches) || matches.length === 0) {
-    return { wins: 0, draws: 0, losses: 0, total: 0, wr: 0, brickWins: 0, totalBricks: 0 };
+    return { wins: 0, draws: 0, losses: 0, total: 0, wr: 0, brickWins: 0, totalBricks: 0, totalGamesCount: 0, totalGameBricksCount: 0 };
   }
   const total = matches.length;
   const wins = matches.filter(m => m.Resultado === 'Vitória').length;
@@ -87,7 +110,30 @@ function calculateStats(matches) {
   const wr = pct(wins, total);
   const brickMatches = matches.filter(m => isBricked(m));
   const brickWins = brickMatches.filter(m => m.Resultado === 'Vitória').length;
-  return { wins, draws, losses, total, wr, brickWins, totalBricks: brickMatches.length };
+
+  let totalGamesCount = 0;
+  let totalGameBricksCount = 0;
+  matches.forEach(m => {
+    if (m.GamesDetail && Array.isArray(m.GamesDetail) && m.GamesDetail.length > 0) {
+      totalGamesCount += m.GamesDetail.length;
+      totalGameBricksCount += m.GamesDetail.filter(g => g.brick === 'Sim').length;
+    } else {
+      totalGamesCount += 1;
+      if (isBricked(m)) totalGameBricksCount += 1;
+    }
+  });
+
+  return { 
+    wins, 
+    draws, 
+    losses, 
+    total, 
+    wr, 
+    brickWins, 
+    totalBricks: brickMatches.length,
+    totalGamesCount,
+    totalGameBricksCount
+  };
 }
 
 function destroyChart(id) {
@@ -608,7 +654,7 @@ function applyFilters() {
 // ── 7. KPI CARDS ─────────────────────────────────────────────────────────────
 function renderKPIs() {
   const stats = calculateStats(filtered);
-  const brickPct = pct(stats.totalBricks, stats.total);
+  const brickPct = pct(stats.totalGameBricksCount, stats.totalGamesCount);
 
   animCount('kpiTotal', stats.total);
   animCount('kpiWin',   stats.wins);
@@ -1013,7 +1059,19 @@ function renderDeckCount() {
 function renderStart() {
   destroyChart('start');
   const positions = ['1º', '2º'];
-  const byStart = groupBy(filtered, 'Start');
+
+  // Expand MD3 matches into individual game-level start entries
+  const expandedStarts = [];
+  filtered.forEach(m => {
+    if (m.GamesDetail && Array.isArray(m.GamesDetail) && m.GamesDetail.length > 0) {
+      m.GamesDetail.forEach(g => {
+        expandedStarts.push({ ...m, Start: g.start });
+      });
+    } else {
+      expandedStarts.push(m);
+    }
+  });
+  const byStart = groupBy(expandedStarts, 'Start');
 
   const datasets = [
     { label:'Vitórias', color: WIN_COLOR  },
@@ -1057,11 +1115,20 @@ function renderBrick() {
   const byDeck     = groupBy(filtered, 'Deck');
   const deckLabels = Object.keys(byDeck).sort();
 
-  // "Brickado" = Brick === 'Sim' OU qualquer valor antigo diferente de 'Nenhum'/'Não'
+  // Brick rate per deck — game-level for MD3, match-level for MD1
   const bricked    = deckLabels.map(deck => {
     const rows = byDeck[deck];
-    const n    = rows.filter(r => r.Brick === 'Sim' || (r.Brick && r.Brick !== 'Nenhum' && r.Brick !== 'Não')).length;
-    return rows.length ? Math.round((n / rows.length) * 100) : 0;
+    let totalGames = 0, brickedGames = 0;
+    rows.forEach(r => {
+      if (r.GamesDetail && Array.isArray(r.GamesDetail) && r.GamesDetail.length > 0) {
+        totalGames += r.GamesDetail.length;
+        brickedGames += r.GamesDetail.filter(g => g.brick === 'Sim').length;
+      } else {
+        totalGames += 1;
+        if (isBricked(r)) brickedGames += 1;
+      }
+    });
+    return totalGames ? Math.round((brickedGames / totalGames) * 100) : 0;
   });
   const notBricked = bricked.map(v => 100 - v);
 
@@ -1288,9 +1355,9 @@ function updateTableHeaderSortUI() {
     return visibleValues.some(v => v.includes(searchNorm));
   });
 
-  // Sort rows based on window.tableSortState
+  // Sort rows based on window.tableSortState (default: Data desc)
   let sorted = [...toRender];
-  const { column, dir } = window.tableSortState || { column: 'id', dir: 'desc' };
+  const { column, dir } = window.tableSortState || { column: 'Data', dir: 'desc' };
   const multiplier = (dir === 'asc') ? 1 : -1;
 
   sorted.sort((a, b) => {

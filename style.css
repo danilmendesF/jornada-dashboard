@@ -79,12 +79,14 @@
 /* ---------- Reset & Base ---------- */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; }
-body {
+html, body {
   font-family: 'Outfit', sans-serif;
   background: var(--bg);
   color: var(--text);
   min-height: 100vh;
+  max-width: 100vw;
   overflow-x: hidden;
+  box-sizing: border-box;
 }
 
 /* ── Animated ocean-wave background ── */
@@ -732,6 +734,7 @@ tbody tr:last-child td { border-bottom: none; }
   border-top: 1px solid var(--border);
   flex-wrap: wrap;
   gap: 0.8rem;
+  width: 100%;
 }
 .pagination-info {
   font-size: 0.78rem;
@@ -741,6 +744,8 @@ tbody tr:last-child td { border-bottom: none; }
   display: flex;
   align-items: center;
   gap: 0.35rem;
+  flex-wrap: wrap;
+  max-width: 100%;
 }
 .page-btn {
   padding: 0.35rem 0.65rem;
@@ -917,12 +922,13 @@ tbody tr:last-child td { border-bottom: none; }
   top: calc(100% + 4px);
   left: 0;
   width: 260px;
+  max-width: calc(100vw - 2rem);
   max-height: 320px;
   background: var(--bg2);
   border: 1px solid rgba(26,127,255,0.35);
   border-radius: var(--radius-sm);
   box-shadow: 0 14px 40px rgba(0,0,0,0.85), 0 0 20px rgba(26,127,255,0.25);
-  z-index: 9999 !important;
+  z-index: var(--z-dropdown);
   padding: 0.6rem;
   flex-direction: column;
   gap: 0.5rem;
@@ -1061,14 +1067,60 @@ tbody tr:last-child td { border-bottom: none; }
 
   /* Modals */
   .modal-overlay { padding: 0.5rem; }
-  .modal { max-height: 95vh; }
+  .modal { max-height: 95vh; width: 100%; max-width: 100%; }
   .modal-body { padding: 1rem; gap: 0.75rem; }
   .modal-footer { padding: 0.75rem 1rem; }
+
+  /* Filters & Selects Zero Min-Width */
+  .multi-deck-wrap, .searchable-select-wrap {
+    min-width: 0 !important;
+    width: 100%;
+  }
+
+  /* Table Pagination Mobile Layout */
+  .table-pagination {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .pagination-info {
+    text-align: center;
+  }
+  .pagination-controls {
+    justify-content: center;
+    max-width: 100%;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
+  }
 }
-@media (max-width: 400px) {
+
+/* ── MOBILE TOUCH TARGETS ─────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .pill-btn {
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .icon-btn.sm {
+    min-width: 32px;
+    min-height: 32px;
+  }
+  [data-close-modal] {
+    min-width: 38px;
+    min-height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+@media (max-width: 480px) {
   .kpi-grid     { grid-template-columns: 1fr; }
   .filters-inner { grid-template-columns: 1fr; }
   .reset-btn    { grid-column: span 1; }
+  .quick-log-grid-bottom { grid-template-columns: 1fr; }
+  .form-row.four-col, .form-row.three-col, .form-row.two-col { grid-template-columns: 1fr; }
 }
 
 /* ---------- Scrollbar ---------- */
@@ -1216,6 +1268,7 @@ tbody tr:last-child td { border-bottom: none; }
   white-space: nowrap;
 }
 .tab-btn.active { color: var(--accent2); border-bottom-color: var(--accent2); }
+.tab-btn:hover:not(.active) { color: var(--text); border-bottom-color: rgba(124,106,247,0.3); }
 
 .tab-pane { display: none; flex: 1; overflow-y: auto; padding: 1rem 1.2rem; flex-direction: column; gap: .75rem; }
 .tab-pane.active { display: flex; }
@@ -1572,7 +1625,7 @@ select.form-input option {
   box-shadow: var(--shadow), var(--glow-cyan);
   opacity: 0;
   transition: opacity .3s, transform .3s;
-  z-index: 500;
+  z-index: var(--z-toast);
   pointer-events: none;
   white-space: nowrap;
 }
@@ -1997,4 +2050,120 @@ select.form-input option {
 .shake-error {
   animation: shakeError 0.35s ease;
   border-color: var(--red) !important;
+}
+
+/* ============================================================
+   TOUCH-OPTIMIZED QUICK LOG GAMES STRIP (MOBILE & DESKTOP)
+   ============================================================ */
+.quick-log-games-strip {
+  margin: 0.75rem 0;
+  padding: 0.75rem 0.85rem;
+  background: var(--bg3);
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+.strip-header {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.6rem;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.strip-title {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--accent2);
+}
+
+.strip-subtitle {
+  font-size: 0.72rem;
+  color: var(--text2);
+}
+
+.pill-grid-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.pill-game-row {
+  background: var(--bg2);
+  padding: 0.5rem 0.65rem;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.pill-game-header {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--accent2);
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.pill-btn-group {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.4rem;
+}
+
+.pill-btn {
+  padding: 0.45rem 0.2rem;
+  font-size: 0.74rem;
+  font-weight: 600;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text2);
+  cursor: pointer;
+  text-align: center;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.pill-btn:hover {
+  background: rgba(255, 255, 255, 0.10);
+  border-color: rgba(255, 255, 255, 0.20);
+}
+
+.pill-btn:active {
+  transform: scale(0.97);
+}
+
+.pill-btn.active-start {
+  background: rgba(0, 200, 248, 0.2);
+  color: var(--accent2);
+  border-color: var(--accent2);
+}
+
+.pill-btn.active-brick {
+  background: rgba(240, 80, 80, 0.25);
+  color: var(--red);
+  border-color: var(--red);
+}
+
+@media (max-width: 480px) {
+  .strip-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.15rem;
+  }
+  .pill-btn-group {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.25rem;
+  }
+  .pill-btn {
+    font-size: 0.69rem;
+    padding: 0.4rem 0.1rem;
+  }
 }
