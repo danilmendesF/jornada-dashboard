@@ -21,11 +21,9 @@ window.populatePlayerRegisterDropdowns = function() {
   const currentPlayers = typeof loadPlayers === 'function' ? loadPlayers() : ['Danilo', 'GuiVaz', 'Victor', 'Lipe'];
   const claimed = getClaimedPlayers();
 
-  const optionsHtml = currentPlayers.map(p => {
-    return claimed.includes(p.trim())
-      ? `<option value="${p}" disabled style="color:var(--text2); opacity:0.5;">🔒 ${p} (Já Cadastrado)</option>`
-      : `<option value="${p}">👤 ${p}</option>`;
-  }).join('') + `<option value="__NEW__">➕ Cadastrar Novo Integrante...</option>`;
+  const availablePlayers = currentPlayers.filter(p => !claimed.includes(p.trim()));
+  const optionsHtml = availablePlayers.map(p => `<option value="${p}">👤 ${p}</option>`).join('') +
+    `<option value="__NEW__">➕ Cadastrar Novo Integrante...</option>`;
 
   if (wallSel) wallSel.innerHTML = optionsHtml;
   if (authSel) authSel.innerHTML = optionsHtml;

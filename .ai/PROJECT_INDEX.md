@@ -58,13 +58,15 @@ Este índice permite que assistentes de IA localizem instantaneamente arquivos, 
 
 > **Última Atualização Automática de Estado**: 2026-08-06T12:04:47.272Z (Total Módulos: 13)
 
+> **Última Atualização Automática de Estado**: 2026-08-06T12:26:46.456Z (Total Módulos: 13)
+
 ## 📂 ESTRUTURA DE ARQUIVOS E MÓDULOS
 
 | Arquivo Módulo | Linhas Aprox. | Status | Funções Exportadas em window |
 |---|---|---|---|
-| `js/auth.js` | ~258 | 🟢 Ativo | `currentUser, getAuthToken, getCurrentUser, getClaimedPlayers, addClaimedPlayer...` |
+| `js/auth.js` | ~256 | 🟢 Ativo | `currentUser, getAuthToken, getCurrentUser, getClaimedPlayers, addClaimedPlayer...` |
 | `js/charts.js` | ~182 | 🟢 Ativo | `charts, destroyChart, renderKPIs, renderDeckWR, renderPlayerPerf...` |
-| `js/config.js` | ~50 | 🟢 Ativo | `KEY_DECKS, KEY_MATCHES, KEY_PLAYERS, KEY_LOCAIS, KEY_COLECOES...` |
+| `js/config.js` | ~60 | 🟢 Ativo | `KEY_DECKS, KEY_MATCHES, KEY_PLAYERS, KEY_LOCAIS, KEY_COLECOES...` |
 | `js/filters.js` | ~318 | 🟢 Ativo | `selectedPlayers, selectedDecks, populateMultiPlayerFilter, selectedPlayers, renderMultiPlayerItems...` |
 | `js/manager_forms.js` | ~256 | 🟢 Ativo | `editingMatchId, showModal, closeModal, openMatchForm, editingMatchId...` |
 | `js/matchup.js` | ~111 | 🟢 Ativo | `buildMatchupData, showDeckMatchupOverview, renderMatchupMatrix` |

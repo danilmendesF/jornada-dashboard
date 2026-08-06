@@ -56,7 +56,7 @@ export default async function handler(req, res) {
   const redisUrl = process.env.REDIS_URL;
   const key = `jornada_sync_${activeToken.replace(/[^a-zA-Z0-9_-]/g, '')}`;
 
-  console.log(`[Serverless Sync] ${req.method} | Key: ${key}`);
+  console.log(`[Serverless Sync] ${req.method} | Authorized Request`);
 
   // ── FALLBACK: No Redis URL configured → proxy to keyvalue.xyz ───────────────
   if (!redisUrl) {

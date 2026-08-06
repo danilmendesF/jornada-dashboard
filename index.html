@@ -12,6 +12,17 @@
   <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <link rel="stylesheet" href="style.css" />
+  <script>
+    (function() {
+      try {
+        var token = localStorage.getItem('jornada_auth_token');
+        var user = localStorage.getItem('jornada_user_profile');
+        if (token && user) {
+          document.documentElement.classList.add('auth-session-active');
+        }
+      } catch (e) {}
+    })();
+  </script>
 </head>
 <body>
 
