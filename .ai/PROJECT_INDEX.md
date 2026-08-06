@@ -2,7 +2,7 @@
 
 Este índice permite que assistentes de IA localizem instantaneamente arquivos, funções e elementos do DOM sem ler a base de código inteira, reduzindo o uso de tokens em até 95%.
 
-> **Última Atualização**: 2026-08-06T21:37:49.137Z | **Total Módulos js/**: 13 | **Commit**: `a24b401`
+> **Última Atualização**: 2026-08-06T22:00:33.211Z | **Total Módulos js/**: 13 | **Commit**: `ed2738b`
 
 ---
 
@@ -32,41 +32,41 @@ Este índice permite que assistentes de IA localizem instantaneamente arquivos, 
 > ⚠️ NUNCA leia estes arquivos inteiros. Use a linha indicada abaixo para ir diretamente à função.
 
 
-### 📌 `manager.js` — Funções Críticas (3201 linhas total)
+### 📌 `manager.js` — Funções Críticas (3194 linhas total)
 
 | Função | Linha Aprox. |
 |---|---|
-| `getAdminPin()` | L22 |
-| `hasAdminPin()` | L23 |
-| `isAdminUnlocked()` | L24 |
-| `loadDecks()` | L29 |
-| `loadManual()` | L30 |
-| `loadPlayers()` | L31 |
-| `loadLocais()` | L32 |
-| `loadColecoes()` | L33 |
-| `safeSetItem()` | L35 |
-| `saveDecks()` | L48 |
-| `saveManual()` | L49 |
-| `savePlayers()` | L50 |
-| `saveLocais()` | L51 |
-| `saveColecoes()` | L52 |
-| `loadDeleted()` | L54 |
-| `loadDeletedDecks()` | L55 |
-| `loadDeletedPlayers()` | L56 |
-| `loadDeletedLocais()` | L57 |
-| `loadDeletedColecoes()` | L58 |
-| `loadEdits()` | L60 |
-| `saveDeleted()` | L62 |
-| `saveDeletedDecks()` | L63 |
-| `saveDeletedPlayers()` | L64 |
-| `saveDeletedLocais()` | L65 |
-| `saveDeletedColecoes()` | L66 |
-| `saveEdits()` | L67 |
-| `parsePTCGL()` | L76 |
-| `countCards()` | L112 |
-| `showModal()` | L114 |
-| `getMatchFormStateSnapshot()` | L123 |
-| *(+70 funções adicionais)* | — |
+| `loadDecks()` | L22 |
+| `loadManual()` | L23 |
+| `loadPlayers()` | L24 |
+| `loadLocais()` | L25 |
+| `loadColecoes()` | L26 |
+| `safeSetItem()` | L28 |
+| `saveDecks()` | L41 |
+| `saveManual()` | L42 |
+| `savePlayers()` | L43 |
+| `saveLocais()` | L44 |
+| `saveColecoes()` | L45 |
+| `loadDeleted()` | L47 |
+| `loadDeletedDecks()` | L48 |
+| `loadDeletedPlayers()` | L49 |
+| `loadDeletedLocais()` | L50 |
+| `loadDeletedColecoes()` | L51 |
+| `loadEdits()` | L53 |
+| `saveDeleted()` | L55 |
+| `saveDeletedDecks()` | L56 |
+| `saveDeletedPlayers()` | L57 |
+| `saveDeletedLocais()` | L58 |
+| `saveDeletedColecoes()` | L59 |
+| `saveEdits()` | L60 |
+| `parsePTCGL()` | L69 |
+| `countCards()` | L105 |
+| `showModal()` | L107 |
+| `getMatchFormStateSnapshot()` | L116 |
+| `isMatchFormDirty()` | L142 |
+| `closeModal()` | L148 |
+| `populatePlayerSelects()` | L167 |
+| *(+67 funções adicionais)* | — |
 
 ### 📌 `app.js` — Funções Críticas (2416 linhas total)
 

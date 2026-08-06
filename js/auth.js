@@ -145,6 +145,15 @@ window.updateAuthUI = function() {
     if (typeof populateQuickLogDropdowns === 'function') populateQuickLogDropdowns();
     if (typeof populatePlayerSelects === 'function') populatePlayerSelects();
     if (typeof applyFilters === 'function') applyFilters();
+
+    const btnManager = document.getElementById('btnOpenManager');
+    if (btnManager) {
+      if (window.currentUser && window.currentUser.email === 'danilmendes@gmail.com') {
+        btnManager.style.display = 'inline-flex';
+      } else {
+        btnManager.style.display = 'none';
+      }
+    }
   } else {
     document.documentElement.classList.remove('auth-session-active');
     if (wall) wall.style.display = 'flex';
@@ -331,16 +340,7 @@ window.checkPasswordMatch = function(prefix) {
 
 window.resetAllUserAccounts = async function() {
   if (!confirm('⚠️ Tem certeza que deseja apagar TODAS as contas de usuários e cadastros de jogadores? Todos os e-mails e nomes ficarão liberados para novos cadastros do zero.')) return;
-  try {
-    await fetch('/api/auth', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'reset_all' }) });
-  } catch (e) { console.warn('Reset error:', e); }
-
-  localStorage.removeItem('jornada_claimed_players');
-  localStorage.removeItem('jornada_user_profile');
-  localStorage.removeItem('jornada_auth_token');
-  window.currentUser = null;
-  clearAuthForms();
-  populatePlayerRegisterDropdowns();
-  updateAuthUI();
-  showToast?.('🧹 Todas as contas de usuários foram resetadas com sucesso!');
+  try { await fetch('/api/auth', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'reset_all' }) }); } catch (e) {}
+  ['jornada_claimed_players','jornada_user_profile','jornada_auth_token'].forEach(k => localStorage.removeItem(k));
+  window.currentUser = null; clearAuthForms(); populatePlayerRegisterDropdowns(); updateAuthUI(); showToast?.('🧹 Todas as contas foram resetadas com sucesso!');
 };

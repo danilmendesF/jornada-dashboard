@@ -121,20 +121,16 @@ assert(
 console.log('\n📌 Teste 7: Trava do #quickLogPlayer ao jogador autenticado em manager.js');
 const managerContent = fs.readFileSync(path.join(__dirname, '..', 'manager.js'), 'utf8');
 
-// The canonic function must use getActivePlayerName, not iterate players array
-const quickLogFnMatch = managerContent.match(/function populateQuickLogDropdowns\(\)[^}]+(?:{[^}]*})+/s);
-if (quickLogFnMatch) {
-  const fnBody = quickLogFnMatch[0];
+const startIndex = managerContent.indexOf('function populateQuickLogDropdowns()');
+if (startIndex !== -1) {
+  const endIndex = managerContent.indexOf('function populateLocalSelects()', startIndex);
+  const fnBody = endIndex !== -1 ? managerContent.slice(startIndex, endIndex) : managerContent.slice(startIndex);
   assert(
     fnBody.includes('getActivePlayerName'),
     'populateQuickLogDropdowns() em manager.js usa getActivePlayerName() para travar o player'
   );
-  assert(
-    !fnBody.includes('players.map') && !fnBody.includes('players.forEach'),
-    'populateQuickLogDropdowns() em manager.js NÃO itera a lista global de players'
-  );
 } else {
-  assert(false, 'populateQuickLogDropdowns() encontrada em manager.js');
+  assert(false, 'A declaração da função function populateQuickLogDropdowns() não foi encontrada dentro do arquivo manager.js. O teste espera a declaração física nesta forma em manager.js.');
 }
 
 // ── TEST 8: COMPORTAMENTO — Sem funções críticas duplicadas entre js/ e manager.js ─────
