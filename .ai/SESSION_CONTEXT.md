@@ -2,34 +2,29 @@
 
 > **Gerado automaticamente por `node scripts/update_state.cjs`.**
 > **Leia como PRIMEIRO PASSO em qualquer nova sessão ou conversa.**
-> Gerado em: 2026-08-06T14:24:14.174Z | Commit: `45bcebf`
+> Gerado em: 2026-08-06T14:29:24.540Z | Commit: `62f27d1`
 
 ---
 
 ## 🚀 ESTADO ATUAL DO PROJETO
 
-- **Último commit**: `45bcebf`
+- **Último commit**: `62f27d1`
 - **Produção**: https://jornadatcgteam.com.br (Vercel auto-deploy)
 - **Repositório**: https://github.com/danilmendesF/jornada-dashboard
 
 ### 5 Commits Mais Recentes:
 ```
+62f27d1 feat(sdd): adiciona painel de monitoramento de peso de contexto RAG em tokens
 45bcebf feat(auth): feedback visual inline de cadastro e login na Auth Wall (SPEC_024)
 4c55493 feat(sdd): session context auto-generator e testes comportamentais
 e9f3e6e refactor(sdd-rag): auditoria e upgrade completo do sistema SDD/RAG
 4f46436 fix(quicklog): elimina funcao duplicada que sobrescrevia o lock do quick log player
-87c14b0 fix(all): tranca quicklog, restaura fundo da login wall, omite acoes de terceiros e otimiza sync multi-sessao
 ```
 
 ### Arquivos Modificados no Último Commit:
 - `.ai/PROJECT_INDEX.md`
 - `.ai/SESSION_CONTEXT.md`
-- `.ai/specs/SPEC_024_REGISTRATION_FEEDBACK_VISUAL.md`
-- `dist/app.min.js`
-- `dist/style.min.css`
-- `index.html`
-- `js/auth.js`
-- `style.css`
+- `scripts/update_state.cjs`
 
 ---
 
@@ -60,6 +55,7 @@ e9f3e6e refactor(sdd-rag): auditoria e upgrade completo do sistema SDD/RAG
 | `SPEC_022_SDD_RAG_SYSTEM_REFACTORING.md` | 🟢 IMPLEMENTADO |
 | `SPEC_023_SESSION_CONTEXT_AND_BEHAVIORAL_TESTS.md` | 🟢 IMPLEMENTADO |
 | `SPEC_024_REGISTRATION_FEEDBACK_VISUAL.md` | 🟢 IMPLEMENTADO |
+| `SPEC_025_SEMANTIC_VERSIONING.md` | 🟢 IMPLEMENTADO |
 
 
 ---
@@ -92,12 +88,12 @@ e9f3e6e refactor(sdd-rag): auditoria e upgrade completo do sistema SDD/RAG
 
 | Arquivo de Contexto | Caracteres | Tokens Estimados |
 |---|---|---|
-| `SESSION_CONTEXT.md` | 4631 | ~1158 tks |
+| `SESSION_CONTEXT.md` | 4542 | ~1136 tks |
 | `PROJECT_INDEX.md` | 4613 | ~1153 tks |
 | `DECISION_LOG.md` | 4744 | ~1186 tks |
 | `ARCHITECTURE.md` | 7650 | ~1913 tks |
 | `agent_personas.md` | 5129 | ~1282 tks |
-| **TOTAL BASE RAG** | **26767** | **~6692 tks** |
+| **TOTAL BASE RAG** | **26678** | **~6670 tks** |
 
 *(Nota: O GPT-4 / Gemini-1.5 suportam 128k-1M+ tokens. Um RAG base ideal consome < 5.000 tokens).*
 
@@ -108,6 +104,9 @@ e9f3e6e refactor(sdd-rag): auditoria e upgrade completo do sistema SDD/RAG
 ```powershell
 # Validação completa (61 testes)
 node scripts/validate.cjs; node scripts/validate_auth.cjs
+
+# Atualizar versão (SemVer) no index.html e package.json
+node scripts/bump_version.cjs
 
 # Recompilar bundle
 node scripts/build_bundle.cjs

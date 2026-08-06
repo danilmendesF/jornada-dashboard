@@ -2366,4 +2366,17 @@ html.auth-session-active #appDashboardContainer {
   transform: scale(0.92);
 }
 
-
+/* ===== VERSION FOOTER ===== */
+.app-version-footer {
+  position: fixed;
+  bottom: 8px;
+  right: 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text2);
+  opacity: 0.6;
+  pointer-events: none;
+  z-index: 10001;
+  user-select: none;
+  font-family: 'Outfit', sans-serif;
+}
