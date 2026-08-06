@@ -178,11 +178,7 @@ window.quickLogMatch = function(resultado) {
 window.populateQuickLogDropdowns = function() {
   const pSel = document.getElementById('quickLogPlayer');
   if (pSel) {
-    let currentUserObj = typeof getCurrentUser === 'function' ? getCurrentUser() : window.currentUser;
-    if (!currentUserObj) {
-      try { currentUserObj = JSON.parse(localStorage.getItem('jornada_user_profile')) || null; } catch (e) {}
-    }
-    const activeName = currentUserObj?.linkedPlayer || currentUserObj?.name;
+    const activeName = typeof getActivePlayerName === 'function' ? getActivePlayerName() : null;
 
     if (activeName) {
       // Authenticated user: RESTRICT dropdown exclusively to the single logged-in player
@@ -190,9 +186,8 @@ window.populateQuickLogDropdowns = function() {
       pSel.value = activeName;
       pSel.selectedIndex = 0;
     } else {
-      // Guest / unauthenticated fallback
-      const currentPlayers = typeof loadPlayers === 'function' ? loadPlayers() : ['Danilo', 'GuiVaz', 'Victor', 'Lipe'];
-      pSel.innerHTML = currentPlayers.map(p => `<option value="${p}">${p}</option>`).join('');
+      // Unauthenticated instruction
+      pSel.innerHTML = `<option value="">🔑 Faça Login para Registrar Partida</option>`;
     }
   }
 

@@ -59,19 +59,14 @@ window.updateAuthUI = function() {
   const badge = document.getElementById('userProfileBadge');
   const wall = document.getElementById('authPageWall');
   const dashboard = document.getElementById('appDashboardContainer');
-  const quickLogPlayerSel = document.getElementById('quickLogPlayer');
 
-  if (window.currentUser) {
+  const activeName = typeof getActivePlayerName === 'function' ? getActivePlayerName() : null;
+
+  if (window.currentUser || activeName) {
     if (wall) wall.style.display = 'none';
     if (dashboard) dashboard.style.display = 'block';
 
-    const activeName = window.currentUser?.linkedPlayer || window.currentUser?.name;
-    if (quickLogPlayerSel && activeName) {
-      quickLogPlayerSel.innerHTML = `<option value="${activeName}">👤 ${activeName}</option>`;
-      quickLogPlayerSel.value = activeName;
-    }
-
-    if (badge) {
+    if (badge && window.currentUser) {
       badge.innerHTML = `
         <div style="display:flex; align-items:center; gap:0.4rem; background:rgba(124,106,247,0.18); border:1px solid var(--accent); padding:0.35rem 0.75rem; border-radius:50px; font-size:0.8rem; font-weight:700; color:var(--accent2);">
           <span style="font-size:0.9rem;">⚡</span>

@@ -37,3 +37,13 @@ window.PLACAR_RULES = {
     'Derrota': ['0-2', '1-2', '0-1']
   }
 };
+
+window.getActivePlayerName = function() {
+  let user = typeof getCurrentUser === 'function' ? getCurrentUser() : window.currentUser;
+  if (!user) {
+    try { user = JSON.parse(localStorage.getItem('jornada_user_profile')) || null; } catch (e) {}
+  }
+  const name = user?.linkedPlayer || user?.name;
+  if (name && typeof name === 'string' && name.trim()) return name.trim();
+  return null;
+};
