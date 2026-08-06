@@ -1148,6 +1148,19 @@ tbody tr:last-child td { border-bottom: none; }
 }
 .manager-btn:hover { background: rgba(26,127,255,0.22); transform: translateY(-1px); box-shadow: var(--glow-cyan); }
 
+.btn-logout {
+  background: rgba(247, 80, 80, 0.12);
+  border-color: rgba(247, 80, 80, 0.35);
+  color: var(--red);
+  padding: .35rem .85rem;
+  border-radius: 50px;
+}
+.btn-logout:hover {
+  background: rgba(247, 80, 80, 0.25);
+  border-color: rgba(247, 80, 80, 0.6);
+  box-shadow: 0 0 15px rgba(247, 80, 80, 0.25);
+}
+
 /* ============================================================
    FAB — Floating Action Button
    ============================================================ */
