@@ -123,3 +123,107 @@ ${monolithSection}
 fs.writeFileSync(indexFile, newHeader, 'utf8');
 console.log(`✅ Base RAG atualizada: ${totalModules} módulos indexados | Commit: ${latestCommit}`);
 console.log(`✅ Funções críticas de manager.js e app.js indexadas no RAG!`);
+
+// ── 5. GENERATE .ai/SESSION_CONTEXT.md ────────────────────────────────────
+const sessionFile = path.join(rootDir, '.ai', 'SESSION_CONTEXT.md');
+const { execSync: exec2 } = require('child_process');
+
+function tryGit(cmd) {
+  const gitDirs = [rootDir, 'C:\\Users\\danil\\OneDrive\\Documentos\\jornada-dashboard'];
+  for (const dir of gitDirs) {
+    try { return exec2(cmd, { cwd: dir, stdio: ['pipe', 'pipe', 'ignore'] }).toString().trim(); } catch (e) {}
+  }
+  return '';
+}
+
+const recentCommits = tryGit('git log --oneline -5') || '(não disponível)';
+const recentFiles   = tryGit('git diff --name-only HEAD~1 HEAD')
+  .split('\n').filter(Boolean).map(f => `- \`${f}\``).join('\n') || '- (não disponível)';
+
+// Scan all specs for status
+const specsDir = path.join(rootDir, '.ai', 'specs');
+let specsTable = '| Spec | Status |\n|---|---|\n';
+if (fs.existsSync(specsDir)) {
+  fs.readdirSync(specsDir)
+    .filter(f => f.startsWith('SPEC_') && f.endsWith('.md'))
+    .sort()
+    .forEach(specFile => {
+      const raw = fs.readFileSync(path.join(specsDir, specFile), 'utf8');
+      const m = raw.match(/\*\*Status\*\*:\s*(.+)/);
+      specsTable += `| \`${specFile}\` | ${m ? m[1].trim() : '—'} |\n`;
+    });
+}
+
+const sessionContent = [
+  '# 🧭 SESSION CONTEXT — Jornada Dashboard',
+  '',
+  '> **Gerado automaticamente por `node scripts/update_state.cjs`.**',
+  '> **Leia como PRIMEIRO PASSO em qualquer nova sessão ou conversa.**',
+  `> Gerado em: ${new Date().toISOString()} | Commit: \`${latestCommit}\``,
+  '',
+  '---',
+  '',
+  '## 🚀 ESTADO ATUAL DO PROJETO',
+  '',
+  `- **Último commit**: \`${latestCommit}\``,
+  '- **Produção**: https://jornadatcgteam.com.br (Vercel auto-deploy)',
+  '- **Repositório**: https://github.com/danilmendesF/jornada-dashboard',
+  '',
+  '### 5 Commits Mais Recentes:',
+  '```',
+  recentCommits,
+  '```',
+  '',
+  '### Arquivos Modificados no Último Commit:',
+  recentFiles,
+  '',
+  '---',
+  '',
+  '## 📋 STATUS DAS SPECs',
+  '',
+  specsTable,
+  '',
+  '---',
+  '',
+  '## 🛠️ CONTEXTO TÉCNICO ESSENCIAL',
+  '',
+  '### Stack:',
+  '- Frontend: HTML + Vanilla JS + CSS (sem frameworks)',
+  '- Bundle: `dist/app.min.js` (IIFE) + `dist/style.min.css`',
+  '- Backend: Vercel Serverless (`api/auth.js`, `api/sync.js`)',
+  '- Banco: Redis KV (Upstash) | Auth: JWT + PBKDF2',
+  '',
+  '### Ordem de Leitura Obrigatória ANTES de qualquer tarefa:',
+  '1. Este arquivo `.ai/SESSION_CONTEXT.md` ✅',
+  '2. `.ai/PROJECT_INDEX.md` — mapa de módulos + linha exata das funções críticas',
+  '3. `.ai/DECISION_LOG.md` — decisões que NÃO devem ser revertidas',
+  '4. `.agents/rules/agent_personas.md` — persona correta para o slash command',
+  '5. `.ai/ARCHITECTURE.md` — apenas se a tarefa envolver stats/mirror/storage/sync',
+  '',
+  '### ⚠️ Regra Anti-Bug #1 (causa do bug SPEC_021):',
+  '> Antes de criar/editar qualquer função, verifique duplicatas:',
+  '> `Select-String -Path "*.js","js/*.js" -Pattern "function nomeDaFuncao"`',
+  '> Funções duplicadas no IIFE bundle são hoisted — a última no `jsOrder` vence silenciosamente.',
+  '',
+  '---',
+  '',
+  '## ⚡ COMANDOS RÁPIDOS',
+  '',
+  '```powershell',
+  '# Validação completa (61 testes)',
+  'node scripts/validate.cjs; node scripts/validate_auth.cjs',
+  '',
+  '# Recompilar bundle',
+  'node scripts/build_bundle.cjs',
+  '',
+  '# Atualizar SESSION_CONTEXT + PROJECT_INDEX',
+  'node scripts/update_state.cjs',
+  '',
+  '# Mirror + Deploy (após aprovação)',
+  'robocopy "C:\\Users\\danil\\.gemini\\antigravity\\scratch\\jornada-dashboard" "C:\\Users\\danil\\OneDrive\\Documentos\\jornada-dashboard" /E /NDL /NFL /NJH /NJS; exit 0',
+  'git -C "C:\\Users\\danil\\OneDrive\\Documentos\\jornada-dashboard" add .; git -C "C:\\Users\\danil\\OneDrive\\Documentos\\jornada-dashboard" commit -m "..."; git -C "C:\\Users\\danil\\OneDrive\\Documentos\\jornada-dashboard" push origin main',
+  '```',
+].join('\n');
+
+fs.writeFileSync(sessionFile, sessionContent, 'utf8');
+console.log('✅ SESSION_CONTEXT.md gerado em .ai/SESSION_CONTEXT.md');
