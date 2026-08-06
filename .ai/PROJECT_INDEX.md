@@ -32,11 +32,15 @@ Este índice permite que assistentes de IA localizem instantaneamente arquivos, 
 
 > **Última Atualização Automática de Estado**: 2026-08-06T00:45:00.713Z (Total Módulos: 13)
 
+> **Última Atualização Automática de Estado**: 2026-08-06T01:16:52.397Z (Total Módulos: 13)
+
+> **Última Atualização Automática de Estado**: 2026-08-06T01:17:19.021Z (Total Módulos: 13)
+
 ## 📂 ESTRUTURA DE ARQUIVOS E MÓDULOS
 
 | Arquivo Módulo | Linhas Aprox. | Status | Funções Exportadas em window |
 |---|---|---|---|
-| `js/auth.js` | ~340 | 🟢 Ativo | `currentUser, getAuthToken, getCurrentUser, getClaimedPlayers, addClaimedPlayer...` |
+| `js/auth.js` | ~261 | 🟢 Ativo | `currentUser, getAuthToken, getCurrentUser, getClaimedPlayers, addClaimedPlayer...` |
 | `js/charts.js` | ~182 | 🟢 Ativo | `charts, destroyChart, renderKPIs, renderDeckWR, renderPlayerPerf...` |
 | `js/config.js` | ~40 | 🟢 Ativo | `KEY_DECKS, KEY_MATCHES, KEY_PLAYERS, KEY_LOCAIS, KEY_COLECOES...` |
 | `js/filters.js` | ~318 | 🟢 Ativo | `selectedPlayers, selectedDecks, populateMultiPlayerFilter, selectedPlayers, renderMultiPlayerItems...` |

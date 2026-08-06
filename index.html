@@ -75,6 +75,11 @@
         </div>
         <button class="save-btn" style="width: 100%; margin-top: 0.5rem; justify-content: center; height: 48px; font-size: 1rem;" onclick="submitWallRegister()">
           📝 Finalizar Cadastro
+      </div>
+
+      <div style="text-align: center; margin-top: 1rem; border-top: 1px dashed var(--border); padding-top: 0.8rem;">
+        <button type="button" onclick="resetAllUserAccounts()" style="background: none; border: none; color: var(--text2); font-size: 0.75rem; cursor: pointer; text-decoration: underline; opacity: 0.7;" title="Liberar todos os e-mails e nomes para novos cadastros do zero">
+          🧹 Resetar Contas & Liberar E-mails de Teste
         </button>
       </div>
     </div>
@@ -614,6 +619,9 @@
     <div class="manager-header">
       <h2>📋 Gerenciador de Dados</h2>
       <div style="display:flex;align-items:center;gap:0.5rem;margin-left:auto;">
+        <button class="icon-btn sm" id="btnResetAccounts" onclick="resetAllUserAccounts()" title="Resetar Todas as Contas de Usuários" style="font-size:0.75rem;padding:4px 9px;background:rgba(240,80,80,0.15);border:1px solid rgba(240,80,80,0.4);color:var(--red);border-radius:var(--radius-sm);cursor:pointer;display:flex;align-items:center;gap:4px;font-weight:600;">
+          🧹 Resetar Contas
+        </button>
         <button class="icon-btn sm" id="btnLockManager" title="Bloquear Acesso" style="font-size:0.75rem;padding:4px 9px;background:rgba(240,80,80,0.15);border:1px solid rgba(240,80,80,0.3);color:var(--red);border-radius:var(--radius-sm);cursor:pointer;display:flex;align-items:center;gap:4px;">
           🔒 Bloquear
         </button>

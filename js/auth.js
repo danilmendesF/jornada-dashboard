@@ -3,25 +3,9 @@
 
 window.currentUser = null;
 
-window.getAuthToken = function() {
-  return localStorage.getItem('jornada_auth_token') || '';
-};
-
-window.getCurrentUser = function() {
-  try {
-    return JSON.parse(localStorage.getItem('jornada_user_profile')) || null;
-  } catch (e) {
-    return null;
-  }
-};
-
-window.getClaimedPlayers = function() {
-  try {
-    return JSON.parse(localStorage.getItem('jornada_claimed_players')) || [];
-  } catch (e) {
-    return [];
-  }
-};
+window.getAuthToken = () => localStorage.getItem('jornada_auth_token') || '';
+window.getCurrentUser = () => { try { return JSON.parse(localStorage.getItem('jornada_user_profile')) || null; } catch { return null; } };
+window.getClaimedPlayers = () => { try { return JSON.parse(localStorage.getItem('jornada_claimed_players')) || []; } catch { return []; } };
 
 window.addClaimedPlayer = function(playerName) {
   const claimed = getClaimedPlayers();
@@ -34,16 +18,13 @@ window.addClaimedPlayer = function(playerName) {
 window.populatePlayerRegisterDropdowns = function() {
   const wallSel = document.getElementById('wallRegName');
   const authSel = document.getElementById('authRegName');
-
   const currentPlayers = typeof loadPlayers === 'function' ? loadPlayers() : ['Danilo', 'GuiVaz', 'Victor', 'Lipe'];
   const claimed = getClaimedPlayers();
 
   const optionsHtml = currentPlayers.map(p => {
-    const isClaimed = claimed.includes(p.trim());
-    if (isClaimed) {
-      return `<option value="${p}" disabled style="color:var(--text2); opacity:0.5;">🔒 ${p} (Já Cadastrado)</option>`;
-    }
-    return `<option value="${p}">👤 ${p}</option>`;
+    return claimed.includes(p.trim())
+      ? `<option value="${p}" disabled style="color:var(--text2); opacity:0.5;">🔒 ${p} (Já Cadastrado)</option>`
+      : `<option value="${p}">👤 ${p}</option>`;
   }).join('') + `<option value="__NEW__">➕ Cadastrar Novo Integrante...</option>`;
 
   if (wallSel) wallSel.innerHTML = optionsHtml;
@@ -54,11 +35,8 @@ window.initAuthSession = function() {
   window.currentUser = getCurrentUser();
   populatePlayerRegisterDropdowns();
   updateAuthUI();
-
   const token = getAuthToken();
-  if (token) {
-    verifyAuthToken(token);
-  }
+  if (token) verifyAuthToken(token);
 };
 
 async function verifyAuthToken(token) {
@@ -84,7 +62,6 @@ window.updateAuthUI = function() {
   const quickLogPlayerSel = document.getElementById('quickLogPlayer');
 
   if (window.currentUser) {
-    // Authenticated -> Hide Login Wall & Show Dashboard
     if (wall) wall.style.display = 'none';
     if (dashboard) dashboard.style.display = 'block';
 
@@ -109,7 +86,6 @@ window.updateAuthUI = function() {
 
     if (typeof applyFilters === 'function') applyFilters();
   } else {
-    // Unauthenticated -> Show Login Wall & Hide Dashboard
     if (wall) wall.style.display = 'flex';
     if (dashboard) dashboard.style.display = 'none';
 
@@ -149,103 +125,54 @@ window.switchAuthTab = function(tab) {
   }
 };
 
-window.submitUserLogin = function() {
-  const email = document.getElementById('authLoginEmail')?.value?.trim();
-  const password = document.getElementById('authLoginPassword')?.value?.trim();
-  executeLogin(email, password);
-};
-
-window.submitWallLogin = function() {
-  const email = document.getElementById('wallLoginEmail')?.value?.trim();
-  const password = document.getElementById('wallLoginPassword')?.value?.trim();
-  executeLogin(email, password);
-};
-
 window.clearAuthForms = function() {
-  const ids = [
-    'wallLoginEmail', 'wallLoginPassword', 'wallRegEmail', 'wallRegPassword', 'wallRegConfirm',
-    'authLoginEmail', 'authLoginPassword', 'authRegEmail', 'authRegPassword', 'authRegConfirm'
-  ];
-  ids.forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.value = '';
-  });
-
-  const wallHint = document.getElementById('wallPasswordMatchHint');
-  const authHint = document.getElementById('authPasswordMatchHint');
-  if (wallHint) wallHint.innerHTML = '';
-  if (authHint) authHint.innerHTML = '';
+  const ids = ['wallLoginEmail', 'wallLoginPassword', 'wallRegEmail', 'wallRegPassword', 'wallRegConfirm', 'authLoginEmail', 'authLoginPassword', 'authRegEmail', 'authRegPassword', 'authRegConfirm'];
+  ids.forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  const wH = document.getElementById('wallPasswordMatchHint');
+  const aH = document.getElementById('authPasswordMatchHint');
+  if (wH) wH.innerHTML = '';
+  if (aH) aH.innerHTML = '';
 };
+
+window.submitUserLogin = () => executeLogin(document.getElementById('authLoginEmail')?.value?.trim(), document.getElementById('authLoginPassword')?.value?.trim());
+window.submitWallLogin = () => executeLogin(document.getElementById('wallLoginEmail')?.value?.trim(), document.getElementById('wallLoginPassword')?.value?.trim());
 
 async function executeLogin(email, password) {
-  if (!email || !password) {
-    if (typeof showToast === 'function') showToast('⚠️ Preencha e-mail e senha!');
-    return;
-  }
-
+  if (!email || !password) return showToast?.('⚠️ Preencha e-mail e senha!');
   try {
     const res = await fetch('/api/auth', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'login', email, password })
     });
-
     const data = await res.json();
-    if (!res.ok || data.error) {
-      if (typeof showToast === 'function') showToast(`❌ ${data.error || 'Erro ao fazer login.'}`);
-      return;
-    }
+    if (!res.ok || data.error) return showToast?.(`❌ ${data.error || 'Erro ao fazer login.'}`);
 
     localStorage.setItem('jornada_auth_token', data.token);
     localStorage.setItem('jornada_user_profile', JSON.stringify(data.user));
     window.currentUser = data.user;
-
     clearAuthForms();
     updateAuthUI();
-
     if (typeof closeModal === 'function') closeModal('modalAuth');
-    if (typeof showToast === 'function') showToast(`⚡ Bem-vindo de volta, ${data.user.name}!`);
+    showToast?.(`⚡ Bem-vindo de volta, ${data.user.name}!`);
   } catch (e) {
-    if (typeof showToast === 'function') showToast('❌ Erro de conexão com o servidor de autenticação.');
+    showToast?.('❌ Erro de conexão com o servidor de autenticação.');
   }
 }
 
-window.submitUserRegister = function() {
-  const name = document.getElementById('authRegName')?.value?.trim();
-  const email = document.getElementById('authRegEmail')?.value?.trim();
-  const password = document.getElementById('authRegPassword')?.value?.trim();
-  const confirm = document.getElementById('authRegConfirm')?.value?.trim();
-  executeRegister(name, email, password, confirm);
-};
-
-window.submitWallRegister = function() {
-  const name = document.getElementById('wallRegName')?.value?.trim();
-  const email = document.getElementById('wallRegEmail')?.value?.trim();
-  const password = document.getElementById('wallRegPassword')?.value?.trim();
-  const confirm = document.getElementById('wallRegConfirm')?.value?.trim();
-  executeRegister(name, email, password, confirm);
-};
+window.submitUserRegister = () => executeRegister(document.getElementById('authRegName')?.value?.trim(), document.getElementById('authRegEmail')?.value?.trim(), document.getElementById('authRegPassword')?.value?.trim(), document.getElementById('authRegConfirm')?.value?.trim());
+window.submitWallRegister = () => executeRegister(document.getElementById('wallRegName')?.value?.trim(), document.getElementById('wallRegEmail')?.value?.trim(), document.getElementById('wallRegPassword')?.value?.trim(), document.getElementById('wallRegConfirm')?.value?.trim());
 
 async function executeRegister(selectedName, email, password, confirm) {
   let targetName = selectedName;
   if (targetName === '__NEW__') {
     targetName = prompt('Digite o nome do novo integrante do time:');
-    if (!targetName || !targetName.trim()) {
-      if (typeof showToast === 'function') showToast('⚠️ Nome de integrante inválido!');
-      return;
-    }
+    if (!targetName || !targetName.trim()) return showToast?.('⚠️ Nome de integrante inválido!');
     targetName = targetName.trim();
   }
 
-  if (!targetName || !email || !password || !confirm) {
-    if (typeof showToast === 'function') showToast('⚠️ Preencha todos os campos do cadastro!');
-    return;
-  }
-
-  if (password !== confirm) {
-    if (typeof showToast === 'function') showToast('⚠️ As senhas não coincidem!');
-    return;
-  }
+  if (!targetName || !email || !password || !confirm) return showToast?.('⚠️ Preencha todos os campos!');
+  if (password !== confirm) return showToast?.('⚠️ As senhas não coincidem!');
 
   try {
     const res = await fetch('/api/auth', {
@@ -255,13 +182,8 @@ async function executeRegister(selectedName, email, password, confirm) {
     });
 
     const data = await res.json();
-    if (!res.ok || data.error) {
-      if (typeof showToast === 'function') showToast(`❌ ${data.error || 'Erro no cadastro.'}`);
-      return;
-    }
+    if (!res.ok || data.error) return showToast?.(`❌ ${data.error || 'Erro no cadastro.'}`);
 
-    // DO NOT auto-login user after registration (Must perform manual login)
-    // Claim the player name & add to team list if new
     addClaimedPlayer(targetName);
     let players = typeof loadPlayers === 'function' ? loadPlayers() : [];
     if (!players.some(p => p.toLowerCase() === targetName.toLowerCase())) {
@@ -272,7 +194,6 @@ async function executeRegister(selectedName, email, password, confirm) {
     clearAuthForms();
     populatePlayerRegisterDropdowns();
 
-    // Pre-fill login email and switch tab to login
     const wallEmail = document.getElementById('wallLoginEmail');
     const authEmail = document.getElementById('authLoginEmail');
     if (wallEmail) wallEmail.value = email;
@@ -282,16 +203,16 @@ async function executeRegister(selectedName, email, password, confirm) {
 
     let emailMsg = '';
     if (data.emailStatus && data.emailStatus.delivered) {
-      emailMsg = ' E-mail de confirmação enviado! 📧';
+      emailMsg = ' 📧 E-mail de confirmação enviado!';
+    } else if (data.emailStatus && data.emailStatus.reason === 'RESEND_API_KEY_MISSING') {
+      emailMsg = ' ⚠️ (E-mail não disparado: adicione RESEND_API_KEY na Vercel).';
     } else if (data.emailStatus && data.emailStatus.error) {
-      emailMsg = ` (Resend: ${data.emailStatus.error})`;
+      emailMsg = ` ⚠️ (Resend: ${data.emailStatus.error})`;
     }
 
-    if (typeof showToast === 'function') {
-      showToast(`⚡ Cadastro realizado! Faça login com seu e-mail e senha para acessar.${emailMsg}`);
-    }
+    showToast?.(`⚡ Cadastro realizado com sucesso! Digite sua senha para entrar.${emailMsg}`);
   } catch (e) {
-    if (typeof showToast === 'function') showToast('❌ Erro de conexão com o servidor de autenticação.');
+    showToast?.('❌ Erro de conexão com o servidor de autenticação.');
   }
 }
 
@@ -301,39 +222,39 @@ window.logoutUser = function() {
   window.currentUser = null;
   clearAuthForms();
   updateAuthUI();
-  if (typeof showToast === 'function') showToast('👋 Sessão encerrada.');
+  showToast?.('👋 Sessão encerrada.');
 };
 
 window.togglePasswordVisibility = function(inputId, btn) {
   const input = document.getElementById(inputId);
   if (!input) return;
-  if (input.type === 'password') {
-    input.type = 'text';
-    btn.innerHTML = '🙈';
-  } else {
-    input.type = 'password';
-    btn.innerHTML = '👁️';
-  }
+  input.type = input.type === 'password' ? 'text' : 'password';
+  btn.innerHTML = input.type === 'password' ? '👁️' : '🙈';
 };
 
 window.checkPasswordMatch = function(prefix) {
-  const passEl = document.getElementById(`${prefix}RegPassword`);
-  const confEl = document.getElementById(`${prefix}RegConfirm`);
-  const hintEl = document.getElementById(`${prefix}PasswordMatchHint`);
+  const p1 = document.getElementById(`${prefix}RegPassword`)?.value;
+  const p2 = document.getElementById(`${prefix}RegConfirm`)?.value;
+  const hint = document.getElementById(`${prefix}PasswordMatchHint`);
+  if (!hint) return;
+  if (!p2) { hint.innerHTML = ''; return; }
+  hint.innerHTML = p1 === p2
+    ? '<span style="color:var(--green); font-size:0.78rem; font-weight:600; display:inline-block; margin-top:4px;">✅ Senhas coincidem!</span>'
+    : '<span style="color:var(--red); font-size:0.78rem; font-weight:600; display:inline-block; margin-top:4px;">❌ As senhas não coincidem</span>';
+};
 
-  if (!passEl || !confEl || !hintEl) return;
+window.resetAllUserAccounts = async function() {
+  if (!confirm('⚠️ Tem certeza que deseja apagar TODAS as contas de usuários e cadastros de jogadores? Todos os e-mails e nomes ficarão liberados para novos cadastros do zero.')) return;
+  try {
+    await fetch('/api/auth', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'reset_all' }) });
+  } catch (e) { console.warn('Reset error:', e); }
 
-  const p1 = passEl.value;
-  const p2 = confEl.value;
-
-  if (!p2) {
-    hintEl.innerHTML = '';
-    return;
-  }
-
-  if (p1 === p2) {
-    hintEl.innerHTML = '<span style="color:var(--green); font-size:0.78rem; font-weight:600; display:inline-block; margin-top:4px;">✅ Senhas coincidem!</span>';
-  } else {
-    hintEl.innerHTML = '<span style="color:var(--red); font-size:0.78rem; font-weight:600; display:inline-block; margin-top:4px;">❌ As senhas não coincidem</span>';
-  }
+  localStorage.removeItem('jornada_claimed_players');
+  localStorage.removeItem('jornada_user_profile');
+  localStorage.removeItem('jornada_auth_token');
+  window.currentUser = null;
+  clearAuthForms();
+  populatePlayerRegisterDropdowns();
+  updateAuthUI();
+  showToast?.('🧹 Todas as contas de usuários foram resetadas com sucesso!');
 };

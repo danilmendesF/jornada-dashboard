@@ -178,6 +178,29 @@ export default async function handler(req, res) {
       return res.status(200).json({ valid: true, user: verified });
     }
 
+    // ── ACTION 4: RESET ALL ACCOUNTS ─────────────────────────────────────────
+    if (req.method === 'POST' && action === 'reset_all') {
+      if (redis) {
+        try {
+          const users = await redis.sMembers('users_list');
+          if (users && Array.isArray(users)) {
+            for (const email of users) {
+              await redis.del(`user_${email.toLowerCase().trim()}`);
+            }
+          }
+          await redis.del('users_list');
+
+          const defaultPlayers = ['danilo', 'guivaz', 'victor', 'lipe', 'trevas', 'braz', 'leleco'];
+          for (const p of defaultPlayers) {
+            await redis.del(`player_claim_${p}`);
+          }
+        } catch (err) {
+          console.warn('[Serverless Auth] Reset warning:', err.message);
+        }
+      }
+      return res.status(200).json({ success: true, message: 'Todas as contas de usuários foram resetadas com sucesso!' });
+    }
+
     return res.status(400).json({ error: 'Ação não suportada.' });
   } catch (e) {
     console.error('Auth handler error:', e);
