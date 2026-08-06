@@ -2,32 +2,35 @@
 
 > **Gerado automaticamente por `node scripts/update_state.cjs`.**
 > **Leia como PRIMEIRO PASSO em qualquer nova sessão ou conversa.**
-> Gerado em: 2026-08-06T17:54:27.001Z | Commit: `5d70515`
+> Gerado em: 2026-08-06T18:09:12.539Z | Commit: `86e5c63`
 
 ---
 
 ## 🚀 ESTADO ATUAL DO PROJETO
 
-- **Último commit**: `5d70515`
+- **Último commit**: `86e5c63`
 - **Produção**: https://jornadatcgteam.com.br (Vercel auto-deploy)
 - **Repositório**: https://github.com/danilmendesF/jornada-dashboard
 
 ### 5 Commits Mais Recentes:
 ```
+86e5c63 feat(api): notifica admin por email na criacao de decks (SPEC_031)
 5d70515 docs(core): implementa duplo proceed no sdd para revisao local (SPEC_030)
 bd24a05 feat(table): esconde edicao e delecao para partidas de terceiros (SPEC_029)
 4373cf2 feat(core): implementa arquitetura multi-agent SDD (SPEC_028) e corrige bug no manager.js
 7fa22d2 fix(api): corrige restrição 403 da resend aplicando dominio verificado (SPEC_027)
-8a59a56 style(auth): redesign do botao sair (SPEC_026)
 ```
 
 ### Arquivos Modificados no Último Commit:
 - `.ai/PROJECT_INDEX.md`
 - `.ai/SESSION_CONTEXT.md`
-- `.ai/specs/SPEC_030_DEPLOY_PAUSE.md`
-- `.cursorrules`
+- `.ai/specs/SPEC_031_NEW_DECK_EMAIL.md`
 - `AGENTS.md`
+- `api/email.js`
+- `api/notifyDeck.js`
+- `dist/app.min.js`
 - `index.html`
+- `manager.js`
 - `package.json`
 
 ---
@@ -65,6 +68,7 @@ bd24a05 feat(table): esconde edicao e delecao para partidas de terceiros (SPEC_0
 | `SPEC_029_HIDE_ACTIONS_FOR_NON_OWNERS.md` | — |
 | `SPEC_030_DEPLOY_PAUSE.md` | — |
 | `SPEC_031_NEW_DECK_EMAIL.md` | — |
+| `SPEC_032_NOTIFY_DECK_FIX.md` | — |
 
 
 ---
@@ -97,12 +101,12 @@ bd24a05 feat(table): esconde edicao e delecao para partidas de terceiros (SPEC_0
 
 | Arquivo de Contexto | Caracteres | Tokens Estimados |
 |---|---|---|
-| `SESSION_CONTEXT.md` | 4810 | ~1203 tks |
+| `SESSION_CONTEXT.md` | 4927 | ~1232 tks |
 | `PROJECT_INDEX.md` | 4613 | ~1153 tks |
 | `DECISION_LOG.md` | 4744 | ~1186 tks |
 | `ARCHITECTURE.md` | 7650 | ~1913 tks |
 | `agent_personas.md` | 5129 | ~1282 tks |
-| **TOTAL BASE RAG** | **26946** | **~6737 tks** |
+| **TOTAL BASE RAG** | **27063** | **~6766 tks** |
 
 *(Nota: O GPT-4 / Gemini-1.5 suportam 128k-1M+ tokens. Um RAG base ideal consome < 5.000 tokens).*
 
