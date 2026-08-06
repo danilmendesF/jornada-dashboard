@@ -1801,14 +1801,18 @@ function showToast(msg) {
   toast._timer = setTimeout(() => toast.classList.remove('show'), 3000);
 }
 
-// ── QUICK LOG FUNCTIONALITY ──────────────────────────────────────────────────
+// ── QUICK LOG — Trava #quickLogPlayer ao jogador autenticado ──────────────────
 function populateQuickLogDropdowns() {
-  const qPlayer = document.getElementById('quickLogPlayer');
-  if (qPlayer) {
-    const curP = qPlayer.value;
-    qPlayer.innerHTML = players.map(p => `<option value="${p}">👤 ${p}</option>`).join('');
-    if (curP && players.includes(curP)) qPlayer.value = curP;
-    if (qPlayer.syncSearchableSelect) qPlayer.syncSearchableSelect();
+  const pSel = document.getElementById('quickLogPlayer');
+  if (pSel) {
+    const activeName = typeof getActivePlayerName === 'function' ? getActivePlayerName() : null;
+    if (activeName) {
+      pSel.innerHTML = `<option value="${activeName}">👤 ${activeName}</option>`;
+      pSel.value = activeName;
+      pSel.selectedIndex = 0;
+    } else {
+      pSel.innerHTML = `<option value="">🔑 Faça Login para Registrar Partida</option>`;
+    }
   }
 
   populateLocalSelects();

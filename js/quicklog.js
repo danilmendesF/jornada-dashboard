@@ -176,39 +176,7 @@ window.quickLogMatch = function(resultado) {
 };
 
 window.populateQuickLogDropdowns = function() {
-  const pSel = document.getElementById('quickLogPlayer');
-  if (pSel) {
-    const activeName = typeof getActivePlayerName === 'function' ? getActivePlayerName() : null;
-
-    if (activeName) {
-      // Authenticated user: RESTRICT dropdown exclusively to the single logged-in player
-      pSel.innerHTML = `<option value="${activeName}">👤 ${activeName}</option>`;
-      pSel.value = activeName;
-      pSel.selectedIndex = 0;
-    } else {
-      // Unauthenticated instruction
-      pSel.innerHTML = `<option value="">🔑 Faça Login para Registrar Partida</option>`;
-    }
-  }
-
-  if (typeof populateLocalSelects === 'function') populateLocalSelects();
-  if (typeof populateColecaoSelects === 'function') populateColecaoSelects();
-  if (typeof updatePlacarDropdown === 'function') {
-    updatePlacarDropdown('quickLogFormato', 'quickLogPlacar');
-    updatePlacarDropdown('formMatchFormato', 'formMatchPlacar');
-  }
-
-  if (typeof renderQuickLogTouchPills === 'function') renderQuickLogTouchPills();
-
-  const fmtSel = document.getElementById('quickLogFormato');
-  const plcSel = document.getElementById('quickLogPlacar');
-  if (fmtSel) {
-    fmtSel.addEventListener('change', () => {
-      if (typeof updatePlacarDropdown === 'function') updatePlacarDropdown('quickLogFormato', 'quickLogPlacar');
-      renderQuickLogTouchPills();
-    });
-  }
-  if (plcSel) {
-    plcSel.addEventListener('change', () => renderQuickLogTouchPills());
-  }
+  // Delegado para populateQuickLogDropdowns() em manager.js
+  // que trava #quickLogPlayer ao jogador autenticado via getActivePlayerName()
+  if (typeof populateQuickLogDropdowns === 'function') populateQuickLogDropdowns();
 };
