@@ -172,17 +172,20 @@ function closeModal(id, force = false) {
 
 // ── POPULATE PLAYER SELECTS ──────────────────────────────────────────────────
 function populatePlayerSelects() {
-  const currentUserObj = typeof getCurrentUser === 'function' ? getCurrentUser() : window.currentUser;
+  let currentUserObj = typeof getCurrentUser === 'function' ? getCurrentUser() : window.currentUser;
+  if (!currentUserObj) {
+    try { currentUserObj = JSON.parse(localStorage.getItem('jornada_user_profile')) || null; } catch (e) {}
+  }
   const activeName = currentUserObj?.linkedPlayer || currentUserObj?.name;
 
-  ['formMatchPlayer','formDeckPlayer','filterPlayer'].forEach(id => {
+  ['formMatchPlayer','quickLogPlayer','formDeckPlayer','filterPlayer'].forEach(id => {
     const sel = document.getElementById(id);
     if (!sel) return;
     const cur = sel.value;
     const first = sel.options[0];
     sel.innerHTML = '';
 
-    if (id === 'formMatchPlayer' && activeName) {
+    if ((id === 'formMatchPlayer' || id === 'quickLogPlayer') && activeName) {
       const o = document.createElement('option');
       o.value = activeName;
       o.textContent = `👤 ${activeName}`;

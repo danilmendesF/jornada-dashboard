@@ -177,17 +177,21 @@ window.quickLogMatch = function(resultado) {
 
 window.populateQuickLogDropdowns = function() {
   const pSel = document.getElementById('quickLogPlayer');
-  if (pSel && typeof loadPlayers === 'function') {
-    const currentUserObj = typeof getCurrentUser === 'function' ? getCurrentUser() : window.currentUser;
+  if (pSel) {
+    let currentUserObj = typeof getCurrentUser === 'function' ? getCurrentUser() : window.currentUser;
+    if (!currentUserObj) {
+      try { currentUserObj = JSON.parse(localStorage.getItem('jornada_user_profile')) || null; } catch (e) {}
+    }
     const activeName = currentUserObj?.linkedPlayer || currentUserObj?.name;
 
     if (activeName) {
-      // Authenticated user: RESTRICT dropdown exclusively to the logged-in player
+      // Authenticated user: RESTRICT dropdown exclusively to the single logged-in player
       pSel.innerHTML = `<option value="${activeName}">👤 ${activeName}</option>`;
+      pSel.value = activeName;
       pSel.selectedIndex = 0;
     } else {
       // Guest / unauthenticated fallback
-      const currentPlayers = loadPlayers();
+      const currentPlayers = typeof loadPlayers === 'function' ? loadPlayers() : ['Danilo', 'GuiVaz', 'Victor', 'Lipe'];
       pSel.innerHTML = currentPlayers.map(p => `<option value="${p}">${p}</option>`).join('');
     }
   }

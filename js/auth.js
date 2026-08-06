@@ -65,6 +65,12 @@ window.updateAuthUI = function() {
     if (wall) wall.style.display = 'none';
     if (dashboard) dashboard.style.display = 'block';
 
+    const activeName = window.currentUser?.linkedPlayer || window.currentUser?.name;
+    if (quickLogPlayerSel && activeName) {
+      quickLogPlayerSel.innerHTML = `<option value="${activeName}">👤 ${activeName}</option>`;
+      quickLogPlayerSel.value = activeName;
+    }
+
     if (badge) {
       badge.innerHTML = `
         <div style="display:flex; align-items:center; gap:0.4rem; background:rgba(124,106,247,0.18); border:1px solid var(--accent); padding:0.35rem 0.75rem; border-radius:50px; font-size:0.8rem; font-weight:700; color:var(--accent2);">
