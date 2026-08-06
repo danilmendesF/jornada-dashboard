@@ -260,10 +260,7 @@ async function executeRegister(selectedName, email, password, confirm) {
       return;
     }
 
-    localStorage.setItem('jornada_auth_token', data.token);
-    localStorage.setItem('jornada_user_profile', JSON.stringify(data.user));
-    window.currentUser = data.user;
-
+    // DO NOT auto-login user after registration (Must perform manual login)
     // Claim the player name & add to team list if new
     addClaimedPlayer(targetName);
     let players = typeof loadPlayers === 'function' ? loadPlayers() : [];
@@ -274,14 +271,24 @@ async function executeRegister(selectedName, email, password, confirm) {
 
     clearAuthForms();
     populatePlayerRegisterDropdowns();
-    updateAuthUI();
 
-    if (typeof closeModal === 'function') closeModal('modalAuth');
+    // Pre-fill login email and switch tab to login
+    const wallEmail = document.getElementById('wallLoginEmail');
+    const authEmail = document.getElementById('authLoginEmail');
+    if (wallEmail) wallEmail.value = email;
+    if (authEmail) authEmail.value = email;
 
+    switchAuthTab('login');
+
+    let emailMsg = '';
     if (data.emailStatus && data.emailStatus.delivered) {
-      if (typeof showToast === 'function') showToast(`⚡ Conta associada a "${targetName}"! E-mail de confirmação enviado. 📧`);
-    } else {
-      if (typeof showToast === 'function') showToast(`⚡ Conta associada a "${targetName}" com sucesso!`);
+      emailMsg = ' E-mail de confirmação enviado! 📧';
+    } else if (data.emailStatus && data.emailStatus.error) {
+      emailMsg = ` (Resend: ${data.emailStatus.error})`;
+    }
+
+    if (typeof showToast === 'function') {
+      showToast(`⚡ Cadastro realizado! Faça login com seu e-mail e senha para acessar.${emailMsg}`);
     }
   } catch (e) {
     if (typeof showToast === 'function') showToast('❌ Erro de conexão com o servidor de autenticação.');
