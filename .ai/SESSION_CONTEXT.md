@@ -2,35 +2,32 @@
 
 > **Gerado automaticamente por `node scripts/update_state.cjs`.**
 > **Leia como PRIMEIRO PASSO em qualquer nova sessão ou conversa.**
-> Gerado em: 2026-08-06T16:05:08.683Z | Commit: `8a59a56`
+> Gerado em: 2026-08-06T17:03:21.690Z | Commit: `7fa22d2`
 
 ---
 
 ## 🚀 ESTADO ATUAL DO PROJETO
 
-- **Último commit**: `8a59a56`
+- **Último commit**: `7fa22d2`
 - **Produção**: https://jornadatcgteam.com.br (Vercel auto-deploy)
 - **Repositório**: https://github.com/danilmendesF/jornada-dashboard
 
 ### 5 Commits Mais Recentes:
 ```
+7fa22d2 fix(api): corrige restrição 403 da resend aplicando dominio verificado (SPEC_027)
 8a59a56 style(auth): redesign do botao sair (SPEC_026)
 9f8392d docs(rules): enforce strict SDD protocol for all changes
 51cf242 fix(auth): resolve bug de UI nao reativa apos login/logout
 ef2ccfb feat(auth): exibe versao do app dentro da tela de login tambem
-301a59a feat(infra): adiciona versionamento semantico e rodape flutuante (SPEC_025)
 ```
 
 ### Arquivos Modificados no Último Commit:
-- `.agents/rules/strict_sdd.md`
 - `.ai/PROJECT_INDEX.md`
 - `.ai/SESSION_CONTEXT.md`
-- `dist/app.min.js`
-- `dist/style.min.css`
+- `.ai/specs/SPEC_027_RESEND_DOMAIN.md`
+- `api/email.js`
 - `index.html`
-- `js/auth.js`
 - `package.json`
-- `style.css`
 
 ---
 
@@ -63,6 +60,7 @@ ef2ccfb feat(auth): exibe versao do app dentro da tela de login tambem
 | `SPEC_024_REGISTRATION_FEEDBACK_VISUAL.md` | 🟢 IMPLEMENTADO |
 | `SPEC_025_SEMANTIC_VERSIONING.md` | 🟢 IMPLEMENTADO |
 | `SPEC_027_RESEND_DOMAIN.md` | — |
+| `SPEC_028_MULTI_AGENT_WORKFLOW.md` | — |
 
 
 ---
@@ -95,12 +93,12 @@ ef2ccfb feat(auth): exibe versao do app dentro da tela de login tambem
 
 | Arquivo de Contexto | Caracteres | Tokens Estimados |
 |---|---|---|
-| `SESSION_CONTEXT.md` | 4612 | ~1153 tks |
+| `SESSION_CONTEXT.md` | 4614 | ~1154 tks |
 | `PROJECT_INDEX.md` | 4613 | ~1153 tks |
 | `DECISION_LOG.md` | 4744 | ~1186 tks |
 | `ARCHITECTURE.md` | 7650 | ~1913 tks |
 | `agent_personas.md` | 5129 | ~1282 tks |
-| **TOTAL BASE RAG** | **26748** | **~6687 tks** |
+| **TOTAL BASE RAG** | **26750** | **~6688 tks** |
 
 *(Nota: O GPT-4 / Gemini-1.5 suportam 128k-1M+ tokens. Um RAG base ideal consome < 5.000 tokens).*
 

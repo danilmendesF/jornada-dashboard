@@ -1566,7 +1566,7 @@ function addPlayer() {
   showToast(`👤 Player "${name}" adicionado!`);
 }
 
-function deletePlayer(name) {
+window.deletePlayer = function(name) {
   if (!confirm(`Remover player "${name}"?`)) return;
   lastWriteTime = Date.now();
 
@@ -1610,7 +1610,7 @@ function addLocal() {
   showToast(`📍 Local "${name}" adicionado!`);
 }
 
-function deleteLocal(name) {
+window.deleteLocal = function(name) {
   if (!confirm(`Remover local "${name}"?`)) return;
   lastWriteTime = Date.now();
 
@@ -1706,7 +1706,7 @@ function addColecao() {
   showToast(`📦 Coleção "${name}" adicionada!`);
 }
 
-function deleteColecao(name) {
+window.deleteColecao = function(name) {
   if (!confirm(`Remover coleção "${name}"?`)) return;
   lastWriteTime = Date.now();
 

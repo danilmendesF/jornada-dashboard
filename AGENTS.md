@@ -58,4 +58,10 @@ Before writing a single line of code, read in this exact order:
 | `/refactor <desc>` | 🔵 **RefactorSurgeon** | `SPEC_XXX_REFACTOR.md` | Full Read → Plan → Proceed → Refactor → 61 Tests → Deploy Checkpoint |
 | `/doc <desc>` | 🟡 **DocKeeper** | Updates `.ai/` files | Update Specs Status → RAG Re-index → No code changes |
 
+## 🔄 FLUXO MULTI-AGENTE
+
+- **Planner**: Pro High
+- **Executor**: Flash
+- **QA**: Flash
+
 See full persona definitions in [agent_personas.md](.agents/rules/agent_personas.md).
