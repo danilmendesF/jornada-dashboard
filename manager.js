@@ -2483,14 +2483,14 @@ function initSyncUI() {
   const btnGen = document.getElementById('btnGenerateSyncToken');
   const btnCopy = document.getElementById('btnCopySyncToken');
 
-  const curToken = localStorage.getItem('jornada_sync_token');
-  if (curToken) {
-    if (tokenInput) tokenInput.value = curToken;
-    pullFromCloud(true);
-    startSyncInterval();
-  } else {
-    setSyncStatus('disconnected');
+  let curToken = localStorage.getItem('jornada_sync_token');
+  if (!curToken) {
+    curToken = 'team_default_sync';
+    localStorage.setItem('jornada_sync_token', curToken);
   }
+  if (tokenInput) tokenInput.value = curToken;
+  pullFromCloud(true);
+  startSyncInterval();
 
   document.getElementById('btnOpenSync')?.addEventListener('click', () => {
     const tok = localStorage.getItem('jornada_sync_token') || '';

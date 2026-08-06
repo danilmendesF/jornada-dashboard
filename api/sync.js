@@ -39,15 +39,11 @@ export default async function handler(req, res) {
   const bearerToken = authHeader.replace('Bearer ', '').trim();
   const queryToken = req.query.token;
 
-  let activeToken = bearerToken || queryToken;
-  let userPayload = null;
-
   if (bearerToken) {
     userPayload = verifyJwt(bearerToken);
-    if (userPayload && userPayload.email) {
-      activeToken = `user_${userPayload.email.replace(/[^a-zA-Z0-9_-]/g, '')}`;
-    }
   }
+
+  activeToken = queryToken || 'team_default_sync';
 
   if (!activeToken) {
     return res.status(401).json({ error: 'Autenticação necessária (Token JWT ou Sync Token ausente).' });

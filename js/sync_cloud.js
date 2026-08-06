@@ -31,10 +31,8 @@ window.getSyncUrl = function(token) {
   const authToken = typeof getAuthToken === 'function' ? getAuthToken() : '';
   const syncToken = token || localStorage.getItem('jornada_sync_token') || 'team_default_sync';
   
-  if (authToken) {
-    return `/api/sync`;
-  }
-  return `/api/sync?token=${encodeURIComponent(syncToken)}`;
+  const url = `/api/sync?token=${encodeURIComponent(syncToken)}`;
+  return url;
 };
 
 window.getSyncHeaders = function() {
