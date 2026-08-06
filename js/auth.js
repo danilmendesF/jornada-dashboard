@@ -53,6 +53,53 @@ window.initAuthSession = function() {
   if (token) verifyAuthToken(token);
 };
 
+// ── AUTH WALL INLINE FEEDBACK ────────────────────────────────────────────────
+window.showAuthWallFeedback = function(feedbackId, btnId, message, type, duration) {
+  const el = document.getElementById(feedbackId);
+  const btn = document.getElementById(btnId);
+  if (!el) return;
+
+  const colors = {
+    success: { bg: 'rgba(46,232,160,0.12)', border: '#2ee8a0', color: '#2ee8a0', icon: '✅' },
+    error:   { bg: 'rgba(247,80,80,0.12)',  border: '#f75050', color: '#f75050', icon: '❌' },
+    loading: { bg: 'rgba(0,200,248,0.10)',  border: '#00c8f8', color: '#00c8f8', icon: '⏳' },
+  };
+  const c = colors[type] || colors.error;
+
+  el.innerHTML = `<span>${c.icon} ${message}</span>`;
+  el.style.cssText = [
+    'display:flex', 'align-items:center', 'gap:0.4rem',
+    `background:${c.bg}`, `border:1px solid ${c.bg === colors.loading.bg ? c.border : c.border}`,
+    `color:${c.color}`, 'border-radius:8px', 'padding:0.55rem 0.8rem',
+    'font-size:0.85rem', 'font-weight:600', 'margin-bottom:0.2rem',
+    'animation:fadeInUp 0.25s ease',
+  ].join(';');
+
+  if (btn) {
+    if (type === 'loading') {
+      btn.disabled = true;
+      btn.style.opacity = '0.6';
+    } else {
+      btn.disabled = false;
+      btn.style.opacity = '1';
+    }
+  }
+
+  if (duration && duration > 0) {
+    setTimeout(() => {
+      el.style.display = 'none';
+      el.innerHTML = '';
+    }, duration);
+  }
+};
+
+window.clearAuthWallFeedback = function(feedbackId, btnId) {
+  const el = document.getElementById(feedbackId);
+  const btn = document.getElementById(btnId);
+  if (el) { el.style.display = 'none'; el.innerHTML = ''; }
+  if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+};
+
 async function verifyAuthToken(token) {
   try {
     const res = await fetch(`/api/auth?token=${encodeURIComponent(token)}`);
@@ -149,7 +196,11 @@ window.submitUserLogin = () => executeLogin(document.getElementById('authLoginEm
 window.submitWallLogin = () => executeLogin(document.getElementById('wallLoginEmail')?.value?.trim(), document.getElementById('wallLoginPassword')?.value?.trim());
 
 async function executeLogin(email, password) {
-  if (!email || !password) return showToast?.('⚠️ Preencha e-mail e senha!');
+  if (!email || !password) {
+    showAuthWallFeedback('wallLoginFeedback', 'btnWallLogin', 'Preencha e-mail e senha!', 'error');
+    return;
+  }
+  showAuthWallFeedback('wallLoginFeedback', 'btnWallLogin', 'Verificando credenciais...', 'loading');
   try {
     const res = await fetch('/api/auth', {
       method: 'POST',
@@ -157,17 +208,22 @@ async function executeLogin(email, password) {
       body: JSON.stringify({ action: 'login', email, password })
     });
     const data = await res.json();
-    if (!res.ok || data.error) return showToast?.(`❌ ${data.error || 'Erro ao fazer login.'}`);
+    if (!res.ok || data.error) {
+      showAuthWallFeedback('wallLoginFeedback', 'btnWallLogin', data.error || 'E-mail ou senha incorretos.', 'error');
+      return;
+    }
 
     localStorage.setItem('jornada_auth_token', data.token);
     localStorage.setItem('jornada_user_profile', JSON.stringify(data.user));
     window.currentUser = data.user;
-    clearAuthForms();
-    updateAuthUI();
-    if (typeof closeModal === 'function') closeModal('modalAuth');
-    showToast?.(`⚡ Bem-vindo de volta, ${data.user.name}!`);
+    showAuthWallFeedback('wallLoginFeedback', 'btnWallLogin', `Bem-vindo de volta, ${data.user.name}!`, 'success', 1200);
+    setTimeout(() => {
+      clearAuthForms();
+      updateAuthUI();
+      if (typeof closeModal === 'function') closeModal('modalAuth');
+    }, 900);
   } catch (e) {
-    showToast?.('❌ Erro de conexão com o servidor de autenticação.');
+    showAuthWallFeedback('wallLoginFeedback', 'btnWallLogin', 'Erro de conexão com o servidor.', 'error');
   }
 }
 
@@ -178,12 +234,23 @@ async function executeRegister(selectedName, email, password, confirm) {
   let targetName = selectedName;
   if (targetName === '__NEW__') {
     targetName = prompt('Digite o nome do novo integrante do time:');
-    if (!targetName || !targetName.trim()) return showToast?.('⚠️ Nome de integrante inválido!');
+    if (!targetName || !targetName.trim()) {
+      showAuthWallFeedback('wallRegFeedback', 'btnWallRegister', 'Nome de integrante inválido!', 'error');
+      return;
+    }
     targetName = targetName.trim();
   }
 
-  if (!targetName || !email || !password || !confirm) return showToast?.('⚠️ Preencha todos os campos!');
-  if (password !== confirm) return showToast?.('⚠️ As senhas não coincidem!');
+  if (!targetName || !email || !password || !confirm) {
+    showAuthWallFeedback('wallRegFeedback', 'btnWallRegister', 'Preencha todos os campos obrigatórios!', 'error');
+    return;
+  }
+  if (password !== confirm) {
+    showAuthWallFeedback('wallRegFeedback', 'btnWallRegister', 'As senhas não coincidem!', 'error');
+    return;
+  }
+
+  showAuthWallFeedback('wallRegFeedback', 'btnWallRegister', 'Criando sua conta...', 'loading');
 
   try {
     const res = await fetch('/api/auth', {
@@ -193,7 +260,10 @@ async function executeRegister(selectedName, email, password, confirm) {
     });
 
     const data = await res.json();
-    if (!res.ok || data.error) return showToast?.(`❌ ${data.error || 'Erro no cadastro.'}`);
+    if (!res.ok || data.error) {
+      showAuthWallFeedback('wallRegFeedback', 'btnWallRegister', data.error || 'Erro ao criar conta. Tente novamente.', 'error');
+      return;
+    }
 
     addClaimedPlayer(targetName);
     let players = typeof loadPlayers === 'function' ? loadPlayers() : [];
@@ -202,28 +272,27 @@ async function executeRegister(selectedName, email, password, confirm) {
       if (typeof savePlayers === 'function') savePlayers(players);
     }
 
-    clearAuthForms();
-    populatePlayerRegisterDropdowns();
-
-    const wallEmail = document.getElementById('wallLoginEmail');
-    const authEmail = document.getElementById('authLoginEmail');
-    if (wallEmail) wallEmail.value = email;
-    if (authEmail) authEmail.value = email;
-
-    switchAuthTab('login');
-
     let emailMsg = '';
-    if (data.emailStatus && data.emailStatus.delivered) {
-      emailMsg = ' 📧 E-mail de confirmação enviado!';
-    } else if (data.emailStatus && data.emailStatus.reason === 'RESEND_API_KEY_MISSING') {
-      emailMsg = ' ⚠️ (E-mail não disparado: adicione RESEND_API_KEY na Vercel).';
-    } else if (data.emailStatus && data.emailStatus.error) {
-      emailMsg = ` ⚠️ (Resend: ${data.emailStatus.error})`;
-    }
+    if (data.emailStatus?.delivered) emailMsg = ' 📧 E-mail de confirmação enviado!';
 
-    showToast?.(`⚡ Cadastro realizado com sucesso! Digite sua senha para entrar.${emailMsg}`);
+    showAuthWallFeedback('wallRegFeedback', 'btnWallRegister',
+      `Cadastro realizado com sucesso!${emailMsg} Redirecionando para o login...`, 'success');
+
+    setTimeout(() => {
+      clearAuthForms();
+      populatePlayerRegisterDropdowns();
+      const wallEmail = document.getElementById('wallLoginEmail');
+      const authEmail = document.getElementById('authLoginEmail');
+      if (wallEmail) wallEmail.value = email;
+      if (authEmail) authEmail.value = email;
+      clearAuthWallFeedback('wallRegFeedback', 'btnWallRegister');
+      switchAuthTab('login');
+      showAuthWallFeedback('wallLoginFeedback', 'btnWallLogin',
+        `Conta criada! Digite sua senha para entrar.`, 'success', 4000);
+    }, 1800);
+
   } catch (e) {
-    showToast?.('❌ Erro de conexão com o servidor de autenticação.');
+    showAuthWallFeedback('wallRegFeedback', 'btnWallRegister', 'Erro de conexão com o servidor.', 'error');
   }
 }
 

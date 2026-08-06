@@ -2,7 +2,7 @@
 
 Este índice permite que assistentes de IA localizem instantaneamente arquivos, funções e elementos do DOM sem ler a base de código inteira, reduzindo o uso de tokens em até 95%.
 
-> **Última Atualização**: 2026-08-06T13:45:00.283Z | **Total Módulos js/**: 13 | **Commit**: `e9f3e6e`
+> **Última Atualização**: 2026-08-06T14:21:00.518Z | **Total Módulos js/**: 13 | **Commit**: `4c55493`
 
 ---
 
@@ -10,7 +10,7 @@ Este índice permite que assistentes de IA localizem instantaneamente arquivos, 
 
 | Arquivo Módulo | Linhas | Status | window.* Exports (primeiros 5) |
 |---|---|---|---|
-| `js/auth.js` | 272 | 🟢 OK | `currentUser, getAuthToken, getCurrentUser, getClaimedPlayers, addClaimedPlayer...` |
+| `js/auth.js` | 341 | 🟢 OK | `currentUser, getAuthToken, getCurrentUser, getClaimedPlayers, addClaimedPlayer...` |
 | `js/charts.js` | 182 | 🟢 OK | `charts, destroyChart, renderKPIs, renderDeckWR, renderPlayerPerf...` |
 | `js/config.js` | 67 | 🟢 OK | `KEY_DECKS, KEY_MATCHES, KEY_PLAYERS, KEY_LOCAIS, KEY_COLECOES...` |
 | `js/filters.js` | 318 | 🟢 OK | `selectedPlayers, selectedDecks, populateMultiPlayerFilter, selectedPlayers, renderMultiPlayerItems...` |

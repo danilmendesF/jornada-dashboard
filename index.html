@@ -54,7 +54,8 @@
             <button type="button" class="toggle-password-btn" onclick="togglePasswordVisibility('wallLoginPassword', this)" title="Mostrar / Ocultar Senha">👁️</button>
           </div>
         </div>
-        <button class="save-btn" style="width: 100%; margin-top: 0.5rem; justify-content: center; height: 48px; font-size: 1rem;" onclick="submitWallLogin()">
+        <div id="wallLoginFeedback" class="auth-feedback-msg" style="display:none;"></div>
+        <button id="btnWallLogin" class="save-btn" style="width: 100%; margin-top: 0.5rem; justify-content: center; height: 48px; font-size: 1rem;" onclick="submitWallLogin()">
           ⚡ Entrar no Painel
         </button>
       </div>
@@ -84,8 +85,10 @@
           </div>
           <div id="wallPasswordMatchHint" class="password-match-hint"></div>
         </div>
-        <button class="save-btn" style="width: 100%; margin-top: 0.5rem; justify-content: center; height: 48px; font-size: 1rem;" onclick="submitWallRegister()">
+        <div id="wallRegFeedback" class="auth-feedback-msg" style="display:none;"></div>
+        <button id="btnWallRegister" class="save-btn" style="width: 100%; margin-top: 0.5rem; justify-content: center; height: 48px; font-size: 1rem;" onclick="submitWallRegister()">
           📝 Finalizar Cadastro
+        </button>
       </div>
 
       <div style="text-align: center; margin-top: 1rem; border-top: 1px dashed var(--border); padding-top: 0.8rem;">

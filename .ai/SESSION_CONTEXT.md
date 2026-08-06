@@ -2,34 +2,31 @@
 
 > **Gerado automaticamente por `node scripts/update_state.cjs`.**
 > **Leia como PRIMEIRO PASSO em qualquer nova sessão ou conversa.**
-> Gerado em: 2026-08-06T13:45:00.480Z | Commit: `e9f3e6e`
+> Gerado em: 2026-08-06T14:21:00.739Z | Commit: `4c55493`
 
 ---
 
 ## 🚀 ESTADO ATUAL DO PROJETO
 
-- **Último commit**: `e9f3e6e`
+- **Último commit**: `4c55493`
 - **Produção**: https://jornadatcgteam.com.br (Vercel auto-deploy)
 - **Repositório**: https://github.com/danilmendesF/jornada-dashboard
 
 ### 5 Commits Mais Recentes:
 ```
+4c55493 feat(sdd): session context auto-generator e testes comportamentais
 e9f3e6e refactor(sdd-rag): auditoria e upgrade completo do sistema SDD/RAG
 4f46436 fix(quicklog): elimina funcao duplicada que sobrescrevia o lock do quick log player
 87c14b0 fix(all): tranca quicklog, restaura fundo da login wall, omite acoes de terceiros e otimiza sync multi-sessao
 49e8323 refactor(repo): organiza diretorios, adiciona README profissional e .env.example
-5fb06fe build(dist): encapsula bundle unico em IIFE scope e publica em producao
 ```
 
 ### Arquivos Modificados no Último Commit:
-- `.agents/rules/agent_personas.md`
-- `.ai/ARCHITECTURE.md`
-- `.ai/DECISION_LOG.md`
 - `.ai/PROJECT_INDEX.md`
-- `.ai/specs/SPEC_022_SDD_RAG_SYSTEM_REFACTORING.md`
-- `.ai/specs/TEMPLATE_SPEC.md`
-- `AGENTS.md`
+- `.ai/SESSION_CONTEXT.md`
+- `.ai/specs/SPEC_023_SESSION_CONTEXT_AND_BEHAVIORAL_TESTS.md`
 - `scripts/update_state.cjs`
+- `scripts/validate.cjs`
 
 ---
 
@@ -59,6 +56,7 @@ e9f3e6e refactor(sdd-rag): auditoria e upgrade completo do sistema SDD/RAG
 | `SPEC_021_TRIPLE_FIX_QUICKLOG_BACKGROUND_TABLE_ACTIONS.md` | 🟡 EM REVISÃO (Aguardando Aprovação do Usuário) |
 | `SPEC_022_SDD_RAG_SYSTEM_REFACTORING.md` | 🟢 IMPLEMENTADO |
 | `SPEC_023_SESSION_CONTEXT_AND_BEHAVIORAL_TESTS.md` | 🟢 IMPLEMENTADO |
+| `SPEC_024_REGISTRATION_FEEDBACK_VISUAL.md` | 🟢 IMPLEMENTADO |
 
 
 ---
