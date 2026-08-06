@@ -172,19 +172,31 @@ function closeModal(id, force = false) {
 
 // ── POPULATE PLAYER SELECTS ──────────────────────────────────────────────────
 function populatePlayerSelects() {
+  const currentUserObj = typeof getCurrentUser === 'function' ? getCurrentUser() : window.currentUser;
+  const activeName = currentUserObj?.linkedPlayer || currentUserObj?.name;
+
   ['formMatchPlayer','formDeckPlayer','filterPlayer'].forEach(id => {
     const sel = document.getElementById(id);
     if (!sel) return;
     const cur = sel.value;
     const first = sel.options[0];
     sel.innerHTML = '';
-    if (first) sel.appendChild(first);
-    players.forEach(p => {
+
+    if (id === 'formMatchPlayer' && activeName) {
       const o = document.createElement('option');
-      o.value = p; o.textContent = p;
+      o.value = activeName;
+      o.textContent = `👤 ${activeName}`;
       sel.appendChild(o);
-    });
-    sel.value = cur;
+      sel.value = activeName;
+    } else {
+      if (first) sel.appendChild(first);
+      players.forEach(p => {
+        const o = document.createElement('option');
+        o.value = p; o.textContent = p;
+        sel.appendChild(o);
+      });
+      sel.value = cur;
+    }
     if (sel.syncSearchableSelect) sel.syncSearchableSelect();
   });
 

@@ -178,18 +178,17 @@ window.quickLogMatch = function(resultado) {
 window.populateQuickLogDropdowns = function() {
   const pSel = document.getElementById('quickLogPlayer');
   if (pSel && typeof loadPlayers === 'function') {
-    const currentPlayers = loadPlayers();
-    pSel.innerHTML = currentPlayers.map(p => `<option value="${p}">${p}</option>`).join('');
-
     const currentUserObj = typeof getCurrentUser === 'function' ? getCurrentUser() : window.currentUser;
     const activeName = currentUserObj?.linkedPlayer || currentUserObj?.name;
+
     if (activeName) {
-      for (let i = 0; i < pSel.options.length; i++) {
-        if (pSel.options[i].value.toLowerCase() === activeName.toLowerCase()) {
-          pSel.selectedIndex = i;
-          break;
-        }
-      }
+      // Authenticated user: RESTRICT dropdown exclusively to the logged-in player
+      pSel.innerHTML = `<option value="${activeName}">👤 ${activeName}</option>`;
+      pSel.selectedIndex = 0;
+    } else {
+      // Guest / unauthenticated fallback
+      const currentPlayers = loadPlayers();
+      pSel.innerHTML = currentPlayers.map(p => `<option value="${p}">${p}</option>`).join('');
     }
   }
 

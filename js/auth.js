@@ -75,15 +75,8 @@ window.updateAuthUI = function() {
       `;
     }
 
-    if (quickLogPlayerSel) {
-      for (let i = 0; i < quickLogPlayerSel.options.length; i++) {
-        if (quickLogPlayerSel.options[i].value.toLowerCase() === window.currentUser.name.toLowerCase()) {
-          quickLogPlayerSel.selectedIndex = i;
-          break;
-        }
-      }
-    }
-
+    if (typeof populateQuickLogDropdowns === 'function') populateQuickLogDropdowns();
+    if (typeof populatePlayerSelects === 'function') populatePlayerSelects();
     if (typeof applyFilters === 'function') applyFilters();
   } else {
     if (wall) wall.style.display = 'flex';
@@ -96,6 +89,9 @@ window.updateAuthUI = function() {
         </button>
       `;
     }
+
+    if (typeof populateQuickLogDropdowns === 'function') populateQuickLogDropdowns();
+    if (typeof populatePlayerSelects === 'function') populatePlayerSelects();
   }
 };
 

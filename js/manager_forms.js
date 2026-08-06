@@ -20,6 +20,8 @@ window.closeModal = function(id) {
 };
 
 window.openMatchForm = function(matchData = null) {
+  if (typeof populatePlayerSelects === 'function') populatePlayerSelects();
+
   const title = document.getElementById('modalMatchFormTitle');
   if (title) title.textContent = matchData ? '✏️ Editar Partida' : '⚔️ Registrar Partida';
 
@@ -31,8 +33,11 @@ window.openMatchForm = function(matchData = null) {
     if (el) el.value = val ?? '';
   };
 
+  const currentUserObj = typeof getCurrentUser === 'function' ? getCurrentUser() : window.currentUser;
+  const activeName = currentUserObj?.linkedPlayer || currentUserObj?.name;
+
   setVal('formMatchData', matchData?.Data || new Date().toISOString().slice(0, 10));
-  setVal('formMatchPlayer', matchData?.Player || '');
+  setVal('formMatchPlayer', matchData?.Player || activeName || '');
   setVal('formMatchAdv', matchData?.Adversario || '');
   setVal('formMatchDeckAdv', matchData?.DeckAdvArquetipo || matchData?.DeckAdv || '');
   setVal('formMatchSubtipoAdv', matchData?.SubtipoAdv || '');
