@@ -6,3 +6,4 @@
 - Keep module files inside `js/` under 300 lines.
 - Always validate JS syntax with `node -c` after making changes.
 - Never remove global function exports attached to `window`.
+- SDD PROTOCOL IS MANDATORY: You must always generate an implementation plan/SPEC and wait for approval before coding, even for trivial fixes or CSS changes. NO EXCEPTIONS.

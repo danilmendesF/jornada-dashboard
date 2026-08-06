@@ -41,6 +41,14 @@ Before writing a single line of code, read in this exact order:
 
 ---
 
+## 🛑 SDD PROTOCOL: NO EXCEPTIONS
+
+- **NO HEURISTIC BYPASSING**: You must ALWAYS generate an `implementation_plan.md` (or a `SPEC_XXX.md` file) and wait for the user to say `Proceed` before writing any code.
+- This applies to **ALL** tasks, including trivial CSS tweaks, minor bug fixes, or text changes.
+- Do not assume a task is too small for the SDD workflow. If the user uses `/fix`, `/feat`, or `/refactor`, the planning phase is **MANDATORY**.
+
+---
+
 ## ⚡ SDD SLASH COMMANDS & PERSONAS
 
 | Comando | Persona Adotada | Spec Gerada | Workflow |
