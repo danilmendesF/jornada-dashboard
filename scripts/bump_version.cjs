@@ -55,15 +55,15 @@ console.log(`🆙 Versão atualizada no package.json: ${currentVersion} ➔ ${ne
 if (fs.existsSync(htmlPath)) {
   let html = fs.readFileSync(htmlPath, 'utf8');
   
-  // Expressão regular para encontrar e substituir o conteúdo da tag do appVersion
-  const regex = /(<span\s+id="appVersion"\s*>)(.*?)(<\/span>)/g;
+  // Expressão regular para encontrar e substituir o conteúdo da tag do appVersion e appVersionAuth
+  const regex = /(<span\s+id="appVersion(?:Auth)?"\s*>)(.*?)(<\/span>)/g;
   
   if (regex.test(html)) {
     html = html.replace(regex, `$1${newVersion}$3`);
     fs.writeFileSync(htmlPath, html, 'utf8');
     console.log(`✅ Nova versão (v${newVersion}) injetada com sucesso no index.html!`);
   } else {
-    console.error('⚠️ Tag <span id="appVersion"> não encontrada no index.html. Não foi possível injetar a versão.');
+    console.error('⚠️ Tag <span id="appVersion"> ou <span id="appVersionAuth"> não encontrada no index.html. Não foi possível injetar a versão.');
   }
 } else {
   console.error('❌ index.html não encontrado.');
