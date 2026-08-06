@@ -122,7 +122,7 @@ window.renderTable = function(rows, resetPage = false) {
           ${isOwner ? `
             <button class="action-btn sm" onclick="editMatch('${r.id}')" title="Editar">✏️</button>
             <button class="action-btn sm danger" onclick="deleteMatch('${r.id}')" title="Deletar">🗑️</button>
-          ` : `<span style="font-size:0.72rem; color:var(--text2); opacity:0.6;">👁️ Leitura</span>`}
+          ` : ''}
         </td>
       </tr>
     `;

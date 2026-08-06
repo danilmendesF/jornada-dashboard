@@ -41,8 +41,15 @@ window.PLACAR_RULES = {
 window.getActivePlayerName = function() {
   let user = typeof getCurrentUser === 'function' ? getCurrentUser() : window.currentUser;
   if (!user) {
-    try { user = JSON.parse(localStorage.getItem('jornada_user_profile')) || null; } catch (e) {}
+    try {
+      const raw = localStorage.getItem('jornada_user_profile');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        user = parsed?.user ? parsed.user : parsed;
+      }
+    } catch (e) {}
   }
+  if (user?.user) user = user.user;
   const name = user?.linkedPlayer || user?.name;
   if (name && typeof name === 'string' && name.trim()) return name.trim();
   return null;

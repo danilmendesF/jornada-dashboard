@@ -102,6 +102,8 @@ export default async function handler(req, res) {
         await redis.set(userKey, JSON.stringify(userObj));
         await redis.set(nameKey, userObj.email);
         await redis.sAdd('users_list', userObj.email);
+        if (userObj.name) await redis.sAdd('claimed_players', userObj.name);
+        if (userObj.linkedPlayer) await redis.sAdd('claimed_players', userObj.linkedPlayer);
       }
 
       const token = signJwt({ id: userObj.id, name: userObj.name, linkedPlayer: userObj.linkedPlayer, email: userObj.email });
@@ -165,7 +167,18 @@ export default async function handler(req, res) {
       });
     }
 
-    // ── ACTION 3: VERIFY TOKEN ──────────────────────────────────────────────
+    // ── ACTION 3: VERIFY TOKEN OR GET CLAIMED ─────────────────────────────
+    if (action === 'claimed' || req.query.action === 'claimed') {
+      let claimedList = [];
+      if (redis) {
+        try {
+          const members = await redis.sMembers('claimed_players');
+          if (Array.isArray(members)) claimedList = members;
+        } catch (e) {}
+      }
+      return res.status(200).json({ claimed: claimedList });
+    }
+
     if (req.method === 'GET' || action === 'verify') {
       const authHeader = req.headers.authorization || '';
       const token = authHeader.replace('Bearer ', '').trim() || req.query.token;

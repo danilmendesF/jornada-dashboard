@@ -88,4 +88,15 @@ if (fs.existsSync(cssPath)) {
   console.log(`✅ CSS Minificado gerado com sucesso: dist/style.min.css (${(cleanCSS.length / 1024).toFixed(1)} KB)`);
 }
 
+// Copy assets to dist/assets
+const assetsDir = path.join(rootDir, 'assets');
+const distAssetsDir = path.join(distDir, 'assets');
+if (fs.existsSync(assetsDir)) {
+  if (!fs.existsSync(distAssetsDir)) fs.mkdirSync(distAssetsDir, { recursive: true });
+  fs.readdirSync(assetsDir).forEach(file => {
+    fs.copyFileSync(path.join(assetsDir, file), path.join(distAssetsDir, file));
+  });
+  console.log('✅ Assets copiados para dist/assets com sucesso!');
+}
+
 console.log('🎉 Build de Produção Concluído!');

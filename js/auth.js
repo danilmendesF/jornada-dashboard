@@ -29,10 +29,26 @@ window.populatePlayerRegisterDropdowns = function() {
   if (authSel) authSel.innerHTML = optionsHtml;
 };
 
+window.fetchClaimedPlayers = async function() {
+  try {
+    const res = await fetch('/api/auth?action=claimed');
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data.claimed) && data.claimed.length > 0) {
+        const current = getClaimedPlayers();
+        const combined = Array.from(new Set([...current, ...data.claimed]));
+        localStorage.setItem('jornada_claimed_players', JSON.stringify(combined));
+        if (typeof populatePlayerRegisterDropdowns === 'function') populatePlayerRegisterDropdowns();
+      }
+    }
+  } catch (e) {}
+};
+
 window.initAuthSession = function() {
   window.currentUser = getCurrentUser();
   populatePlayerRegisterDropdowns();
   updateAuthUI();
+  fetchClaimedPlayers();
   const token = getAuthToken();
   if (token) verifyAuthToken(token);
 };
