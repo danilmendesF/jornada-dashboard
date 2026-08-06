@@ -4,7 +4,7 @@
  */
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
-const FROM_EMAIL = process.env.FROM_EMAIL || 'Jornada TCG Team <onboarding@resend.dev>';
+const FROM_EMAIL = process.env.FROM_EMAIL || 'Jornada TCG Team <nao-responda@jornadatcgteam.com.br>';
 
 export async function sendWelcomeEmail(playerName, playerEmail) {
   if (!playerEmail || !playerEmail.includes('@')) {
