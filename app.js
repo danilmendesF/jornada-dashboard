@@ -21,6 +21,29 @@ function applyDataOverrides(rawData) {
     baseData = baseData.map(d => edits[d.id] ? edits[d.id] : d);
   }
 
+  // Apply persistent archetype unification rules retroactively
+  if (typeof loadArchetypeUnifications === 'function') {
+    const unifications = loadArchetypeUnifications();
+    if (Array.isArray(unifications) && unifications.length > 0) {
+      baseData.forEach(m => {
+        unifications.forEach(rule => {
+          const fromDeck = rule.fromDeck;
+          const targetArchetype = rule.targetArchetype;
+          if (fromDeck && targetArchetype) {
+            if (m.Deck === fromDeck || m.Arquetipo === fromDeck || (typeof getMatchDeck === 'function' && getMatchDeck(m) === fromDeck)) {
+              m.Arquetipo = targetArchetype;
+              m.Deck = m.Subtipo ? `${targetArchetype} (${m.Subtipo})` : targetArchetype;
+            }
+            if (m.DeckAdv === fromDeck || m.DeckAdvArquetipo === fromDeck || (typeof getMatchOppDeck === 'function' && getMatchOppDeck(m) === fromDeck)) {
+              m.DeckAdvArquetipo = targetArchetype;
+              m.DeckAdv = m.SubtipoAdv ? `${targetArchetype} (${m.SubtipoAdv})` : targetArchetype;
+            }
+          }
+        });
+      });
+    }
+  }
+
   return baseData;
 }
 

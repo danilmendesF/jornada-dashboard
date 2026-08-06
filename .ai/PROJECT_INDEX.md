@@ -50,6 +50,10 @@ Este índice permite que assistentes de IA localizem instantaneamente arquivos, 
 
 > **Última Atualização Automática de Estado**: 2026-08-06T11:22:05.152Z (Total Módulos: 13)
 
+> **Última Atualização Automática de Estado**: 2026-08-06T11:34:45.727Z (Total Módulos: 13)
+
+> **Última Atualização Automática de Estado**: 2026-08-06T11:43:04.248Z (Total Módulos: 13)
+
 ## 📂 ESTRUTURA DE ARQUIVOS E MÓDULOS
 
 | Arquivo Módulo | Linhas Aprox. | Status | Funções Exportadas em window |
@@ -64,8 +68,8 @@ Este índice permite que assistentes de IA localizem instantaneamente arquivos, 
 | `js/mirror.js` | ~127 | 🟢 Ativo | `invertPlacar, buildMirrorMatch, syncAllTeamMirrorMatches` |
 | `js/quicklog.js` | ~220 | 🟢 Ativo | `quickLogPillState, renderQuickLogTouchPills, toggleQuickLogPill, quickLogMatch, filtered...` |
 | `js/stats.js` | ~81 | 🟢 Ativo | `pct, avg, getMatchDeck, getMatchOppDeck, groupBy...` |
-| `js/storage.js` | ~70 | 🟢 Ativo | `safeSetItem, loadDecks, saveDecks, loadManual, saveManual...` |
-| `js/sync_cloud.js` | ~146 | 🟢 Ativo | `syncStatusState, setSyncStatus, syncStatusState, triggerSyncPush, _syncPushTimer...` |
+| `js/storage.js` | ~78 | 🟢 Ativo | `safeSetItem, loadDecks, saveDecks, loadManual, saveManual...` |
+| `js/sync_cloud.js` | ~161 | 🟢 Ativo | `syncStatusState, setSyncStatus, syncStatusState, triggerSyncPush, _syncPushTimer...` |
 | `js/table.js` | ~175 | 🟢 Ativo | `currentPage, tableSortState, changePage, currentPage, sortTableByColumn...` |
 
 |

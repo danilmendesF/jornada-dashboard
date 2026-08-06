@@ -67,6 +67,18 @@ window.pullFromCloud = async function(quiet = false) {
       if (Array.isArray(data.players) && typeof savePlayers === 'function') {
         savePlayers(data.players);
       }
+      if (data.edits && typeof data.edits === 'object' && typeof saveEdits === 'function') {
+        saveEdits(data.edits);
+      }
+      if (Array.isArray(data.deletedIds) && typeof saveDeleted === 'function') {
+        saveDeleted(new Set(data.deletedIds));
+      }
+      if (Array.isArray(data.archetypeUnifications) && typeof saveArchetypeUnifications === 'function') {
+        saveArchetypeUnifications(data.archetypeUnifications);
+      }
+      if (typeof initializeData === 'function') initializeData();
+      if (typeof applyFilters === 'function') applyFilters();
+
       setSyncStatus('success', 'Sincronizado com a nuvem!');
       if (!quiet && typeof showToast === 'function') showToast('☁️ Dados sincronizados com a nuvem!');
     }
@@ -86,6 +98,9 @@ window.pushToCloud = async function() {
     manualMatches: typeof loadManual === 'function' ? loadManual() : [],
     decks: typeof loadDecks === 'function' ? loadDecks() : [],
     players: typeof loadPlayers === 'function' ? loadPlayers() : [],
+    edits: typeof loadEdits === 'function' ? loadEdits() : {},
+    deletedIds: typeof loadDeleted === 'function' ? Array.from(loadDeleted()) : [],
+    archetypeUnifications: typeof loadArchetypeUnifications === 'function' ? loadArchetypeUnifications() : [],
     updatedAt: new Date().toISOString()
   };
 

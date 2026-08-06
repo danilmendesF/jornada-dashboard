@@ -26,3 +26,12 @@ Welcome AI Agent. Read and strictly enforce these directives for any task in thi
 - **Defensive Programming**: Always check array/object existence before dereferencing (`Array.isArray(x)`, `x?.prop`).
 - **IDs**: Always append random suffixes to timestamp IDs: `Date.now().toString() + Math.random().toString(36).substr(2, 4)`.
 - **CSS**: Use variables from `:root`. Maintain mobile touch targets at `>= 40px` and avoid vertical/horizontal page overflow (`overflow-x: hidden`).
+
+---
+
+## ⚡ SDD SLASH COMMANDS SUMMARY
+
+- **/feat <desc>**: Triggers SDD Feature workflow (`SPEC_XXX_FEATURE.md` ➔ `implementation_plan.md` ➔ Approval ➔ Implementation ➔ 61 Validation Tests ➔ Deploy Checkpoint).
+- **/fix <desc>**: Triggers SDD Bugfix workflow (`SPEC_XXX_FIX.md` ➔ `implementation_plan.md` ➔ Approval ➔ Implementation ➔ 61 Validation Tests ➔ Deploy Checkpoint).
+- **/refactor <desc>**: Triggers SDD Refactoring workflow with zero regression enforcement.
+- **/doc <desc>**: Triggers SDD Documentation update and RAG re-indexing (`scripts/update_state.cjs`).

@@ -44,3 +44,14 @@ Este documento estabelece o fluxo inviolável de interação entre o **Usuário*
 2. A IA deve apresentar o resultado da validação automatizada e **perguntar explicitamente ao Usuário**:
    *"Deseja que eu envie as alterações para o GitHub/Vercel (Deploy em Produção) agora ou prefere testar no navegador antes?"*
 3. A IA aguarda a confirmação do Usuário antes de rodar os comandos de git commit e push.
+
+---
+
+## ⚡ COMANDOS RÁPIDOS SDD DA IA (SLASH COMMANDS)
+
+| Comando | Descrição | Comportamento Executado |
+| :--- | :--- | :--- |
+| **`/feat <descrição>`** | Nova Funcionalidade | Escreve o prompt SDD completo, gera `SPEC_XXX_FEATURE.md`, cria o `implementation_plan.md`, aguarda `Proceed`, implementa, roda os 61 testes e faz a pergunta da Fase 5 (Deploy). |
+| **`/fix <descrição>`** | Correção de Bug / Ajuste | Identifica causa raiz, cria `SPEC_XXX_FIX.md`, gera `implementation_plan.md`, aguarda `Proceed`, corrige, roda 61 testes e faz a pergunta da Fase 5 (Deploy). |
+| **`/refactor <descrição>`** | Refatoração & Performance | Garante contrato zero-regressão, especifica módulos < 350 linhas em `SPEC_XXX_REFACTOR.md`, aprova e executa com validação automatizada. |
+| **`/doc <descrição>`** | Atualização de Documentos | Atualiza especificações no `.ai/` e executa a re-indexação RAG com `node scripts/update_state.cjs`. |

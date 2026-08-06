@@ -67,3 +67,11 @@ window.saveEdits = function(e) {
   safeSetItem(KEY_EDITS, JSON.stringify(e));
   if (typeof triggerSyncPush === 'function') triggerSyncPush();
 };
+
+window.loadArchetypeUnifications = function() {
+  try { return JSON.parse(localStorage.getItem('jornada_archetype_unifications')) || []; } catch(e) { return []; }
+};
+window.saveArchetypeUnifications = function(rules) {
+  safeSetItem('jornada_archetype_unifications', JSON.stringify(rules));
+  if (typeof triggerSyncPush === 'function') triggerSyncPush();
+};

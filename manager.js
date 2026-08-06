@@ -3125,6 +3125,13 @@ window.submitUnifyArchetypes = function() {
 
   lastWriteTime = Date.now();
 
+  // 0. Register persistent unification rule
+  const unifications = typeof loadArchetypeUnifications === 'function' ? loadArchetypeUnifications() : [];
+  if (!unifications.some(u => u.fromDeck === fromDeck && u.targetArchetype === targetArchetype)) {
+    unifications.push({ fromDeck, targetArchetype, timestamp: Date.now() });
+    if (typeof saveArchetypeUnifications === 'function') saveArchetypeUnifications(unifications);
+  }
+
   // 1. Update manual matches
   let updatedCount = 0;
   const manual = loadManual();
