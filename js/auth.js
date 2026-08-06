@@ -161,6 +161,22 @@ window.submitWallLogin = function() {
   executeLogin(email, password);
 };
 
+window.clearAuthForms = function() {
+  const ids = [
+    'wallLoginEmail', 'wallLoginPassword', 'wallRegEmail', 'wallRegPassword', 'wallRegConfirm',
+    'authLoginEmail', 'authLoginPassword', 'authRegEmail', 'authRegPassword', 'authRegConfirm'
+  ];
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+
+  const wallHint = document.getElementById('wallPasswordMatchHint');
+  const authHint = document.getElementById('authPasswordMatchHint');
+  if (wallHint) wallHint.innerHTML = '';
+  if (authHint) authHint.innerHTML = '';
+};
+
 async function executeLogin(email, password) {
   if (!email || !password) {
     if (typeof showToast === 'function') showToast('⚠️ Preencha e-mail e senha!');
@@ -183,6 +199,8 @@ async function executeLogin(email, password) {
     localStorage.setItem('jornada_auth_token', data.token);
     localStorage.setItem('jornada_user_profile', JSON.stringify(data.user));
     window.currentUser = data.user;
+
+    clearAuthForms();
     updateAuthUI();
 
     if (typeof closeModal === 'function') closeModal('modalAuth');
@@ -254,11 +272,17 @@ async function executeRegister(selectedName, email, password, confirm) {
       if (typeof savePlayers === 'function') savePlayers(players);
     }
 
+    clearAuthForms();
     populatePlayerRegisterDropdowns();
     updateAuthUI();
 
     if (typeof closeModal === 'function') closeModal('modalAuth');
-    if (typeof showToast === 'function') showToast(`⚡ Conta associada a "${targetName}" com sucesso!`);
+
+    if (data.emailStatus && data.emailStatus.delivered) {
+      if (typeof showToast === 'function') showToast(`⚡ Conta associada a "${targetName}"! E-mail de confirmação enviado. 📧`);
+    } else {
+      if (typeof showToast === 'function') showToast(`⚡ Conta associada a "${targetName}" com sucesso!`);
+    }
   } catch (e) {
     if (typeof showToast === 'function') showToast('❌ Erro de conexão com o servidor de autenticação.');
   }
@@ -268,6 +292,7 @@ window.logoutUser = function() {
   localStorage.removeItem('jornada_auth_token');
   localStorage.removeItem('jornada_user_profile');
   window.currentUser = null;
+  clearAuthForms();
   updateAuthUI();
   if (typeof showToast === 'function') showToast('👋 Sessão encerrada.');
 };

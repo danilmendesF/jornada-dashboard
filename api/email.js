@@ -78,13 +78,15 @@ export async function sendWelcomeEmail(playerName, playerEmail) {
 
       if (res.ok) {
         console.log(`[Email Module] Welcome email delivered successfully to ${playerEmail}`);
-        return true;
+        return { success: true, delivered: true };
       } else {
         const errText = await res.text();
         console.error('[Email Module] Resend API error:', errText);
+        return { success: false, delivered: false, error: errText };
       }
     } catch (err) {
       console.error('[Email Module] Error invoking Resend API:', err.message);
+      return { success: false, delivered: false, error: err.message };
     }
   }
 
@@ -93,8 +95,8 @@ export async function sendWelcomeEmail(playerName, playerEmail) {
   console.log(`📧 [SIMULAÇÃO E-MAIL DE CONFIRMAÇÃO]`);
   console.log(`   Para: ${playerName} <${playerEmail}>`);
   console.log(`   Assunto: ⚡ Cadastro Confirmado! Bem-vindo ao Jornada TCG Team 🎮`);
-  console.log(`   Status: Enviado com sucesso (Modo Simulação local)`);
+  console.log(`   Status: Simulação local (RESEND_API_KEY não configurada)`);
   console.log(`==================================================\n`);
 
-  return true;
+  return { success: true, delivered: false, reason: 'RESEND_API_KEY_MISSING' };
 }

@@ -28,11 +28,13 @@ Este índice permite que assistentes de IA localizem instantaneamente arquivos, 
 
 > **Última Atualização Automática de Estado**: 2026-08-05T23:54:07.988Z (Total Módulos: 13)
 
+> **Última Atualização Automática de Estado**: 2026-08-06T00:33:53.097Z (Total Módulos: 13)
+
 ## 📂 ESTRUTURA DE ARQUIVOS E MÓDULOS
 
 | Arquivo Módulo | Linhas Aprox. | Status | Funções Exportadas em window |
 |---|---|---|---|
-| `js/auth.js` | ~308 | 🟢 Ativo | `currentUser, getAuthToken, getCurrentUser, getClaimedPlayers, addClaimedPlayer...` |
+| `js/auth.js` | ~333 | 🟢 Ativo | `currentUser, getAuthToken, getCurrentUser, getClaimedPlayers, addClaimedPlayer...` |
 | `js/charts.js` | ~182 | 🟢 Ativo | `charts, destroyChart, renderKPIs, renderDeckWR, renderPlayerPerf...` |
 | `js/config.js` | ~40 | 🟢 Ativo | `KEY_DECKS, KEY_MATCHES, KEY_PLAYERS, KEY_LOCAIS, KEY_COLECOES...` |
 | `js/filters.js` | ~318 | 🟢 Ativo | `selectedPlayers, selectedDecks, populateMultiPlayerFilter, selectedPlayers, renderMultiPlayerItems...` |
@@ -40,7 +42,7 @@ Este índice permite que assistentes de IA localizem instantaneamente arquivos, 
 | `js/matchup.js` | ~111 | 🟢 Ativo | `buildMatchupData, showDeckMatchupOverview, renderMatchupMatrix` |
 | `js/md3.js` | ~121 | 🟢 Ativo | `getGameCountFromPlacar, renderMD3GamesUI, _activeMD3GameCount` |
 | `js/mirror.js` | ~127 | 🟢 Ativo | `invertPlacar, buildMirrorMatch, syncAllTeamMirrorMatches` |
-| `js/quicklog.js` | ~206 | 🟢 Ativo | `quickLogPillState, renderQuickLogTouchPills, toggleQuickLogPill, quickLogMatch, filtered...` |
+| `js/quicklog.js` | ~217 | 🟢 Ativo | `quickLogPillState, renderQuickLogTouchPills, toggleQuickLogPill, quickLogMatch, filtered...` |
 | `js/stats.js` | ~81 | 🟢 Ativo | `pct, avg, getMatchDeck, getMatchOppDeck, groupBy...` |
 | `js/storage.js` | ~70 | 🟢 Ativo | `safeSetItem, loadDecks, saveDecks, loadManual, saveManual...` |
 | `js/sync_cloud.js` | ~146 | 🟢 Ativo | `syncStatusState, setSyncStatus, syncStatusState, triggerSyncPush, _syncPushTimer...` |

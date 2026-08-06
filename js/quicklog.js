@@ -180,6 +180,17 @@ window.populateQuickLogDropdowns = function() {
   if (pSel && typeof loadPlayers === 'function') {
     const currentPlayers = loadPlayers();
     pSel.innerHTML = currentPlayers.map(p => `<option value="${p}">${p}</option>`).join('');
+
+    const currentUserObj = typeof getCurrentUser === 'function' ? getCurrentUser() : window.currentUser;
+    const activeName = currentUserObj?.linkedPlayer || currentUserObj?.name;
+    if (activeName) {
+      for (let i = 0; i < pSel.options.length; i++) {
+        if (pSel.options[i].value.toLowerCase() === activeName.toLowerCase()) {
+          pSel.selectedIndex = i;
+          break;
+        }
+      }
+    }
   }
 
   if (typeof populateLocalSelects === 'function') populateLocalSelects();

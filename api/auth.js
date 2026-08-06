@@ -107,9 +107,10 @@ export default async function handler(req, res) {
       const token = signJwt({ id: userObj.id, name: userObj.name, linkedPlayer: userObj.linkedPlayer, email: userObj.email });
 
       // Trigger Welcome & Confirmation Email
+      let emailStatus = { success: false, delivered: false };
       try {
         if (typeof sendWelcomeEmail === 'function') {
-          await sendWelcomeEmail(userObj.name, userObj.email);
+          emailStatus = await sendWelcomeEmail(userObj.name, userObj.email);
         }
       } catch (emailErr) {
         console.warn('[Serverless Auth] Non-blocking email dispatch warning:', emailErr.message);
@@ -119,7 +120,8 @@ export default async function handler(req, res) {
         success: true,
         message: 'Cadastro realizado com sucesso!',
         token,
-        user: { id: userObj.id, name: userObj.name, email: userObj.email }
+        user: { id: userObj.id, name: userObj.name, email: userObj.email },
+        emailStatus
       });
     }
 

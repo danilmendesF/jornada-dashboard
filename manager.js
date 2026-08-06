@@ -28,7 +28,7 @@ let adminAuthMode = 'login';
 // ── LOAD / SAVE ───────────────────────────────────────────────────────────────
 function loadDecks()   { try { return JSON.parse(localStorage.getItem(KEY_DECKS))   || []; } catch { return []; } }
 function loadManual()  { try { return JSON.parse(localStorage.getItem(KEY_MATCHES)) || []; } catch { return []; } }
-function loadPlayers() { try { return JSON.parse(localStorage.getItem(KEY_PLAYERS)) || ['Guivaz','Trevas','Braz','Leleco']; } catch { return ['Guivaz','Trevas','Braz','Leleco']; } }
+function loadPlayers() { try { return JSON.parse(localStorage.getItem(KEY_PLAYERS)) || ['Danilo', 'GuiVaz', 'Victor', 'Lipe']; } catch { return ['Danilo', 'GuiVaz', 'Victor', 'Lipe']; } }
 function loadLocais()  { try { return JSON.parse(localStorage.getItem(KEY_LOCAIS))  || ['Regional SP','Regional Curitiba','League Cup','Treino Interno','TCG Live Online']; } catch { return ['Regional SP','Regional Curitiba','League Cup','Treino Interno','TCG Live Online']; } }
 function loadColecoes(){ try { return JSON.parse(localStorage.getItem(KEY_COLECOES))|| ['SV8 Surging Sparks','SV7 Stellar Crown','SV6 Twilight Masquerade','SV5 Temporal Forces','SV4 Paradox Rift']; } catch { return ['SV8 Surging Sparks','SV7 Stellar Crown','SV6 Twilight Masquerade','SV5 Temporal Forces','SV4 Paradox Rift']; } }
 
