@@ -51,6 +51,10 @@ pkg.version = newVersion;
 fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n', 'utf8');
 console.log(`🆙 Versão atualizada no package.json: ${currentVersion} ➔ ${newVersion}`);
 
+const versionPath = path.join(rootDir, 'version.json');
+fs.writeFileSync(versionPath, JSON.stringify({ version: newVersion }, null, 2) + '\n', 'utf8');
+console.log(`✅ version.json gerado com sucesso!`);
+
 // 2. Injetar a versão no index.html
 if (fs.existsSync(htmlPath)) {
   let html = fs.readFileSync(htmlPath, 'utf8');

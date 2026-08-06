@@ -2126,6 +2126,21 @@ function getSyncUrl(token) {
 }
 
 async function pullFromCloud(quiet = false) {
+  try {
+      const vRes = await fetch(`/version.json?t=${Date.now()}`);
+      if (vRes.ok) {
+        const vData = await vRes.json();
+        const el = document.getElementById('appVersion') || document.getElementById('appVersionAuth');
+        const currHTML = el ? el.textContent.replace('v', '').trim() : '';
+        if (vData.version && currHTML && vData.version !== currHTML) {
+          console.log(`Nova versão detectada: ${vData.version} (Atual: ${currHTML}). Atualizando...`);
+          if (typeof showToast === 'function') showToast('🚀 Nova versão do sistema lançada! Atualizando painel...', 'info');
+          setTimeout(() => location.reload(true), 2500);
+          return;
+        }
+      }
+    } catch (e) {}
+
   const token = localStorage.getItem('jornada_sync_token');
   if (!token) return;
 

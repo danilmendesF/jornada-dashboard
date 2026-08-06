@@ -2,29 +2,29 @@
 
 > **Gerado automaticamente por `node scripts/update_state.cjs`.**
 > **Leia como PRIMEIRO PASSO em qualquer nova sessão ou conversa.**
-> Gerado em: 2026-08-06T21:02:20.990Z | Commit: `cbf5a3c`
+> Gerado em: 2026-08-06T21:27:50.105Z | Commit: `e7bf1ef`
 
 ---
 
 ## 🚀 ESTADO ATUAL DO PROJETO
 
-- **Último commit**: `cbf5a3c`
+- **Último commit**: `e7bf1ef`
 - **Produção**: https://jornadatcgteam.com.br (Vercel auto-deploy)
 - **Repositório**: https://github.com/danilmendesF/jornada-dashboard
 
 ### 5 Commits Mais Recentes:
 ```
+e7bf1ef fix(sync): forca a chave global no cache de todos os usuarios ignorando chaves obsoletas (SPEC_037)
 cbf5a3c fix(sync): renderizar jogadores no dropdown de auth apos o primeiro sync
 883bf02 fix(sync): resolve 500 error on api/sync.js due to undeclared variables in strict mode
 eaec99d refactor(ui): remocao da ui de sincronizacao manual para consolidacao do modo global (SPEC_036)
 59a3115 fix(sync): conexao global automatica e liberacao de private buckets via auth (SPEC_035)
-9d20df0 feat(sync): unificacao em lote e bloqueio definitivo de nome antigo (SPEC_034)
 ```
 
 ### Arquivos Modificados no Último Commit:
 - `.ai/PROJECT_INDEX.md`
 - `.ai/SESSION_CONTEXT.md`
-- `app.js`
+- `.ai/specs/SPEC_037_FORCE_GLOBAL_TOKEN.md`
 - `dist/app.min.js`
 - `index.html`
 - `manager.js`
@@ -71,6 +71,7 @@ eaec99d refactor(ui): remocao da ui de sincronizacao manual para consolidacao do
 | `SPEC_035_FIX_GLOBAL_SYNC.md` | — |
 | `SPEC_036_REMOVE_SYNC_UI.md` | — |
 | `SPEC_037_FORCE_GLOBAL_TOKEN.md` | — |
+| `SPEC_038_HOT_RELOAD.md` | — |
 
 
 ---
@@ -103,12 +104,12 @@ eaec99d refactor(ui): remocao da ui de sincronizacao manual para consolidacao do
 
 | Arquivo de Contexto | Caracteres | Tokens Estimados |
 |---|---|---|
-| `SESSION_CONTEXT.md` | 5065 | ~1266 tks |
+| `SESSION_CONTEXT.md` | 5153 | ~1288 tks |
 | `PROJECT_INDEX.md` | 4614 | ~1154 tks |
 | `DECISION_LOG.md` | 4744 | ~1186 tks |
 | `ARCHITECTURE.md` | 7650 | ~1913 tks |
 | `agent_personas.md` | 5129 | ~1282 tks |
-| **TOTAL BASE RAG** | **27202** | **~6801 tks** |
+| **TOTAL BASE RAG** | **27290** | **~6823 tks** |
 
 *(Nota: O GPT-4 / Gemini-1.5 suportam 128k-1M+ tokens. Um RAG base ideal consome < 5.000 tokens).*
 
