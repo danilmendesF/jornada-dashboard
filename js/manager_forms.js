@@ -234,14 +234,19 @@ window.submitUnifyArchetypes = function() {
   });
   if (typeof saveManual === 'function') saveManual(manual);
 
+  const delDecks = typeof loadDeletedDecks === 'function' ? loadDeletedDecks() : new Set();
+  delDecks.add(fromDeck);
+
   let decks = typeof loadDecks === 'function' ? loadDecks() : [];
   decks.forEach(d => {
     if (d.arquetipo === fromDeck || d.name === fromDeck) {
+      if (d.name) delDecks.add(d.name); // <--- Adicionar o nome antigo completo à lixeira
       d.arquetipo = targetArquetipo;
       d.name = d.subtipo ? `${targetArquetipo} (${d.subtipo})` : targetArquetipo;
     }
   });
   if (typeof saveDecks === 'function') saveDecks(decks);
+  if (typeof saveDeletedDecks === 'function') saveDeletedDecks(delDecks);
 
   if (typeof window.allData !== 'undefined') {
     window.allData = typeof applyDataOverrides === 'function' ? applyDataOverrides(manual) : [...manual];
@@ -250,10 +255,14 @@ window.submitUnifyArchetypes = function() {
     if (typeof applyFilters === 'function') applyFilters();
   }
 
-  const delDecks = typeof loadDeletedDecks === 'function' ? loadDeletedDecks() : new Set();
-  delDecks.add(fromDeck);
-  if (typeof saveDeletedDecks === 'function') saveDeletedDecks(delDecks);
+  // if (typeof closeModal === 'function') closeModal('modalUnifyArchetypes');
+  document.getElementById('unifyTargetArchetypeInput').value = '';
+  
+  const fromSel = document.getElementById('unifyFromDeckSelect');
+  if (fromSel) {
+    const uniqueArchetypes = Array.from(new Set(decks.map(d => d.arquetipo || d.name))).sort();
+    fromSel.innerHTML = '<option value="">Selecione o deck para unificar…</option>' + uniqueArchetypes.map(a => `<option value="${a}">${a}</option>`).join('');
+  }
 
-  if (typeof closeModal === 'function') closeModal('modalUnifyArchetypes');
   if (typeof showToast === 'function') showToast(`✅ Unificação concluída! "${fromDeck}" movido.`);
 };

@@ -2,31 +2,33 @@
 
 > **Gerado automaticamente por `node scripts/update_state.cjs`.**
 > **Leia como PRIMEIRO PASSO em qualquer nova sessão ou conversa.**
-> Gerado em: 2026-08-06T19:19:09.026Z | Commit: `7f88c6a`
+> Gerado em: 2026-08-06T19:31:01.317Z | Commit: `118fdc3`
 
 ---
 
 ## 🚀 ESTADO ATUAL DO PROJETO
 
-- **Último commit**: `7f88c6a`
+- **Último commit**: `118fdc3`
 - **Produção**: https://jornadatcgteam.com.br (Vercel auto-deploy)
 - **Repositório**: https://github.com/danilmendesF/jornada-dashboard
 
 ### 5 Commits Mais Recentes:
 ```
+118fdc3 fix(sync): blacklist autom. em unificacoes e garbage collection na nuvem (SPEC_033)
 7f88c6a fix(api): corrige envio de email 400 forcando identificacao de sessao (SPEC_032)
 86e5c63 feat(api): notifica admin por email na criacao de decks (SPEC_031)
 5d70515 docs(core): implementa duplo proceed no sdd para revisao local (SPEC_030)
 bd24a05 feat(table): esconde edicao e delecao para partidas de terceiros (SPEC_029)
-4373cf2 feat(core): implementa arquitetura multi-agent SDD (SPEC_028) e corrige bug no manager.js
 ```
 
 ### Arquivos Modificados no Último Commit:
 - `.ai/PROJECT_INDEX.md`
 - `.ai/SESSION_CONTEXT.md`
-- `.ai/specs/SPEC_032_NOTIFY_DECK_FIX.md`
+- `.ai/specs/SPEC_033_FIX_SYNC_UNIFY.md`
 - `dist/app.min.js`
 - `index.html`
+- `js/manager_forms.js`
+- `js/sync_cloud.js`
 - `manager.js`
 - `package.json`
 
@@ -67,6 +69,7 @@ bd24a05 feat(table): esconde edicao e delecao para partidas de terceiros (SPEC_0
 | `SPEC_031_NEW_DECK_EMAIL.md` | — |
 | `SPEC_032_NOTIFY_DECK_FIX.md` | — |
 | `SPEC_033_FIX_SYNC_UNIFY.md` | — |
+| `SPEC_034_BATCH_UNIFY.md` | — |
 
 
 ---
@@ -99,12 +102,12 @@ bd24a05 feat(table): esconde edicao e delecao para partidas de terceiros (SPEC_0
 
 | Arquivo de Contexto | Caracteres | Tokens Estimados |
 |---|---|---|
-| `SESSION_CONTEXT.md` | 4911 | ~1228 tks |
+| `SESSION_CONTEXT.md` | 4983 | ~1246 tks |
 | `PROJECT_INDEX.md` | 4613 | ~1153 tks |
 | `DECISION_LOG.md` | 4744 | ~1186 tks |
 | `ARCHITECTURE.md` | 7650 | ~1913 tks |
 | `agent_personas.md` | 5129 | ~1282 tks |
-| **TOTAL BASE RAG** | **27047** | **~6762 tks** |
+| **TOTAL BASE RAG** | **27119** | **~6780 tks** |
 
 *(Nota: O GPT-4 / Gemini-1.5 suportam 128k-1M+ tokens. Um RAG base ideal consome < 5.000 tokens).*
 
