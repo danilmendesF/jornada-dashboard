@@ -1813,6 +1813,7 @@ function populateQuickLogDropdowns() {
     } else {
       pSel.innerHTML = `<option value="">🔑 Faça Login para Registrar Partida</option>`;
     }
+    if (pSel.syncSearchableSelect) pSel.syncSearchableSelect();
   }
 
   populateLocalSelects();

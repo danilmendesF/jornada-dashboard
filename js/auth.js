@@ -124,6 +124,7 @@ window.updateAuthUI = function() {
   const activeName = typeof getActivePlayerName === 'function' ? getActivePlayerName() : null;
 
   if (window.currentUser || activeName) {
+    document.documentElement.classList.add('auth-session-active');
     if (wall) wall.style.display = 'none';
     if (dashboard) dashboard.style.display = 'block';
 
@@ -141,6 +142,7 @@ window.updateAuthUI = function() {
     if (typeof populatePlayerSelects === 'function') populatePlayerSelects();
     if (typeof applyFilters === 'function') applyFilters();
   } else {
+    document.documentElement.classList.remove('auth-session-active');
     if (wall) wall.style.display = 'flex';
     if (dashboard) dashboard.style.display = 'none';
 

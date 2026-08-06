@@ -2,29 +2,29 @@
 
 > **Gerado automaticamente por `node scripts/update_state.cjs`.**
 > **Leia como PRIMEIRO PASSO em qualquer nova sessão ou conversa.**
-> Gerado em: 2026-08-06T14:29:24.540Z | Commit: `62f27d1`
+> Gerado em: 2026-08-06T14:55:45.412Z | Commit: `ef2ccfb`
 
 ---
 
 ## 🚀 ESTADO ATUAL DO PROJETO
 
-- **Último commit**: `62f27d1`
+- **Último commit**: `ef2ccfb`
 - **Produção**: https://jornadatcgteam.com.br (Vercel auto-deploy)
 - **Repositório**: https://github.com/danilmendesF/jornada-dashboard
 
 ### 5 Commits Mais Recentes:
 ```
+ef2ccfb feat(auth): exibe versao do app dentro da tela de login tambem
+301a59a feat(infra): adiciona versionamento semantico e rodape flutuante (SPEC_025)
 62f27d1 feat(sdd): adiciona painel de monitoramento de peso de contexto RAG em tokens
 45bcebf feat(auth): feedback visual inline de cadastro e login na Auth Wall (SPEC_024)
 4c55493 feat(sdd): session context auto-generator e testes comportamentais
-e9f3e6e refactor(sdd-rag): auditoria e upgrade completo do sistema SDD/RAG
-4f46436 fix(quicklog): elimina funcao duplicada que sobrescrevia o lock do quick log player
 ```
 
 ### Arquivos Modificados no Último Commit:
-- `.ai/PROJECT_INDEX.md`
-- `.ai/SESSION_CONTEXT.md`
-- `scripts/update_state.cjs`
+- `index.html`
+- `package.json`
+- `scripts/bump_version.cjs`
 
 ---
 
@@ -88,12 +88,12 @@ e9f3e6e refactor(sdd-rag): auditoria e upgrade completo do sistema SDD/RAG
 
 | Arquivo de Contexto | Caracteres | Tokens Estimados |
 |---|---|---|
-| `SESSION_CONTEXT.md` | 4542 | ~1136 tks |
+| `SESSION_CONTEXT.md` | 4510 | ~1128 tks |
 | `PROJECT_INDEX.md` | 4613 | ~1153 tks |
 | `DECISION_LOG.md` | 4744 | ~1186 tks |
 | `ARCHITECTURE.md` | 7650 | ~1913 tks |
 | `agent_personas.md` | 5129 | ~1282 tks |
-| **TOTAL BASE RAG** | **26678** | **~6670 tks** |
+| **TOTAL BASE RAG** | **26646** | **~6662 tks** |
 
 *(Nota: O GPT-4 / Gemini-1.5 suportam 128k-1M+ tokens. Um RAG base ideal consome < 5.000 tokens).*
 
