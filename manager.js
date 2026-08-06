@@ -820,7 +820,12 @@ function saveDeckForm() {
 
   if (editingDeckId) {
     const idx = decks.findIndex(d => d.id === editingDeckId);
-    if (idx >= 0) decks[idx] = { ...decks[idx], name, arquetipo, subtipo, player, list };
+    if (idx >= 0) {
+      const oldDeck = decks[idx];
+      var oldName = oldDeck.name;
+      var oldArquetipo = oldDeck.arquetipo;
+      decks[idx] = { ...oldDeck, name, arquetipo, subtipo, player, list };
+    }
   } else {
     decks.push({ id: Date.now().toString(), name, arquetipo, subtipo, player, list, createdAt: new Date().toISOString() });
     try { 
@@ -836,6 +841,16 @@ function saveDeckForm() {
   if (delDecks.has(name)) { delDecks.delete(name); delChanged = true; }
   if (delDecks.has(arquetipo)) { delDecks.delete(arquetipo); delChanged = true; }
   if (editingDeckId && delDecks.has(editingDeckId)) { delDecks.delete(editingDeckId); delChanged = true; }
+
+  if (oldName && oldName !== name) {
+    delDecks.add(oldName);
+    delChanged = true;
+  }
+  if (oldArquetipo && oldArquetipo !== arquetipo) {
+    delDecks.add(oldArquetipo);
+    delChanged = true;
+  }
+
   if (delChanged) saveDeletedDecks(delDecks);
 
   saveDecks(decks);

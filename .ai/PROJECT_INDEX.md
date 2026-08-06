@@ -2,7 +2,7 @@
 
 Este índice permite que assistentes de IA localizem instantaneamente arquivos, funções e elementos do DOM sem ler a base de código inteira, reduzindo o uso de tokens em até 95%.
 
-> **Última Atualização**: 2026-08-06T18:09:12.332Z | **Total Módulos js/**: 13 | **Commit**: `86e5c63`
+> **Última Atualização**: 2026-08-06T19:19:08.773Z | **Total Módulos js/**: 13 | **Commit**: `7f88c6a`
 
 ---
 
@@ -14,14 +14,14 @@ Este índice permite que assistentes de IA localizem instantaneamente arquivos, 
 | `js/charts.js` | 182 | 🟢 OK | `charts, destroyChart, renderKPIs, renderDeckWR, renderPlayerPerf...` |
 | `js/config.js` | 67 | 🟢 OK | `KEY_DECKS, KEY_MATCHES, KEY_PLAYERS, KEY_LOCAIS, KEY_COLECOES...` |
 | `js/filters.js` | 318 | 🟢 OK | `selectedPlayers, selectedDecks, populateMultiPlayerFilter, selectedPlayers, renderMultiPlayerItems...` |
-| `js/manager_forms.js` | 256 | 🟢 OK | `editingMatchId, showModal, closeModal, openMatchForm, editingMatchId...` |
+| `js/manager_forms.js` | 260 | 🟢 OK | `editingMatchId, showModal, closeModal, openMatchForm, editingMatchId...` |
 | `js/matchup.js` | 111 | 🟢 OK | `buildMatchupData, showDeckMatchupOverview, renderMatchupMatrix` |
 | `js/md3.js` | 121 | 🟢 OK | `getGameCountFromPlacar, renderMD3GamesUI, _activeMD3GameCount` |
 | `js/mirror.js` | 127 | 🟢 OK | `invertPlacar, buildMirrorMatch, syncAllTeamMirrorMatches` |
 | `js/quicklog.js` | 183 | 🟢 OK | `quickLogPillState, renderQuickLogTouchPills, toggleQuickLogPill, quickLogMatch, filtered...` |
 | `js/stats.js` | 81 | 🟢 OK | `pct, avg, getMatchDeck, getMatchOppDeck, groupBy...` |
 | `js/storage.js` | 78 | 🟢 OK | `safeSetItem, loadDecks, saveDecks, loadManual, saveManual...` |
-| `js/sync_cloud.js` | 161 | 🟢 OK | `syncStatusState, setSyncStatus, syncStatusState, triggerSyncPush, _syncPushTimer...` |
+| `js/sync_cloud.js` | 163 | 🟢 OK | `syncStatusState, setSyncStatus, syncStatusState, triggerSyncPush, _syncPushTimer...` |
 | `js/table.js` | 175 | 🟢 OK | `currentPage, tableSortState, changePage, currentPage, sortTableByColumn...` |
 
 
@@ -32,7 +32,7 @@ Este índice permite que assistentes de IA localizem instantaneamente arquivos, 
 > ⚠️ NUNCA leia estes arquivos inteiros. Use a linha indicada abaixo para ir diretamente à função.
 
 
-### 📌 `manager.js` — Funções Críticas (3219 linhas total)
+### 📌 `manager.js` — Funções Críticas (3234 linhas total)
 
 | Função | Linha Aprox. |
 |---|---|

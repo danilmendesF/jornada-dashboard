@@ -99,7 +99,9 @@ window.pushToCloud = async function() {
     decks: typeof loadDecks === 'function' ? loadDecks() : [],
     players: typeof loadPlayers === 'function' ? loadPlayers() : [],
     edits: typeof loadEdits === 'function' ? loadEdits() : {},
-    deletedIds: typeof loadDeleted === 'function' ? Array.from(loadDeleted()) : [],
+    deletedIds: typeof loadDeleted === 'function' ? Array.from(loadDeleted()).slice(-300) : [],
+    deletedDecks: typeof loadDeletedDecks === 'function' ? Array.from(loadDeletedDecks()).slice(-300) : [],
+    deletedPlayers: typeof loadDeletedPlayers === 'function' ? Array.from(loadDeletedPlayers()).slice(-300) : [],
     archetypeUnifications: typeof loadArchetypeUnifications === 'function' ? loadArchetypeUnifications() : [],
     updatedAt: new Date().toISOString()
   };

@@ -250,6 +250,10 @@ window.submitUnifyArchetypes = function() {
     if (typeof applyFilters === 'function') applyFilters();
   }
 
-  closeModal('modalUnifyArchetypes');
-  if (typeof showToast === 'function') showToast(`🔗 Arquétipos unificados em "${targetArquetipo}"!`);
+  const delDecks = typeof loadDeletedDecks === 'function' ? loadDeletedDecks() : new Set();
+  delDecks.add(fromDeck);
+  if (typeof saveDeletedDecks === 'function') saveDeletedDecks(delDecks);
+
+  if (typeof closeModal === 'function') closeModal('modalUnifyArchetypes');
+  if (typeof showToast === 'function') showToast(`✅ Unificação concluída! "${fromDeck}" movido.`);
 };
