@@ -1499,11 +1499,14 @@ function updateTableHeaderSortUI() {
         ? `<button class="icon-btn sm" onclick="viewMatchComment('${r.id}')" title="${(r.Comentarios || '').replace(/"/g, '&quot;')}" style="background:rgba(0,200,248,0.18);color:var(--accent2);border-color:rgba(0,200,248,0.35);">💬</button>` 
         : '';
 
+      const currentUserObj = typeof getActivePlayerName === 'function' ? getActivePlayerName() : window.currentUser?.name || '';
+      const isOwner = currentUserObj && (r.Player || '').trim().toLowerCase() === currentUserObj.trim().toLowerCase();
+
       const actionsCol = `
         <div style="display:flex;gap:4px;justify-content:center;align-items:center;">
           ${commentBtn}
-          <button class="icon-btn sm" onclick="editMatch('${r.id}')" title="Editar partida">✏️</button>
-          <button class="icon-btn danger sm" onclick="deleteMatch('${r.id}')" title="Deletar partida">🗑️</button>
+          ${isOwner ? `<button class="icon-btn sm" onclick="editMatch('${r.id}')" title="Editar partida">✏️</button>
+          <button class="icon-btn danger sm" onclick="deleteMatch('${r.id}')" title="Deletar partida">🗑️</button>` : ''}
         </div>
       `;
 
