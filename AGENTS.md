@@ -53,15 +53,15 @@ Before writing a single line of code, read in this exact order:
 
 | Comando | Persona Adotada | Spec Gerada | Workflow |
 |---|---|---|---|
-| `/fix <desc>` | 🔴 **BugHunter** | `SPEC_XXX_FIX.md` | Root Cause → Plan → Proceed → Fix → 61 Tests → Deploy Checkpoint |
-| `/feat <desc>` | 🟢 **FeatureArchitect** | `SPEC_XXX_FEATURE.md` | RFC → Plan → Proceed → Build → 61 Tests → Deploy Checkpoint |
-| `/refactor <desc>` | 🔵 **RefactorSurgeon** | `SPEC_XXX_REFACTOR.md` | Full Read → Plan → Proceed → Refactor → 61 Tests → Deploy Checkpoint |
+| `/fix <desc>` | 🔴 **BugHunter** | `SPEC_XXX_FIX.md` | Root Cause → Plan → Proceed 1 → Fix → QA → Proceed 2 → Deploy/Push |
+| `/feat <desc>` | 🟢 **FeatureArchitect** | `SPEC_XXX_FEATURE.md` | RFC → Plan → Proceed 1 → Build → QA → Proceed 2 → Deploy/Push |
+| `/refactor <desc>` | 🔵 **RefactorSurgeon** | `SPEC_XXX_REFACTOR.md` | Full Read → Plan → Proceed 1 → Refactor → QA → Proceed 2 → Deploy/Push |
 | `/doc <desc>` | 🟡 **DocKeeper** | Updates `.ai/` files | Update Specs Status → RAG Re-index → No code changes |
 
 ## 🔄 FLUXO MULTI-AGENTE
 
 - **Planner**: Pro High
 - **Executor**: Flash
-- **QA**: Flash
+- **QA**: Flash (Valida, então dispara o Proceed 2 para Deploy/Push)
 
 See full persona definitions in [agent_personas.md](.agents/rules/agent_personas.md).

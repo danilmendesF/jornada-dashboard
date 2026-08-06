@@ -7,3 +7,4 @@
 - Always validate JS syntax with `node -c` after making changes.
 - Never remove global function exports attached to `window`.
 - SDD PROTOCOL IS MANDATORY: You must always generate an implementation plan/SPEC and wait for approval before coding, even for trivial fixes or CSS changes. NO EXCEPTIONS.
+- PROD DEPLOY PROTOCOL: It is strictly forbidden to commit/push/deploy to production without asking the user if they want to test locally first or proceed with the full deploy (requires dual Proceed: 1 for local, 2 for prod).
