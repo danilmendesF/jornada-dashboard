@@ -2,32 +2,34 @@
 
 > **Gerado automaticamente por `node scripts/update_state.cjs`.**
 > **Leia como PRIMEIRO PASSO em qualquer nova sessão ou conversa.**
-> Gerado em: 2026-08-06T19:53:10.663Z | Commit: `9d20df0`
+> Gerado em: 2026-08-06T20:13:08.338Z | Commit: `59a3115`
 
 ---
 
 ## 🚀 ESTADO ATUAL DO PROJETO
 
-- **Último commit**: `9d20df0`
+- **Último commit**: `59a3115`
 - **Produção**: https://jornadatcgteam.com.br (Vercel auto-deploy)
 - **Repositório**: https://github.com/danilmendesF/jornada-dashboard
 
 ### 5 Commits Mais Recentes:
 ```
+59a3115 fix(sync): conexao global automatica e liberacao de private buckets via auth (SPEC_035)
 9d20df0 feat(sync): unificacao em lote e bloqueio definitivo de nome antigo (SPEC_034)
 118fdc3 fix(sync): blacklist autom. em unificacoes e garbage collection na nuvem (SPEC_033)
 7f88c6a fix(api): corrige envio de email 400 forcando identificacao de sessao (SPEC_032)
 86e5c63 feat(api): notifica admin por email na criacao de decks (SPEC_031)
-5d70515 docs(core): implementa duplo proceed no sdd para revisao local (SPEC_030)
 ```
 
 ### Arquivos Modificados no Último Commit:
 - `.ai/PROJECT_INDEX.md`
 - `.ai/SESSION_CONTEXT.md`
-- `.ai/specs/SPEC_034_BATCH_UNIFY.md`
+- `.ai/specs/SPEC_035_FIX_GLOBAL_SYNC.md`
+- `api/sync.js`
 - `dist/app.min.js`
 - `index.html`
-- `js/manager_forms.js`
+- `js/sync_cloud.js`
+- `manager.js`
 - `package.json`
 
 ---
@@ -69,6 +71,7 @@
 | `SPEC_033_FIX_SYNC_UNIFY.md` | — |
 | `SPEC_034_BATCH_UNIFY.md` | — |
 | `SPEC_035_FIX_GLOBAL_SYNC.md` | — |
+| `SPEC_036_REMOVE_SYNC_UI.md` | — |
 
 
 ---
@@ -101,12 +104,12 @@
 
 | Arquivo de Contexto | Caracteres | Tokens Estimados |
 |---|---|---|
-| `SESSION_CONTEXT.md` | 4985 | ~1246 tks |
+| `SESSION_CONTEXT.md` | 5068 | ~1267 tks |
 | `PROJECT_INDEX.md` | 4613 | ~1153 tks |
 | `DECISION_LOG.md` | 4744 | ~1186 tks |
 | `ARCHITECTURE.md` | 7650 | ~1913 tks |
 | `agent_personas.md` | 5129 | ~1282 tks |
-| **TOTAL BASE RAG** | **27121** | **~6780 tks** |
+| **TOTAL BASE RAG** | **27204** | **~6801 tks** |
 
 *(Nota: O GPT-4 / Gemini-1.5 suportam 128k-1M+ tokens. Um RAG base ideal consome < 5.000 tokens).*
 

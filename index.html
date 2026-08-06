@@ -96,7 +96,7 @@
           🧹 Resetar Contas & Liberar E-mails de Teste
         </button>
         <div style="margin-top: 0.8rem; font-size: 0.7rem; color: var(--text2); opacity: 0.5; font-family: 'Outfit', sans-serif;">
-          v<span id="appVersionAuth">1.0.13</span>
+          v<span id="appVersionAuth">1.0.14</span>
         </div>
       </div>
     </div>
@@ -118,10 +118,7 @@
       </div>
       <div class="header-actions">
         <div id="userProfileBadge"></div>
-        <button class="manager-btn" id="btnOpenSync" style="display: inline-flex; align-items: center; gap: .4rem;">
-          <span id="headerSyncDot" style="width: 8px; height: 8px; border-radius: 50%; background: var(--text2); display: inline-block;"></span>
-          <span>&#x26A1; Sincronizar</span>
-        </button>
+
         <button class="manager-btn" id="btnOpenManager">&#x1F4CB; Gerenciar</button>
         <div class="last-update" id="lastUpdate">Aguardando dados…</div>
       </div>
@@ -1099,50 +1096,7 @@ Total de cartas: 60"
     </div>
   </div>
 
-  <!-- ===================================================
-       MODAL: ONLINE SYNC
-       =================================================== -->
-  <div class="modal-overlay" id="modalSync">
-    <div class="modal">
-      <div class="modal-header">
-        <h3>🌐 Sincronização Online</h3>
-      </div>
-      <div class="modal-body">
-        <p style="font-size: .85rem; color: var(--text2); line-height: 1.5; margin-bottom: .75rem;">
-          Sincronize seus dados na nuvem para que você e seus amigos possam alimentar e visualizar o dashboard de múltiplos dispositivos (PC, celular, tablet) em tempo real.
-        </p>
-        
-        <div class="form-group" style="margin-bottom: .75rem;">
-          <label class="form-label">Status da Sincronização</label>
-          <div style="display: flex; align-items: center; gap: .5rem; font-size: .9rem;">
-            <span id="syncStatusIndicator" style="width: 10px; height: 10px; border-radius: 50%; background: var(--red); display: inline-block;"></span>
-            <span id="syncStatusText" style="font-weight: 600; color: var(--red);">Desativado (Local)</span>
-          </div>
-        </div>
 
-        <div class="form-group" style="margin-bottom: .75rem;">
-          <label class="form-label">Chave de Sincronização (Token)</label>
-          <div style="display: flex; gap: .5rem; align-items: center;">
-            <input type="text" id="syncTokenInput" class="form-input" placeholder="Cole uma chave existente ou gere uma nova…" style="font-family: monospace; font-size: .8rem;" />
-            <button class="icon-btn" id="btnCopySyncToken" title="Copiar Chave" style="padding: .5rem .7rem;">📋</button>
-          </div>
-          <span class="modal-sub">Compartilhe esta chave com seus amigos para que todos usem o mesmo banco de dados.</span>
-        </div>
-
-        <div style="display: flex; gap: .75rem; margin-top: .5rem; margin-bottom: .5rem;">
-          <button class="action-btn" id="btnEnableSync" style="flex: 1; padding: .6rem;">🌐 Ativar / Conectar</button>
-          <button class="cancel-btn" id="btnDisableSync" style="flex: 1; border-color: var(--red); color: var(--red); padding: .6rem;">Desativar</button>
-        </div>
-
-        <div style="display: flex; justify-content: center; margin-top: .5rem;">
-          <button class="icon-btn" id="btnGenerateSyncToken" style="font-size: .75rem; padding: .4rem .8rem;">✨ Gerar Nova Chave Privada</button>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="cancel-btn" data-close-modal="modalSync" style="width: 100%; text-align: center;">✕ Fechar</button>
-      </div>
-    </div>
-  </div>
 
   <!-- ===================================================
        MODAL: UNIFICAR ARQUÉTIPOS
@@ -1250,7 +1204,7 @@ Total de cartas: 60"
   <!-- Production Minified Bundle -->
   <script src="dist/app.min.js"></script>  <!-- ===== APP VERSION FOOTER ===== -->
   <div class="app-version-footer">
-    v<span id="appVersion">1.0.13</span>
+    v<span id="appVersion">1.0.14</span>
   </div>
 
 </body>
