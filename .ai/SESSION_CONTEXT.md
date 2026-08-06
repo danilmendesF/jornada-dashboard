@@ -2,31 +2,34 @@
 
 > **Gerado automaticamente por `node scripts/update_state.cjs`.**
 > **Leia como PRIMEIRO PASSO em qualquer nova sessão ou conversa.**
-> Gerado em: 2026-08-06T14:21:00.739Z | Commit: `4c55493`
+> Gerado em: 2026-08-06T14:24:14.174Z | Commit: `45bcebf`
 
 ---
 
 ## 🚀 ESTADO ATUAL DO PROJETO
 
-- **Último commit**: `4c55493`
+- **Último commit**: `45bcebf`
 - **Produção**: https://jornadatcgteam.com.br (Vercel auto-deploy)
 - **Repositório**: https://github.com/danilmendesF/jornada-dashboard
 
 ### 5 Commits Mais Recentes:
 ```
+45bcebf feat(auth): feedback visual inline de cadastro e login na Auth Wall (SPEC_024)
 4c55493 feat(sdd): session context auto-generator e testes comportamentais
 e9f3e6e refactor(sdd-rag): auditoria e upgrade completo do sistema SDD/RAG
 4f46436 fix(quicklog): elimina funcao duplicada que sobrescrevia o lock do quick log player
 87c14b0 fix(all): tranca quicklog, restaura fundo da login wall, omite acoes de terceiros e otimiza sync multi-sessao
-49e8323 refactor(repo): organiza diretorios, adiciona README profissional e .env.example
 ```
 
 ### Arquivos Modificados no Último Commit:
 - `.ai/PROJECT_INDEX.md`
 - `.ai/SESSION_CONTEXT.md`
-- `.ai/specs/SPEC_023_SESSION_CONTEXT_AND_BEHAVIORAL_TESTS.md`
-- `scripts/update_state.cjs`
-- `scripts/validate.cjs`
+- `.ai/specs/SPEC_024_REGISTRATION_FEEDBACK_VISUAL.md`
+- `dist/app.min.js`
+- `dist/style.min.css`
+- `index.html`
+- `js/auth.js`
+- `style.css`
 
 ---
 
@@ -80,6 +83,23 @@ e9f3e6e refactor(sdd-rag): auditoria e upgrade completo do sistema SDD/RAG
 > Antes de criar/editar qualquer função, verifique duplicatas:
 > `Select-String -Path "*.js","js/*.js" -Pattern "function nomeDaFuncao"`
 > Funções duplicadas no IIFE bundle são hoisted — a última no `jsOrder` vence silenciosamente.
+
+---
+
+## 📈 PESO DO CONTEXTO (RAG TOKEN TRACKER)
+
+> Monitoramento de consumo de tokens para a IA (Heurística: ~4 chars / token)
+
+| Arquivo de Contexto | Caracteres | Tokens Estimados |
+|---|---|---|
+| `SESSION_CONTEXT.md` | 4631 | ~1158 tks |
+| `PROJECT_INDEX.md` | 4613 | ~1153 tks |
+| `DECISION_LOG.md` | 4744 | ~1186 tks |
+| `ARCHITECTURE.md` | 7650 | ~1913 tks |
+| `agent_personas.md` | 5129 | ~1282 tks |
+| **TOTAL BASE RAG** | **26767** | **~6692 tks** |
+
+*(Nota: O GPT-4 / Gemini-1.5 suportam 128k-1M+ tokens. Um RAG base ideal consome < 5.000 tokens).*
 
 ---
 

@@ -207,6 +207,49 @@ const sessionContent = [
   '',
   '---',
   '',
+  '## 📈 PESO DO CONTEXTO (RAG TOKEN TRACKER)',
+  '',
+  '> Monitoramento de consumo de tokens para a IA (Heurística: ~4 chars / token)',
+  '',
+  '| Arquivo de Contexto | Caracteres | Tokens Estimados |',
+  '|---|---|---|',
+];
+
+// Calculate Context Weight
+let totalChars = 0;
+const ragFiles = [
+  { path: '.ai/SESSION_CONTEXT.md', name: 'SESSION_CONTEXT.md' },
+  { path: '.ai/PROJECT_INDEX.md', name: 'PROJECT_INDEX.md' },
+  { path: '.ai/DECISION_LOG.md', name: 'DECISION_LOG.md' },
+  { path: '.ai/ARCHITECTURE.md', name: 'ARCHITECTURE.md' },
+  { path: '.agents/rules/agent_personas.md', name: 'agent_personas.md' }
+];
+
+ragFiles.forEach(f => {
+  const fullPath = path.join(rootDir, ...f.path.split('/'));
+  if (fs.existsSync(fullPath)) {
+    // Avoid recursively counting the session file before it's saved
+    let chars = 0;
+    if (f.name === 'SESSION_CONTEXT.md') {
+      chars = sessionContent.join('\n').length;
+    } else {
+      chars = fs.readFileSync(fullPath, 'utf8').length;
+    }
+    const tokens = Math.round(chars / 4);
+    totalChars += chars;
+    sessionContent.push(`| \`${f.name}\` | ${chars} | ~${tokens} tks |`);
+  }
+});
+
+const totalTokens = Math.round(totalChars / 4);
+sessionContent.push(`| **TOTAL BASE RAG** | **${totalChars}** | **~${totalTokens} tks** |`);
+
+sessionContent.push(
+  '',
+  '*(Nota: O GPT-4 / Gemini-1.5 suportam 128k-1M+ tokens. Um RAG base ideal consome < 5.000 tokens).*',
+  '',
+  '---',
+  '',
   '## ⚡ COMANDOS RÁPIDOS',
   '',
   '```powershell',
@@ -222,8 +265,8 @@ const sessionContent = [
   '# Mirror + Deploy (após aprovação)',
   'robocopy "C:\\Users\\danil\\.gemini\\antigravity\\scratch\\jornada-dashboard" "C:\\Users\\danil\\OneDrive\\Documentos\\jornada-dashboard" /E /NDL /NFL /NJH /NJS; exit 0',
   'git -C "C:\\Users\\danil\\OneDrive\\Documentos\\jornada-dashboard" add .; git -C "C:\\Users\\danil\\OneDrive\\Documentos\\jornada-dashboard" commit -m "..."; git -C "C:\\Users\\danil\\OneDrive\\Documentos\\jornada-dashboard" push origin main',
-  '```',
-].join('\n');
+  '```'
+);
 
-fs.writeFileSync(sessionFile, sessionContent, 'utf8');
-console.log('✅ SESSION_CONTEXT.md gerado em .ai/SESSION_CONTEXT.md');
+fs.writeFileSync(sessionFile, sessionContent.join('\n'), 'utf8');
+console.log(`✅ SESSION_CONTEXT.md gerado | Peso RAG Base: ~${totalTokens} tokens`);
