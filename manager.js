@@ -823,6 +823,7 @@ function saveDeckForm() {
     if (idx >= 0) decks[idx] = { ...decks[idx], name, arquetipo, subtipo, player, list };
   } else {
     decks.push({ id: Date.now().toString(), name, arquetipo, subtipo, player, list, createdAt: new Date().toISOString() });
+    try { fetch('/api/notifyDeck', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({playerName: player, deckName: name}) }); } catch(e) {}
   }
 
   // Ensure deck is removed from deleted tracking sets if re-adding/editing

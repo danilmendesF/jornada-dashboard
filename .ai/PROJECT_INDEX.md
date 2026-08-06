@@ -2,7 +2,7 @@
 
 Este índice permite que assistentes de IA localizem instantaneamente arquivos, funções e elementos do DOM sem ler a base de código inteira, reduzindo o uso de tokens em até 95%.
 
-> **Última Atualização**: 2026-08-06T17:37:40.329Z | **Total Módulos js/**: 13 | **Commit**: `bd24a05`
+> **Última Atualização**: 2026-08-06T17:54:26.788Z | **Total Módulos js/**: 13 | **Commit**: `5d70515`
 
 ---
 
@@ -32,7 +32,7 @@ Este índice permite que assistentes de IA localizem instantaneamente arquivos, 
 > ⚠️ NUNCA leia estes arquivos inteiros. Use a linha indicada abaixo para ir diretamente à função.
 
 
-### 📌 `manager.js` — Funções Críticas (3214 linhas total)
+### 📌 `manager.js` — Funções Críticas (3215 linhas total)
 
 | Função | Linha Aprox. |
 |---|---|

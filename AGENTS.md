@@ -62,6 +62,6 @@ Before writing a single line of code, read in this exact order:
 
 - **Planner**: Pro High
 - **Executor**: Flash
-- **QA**: Flash (Valida, então dispara o Proceed 2 para Deploy/Push)
+- **QA**: Flash (Valida, então gera o artefato `deploy_approval.md` com `RequestFeedback=true`. A UI gerará o botão "Proceed 2" para Deploy/Push).
 
 See full persona definitions in [agent_personas.md](.agents/rules/agent_personas.md).

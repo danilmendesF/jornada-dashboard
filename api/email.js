@@ -6,6 +6,53 @@
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const FROM_EMAIL = process.env.FROM_EMAIL || 'Jornada TCG Team <nao-responda@jornadatcgteam.com.br>';
 
+
+export async function sendNewDeckEmail(playerName, deckName) {
+  const adminEmail = process.env.ADMIN_EMAIL;
+  if (!adminEmail) {
+    console.error('[Email Module] ADMIN_EMAIL not configured');
+    return { success: false, error: 'ADMIN_EMAIL_MISSING' };
+  }
+
+  const htmlContent = `
+    <!DOCTYPE html>
+    <html>
+    <body>
+      <div style="font-family: Arial, sans-serif; padding: 20px;">
+        <h2 style="color: #00c8f8;">Novo Deck Adicionado</h2>
+        <p>O jogador <strong>${playerName}</strong> adicionou um novo deck: <strong>${deckName}</strong>.</p>
+        <p>Acesse o painel para visualizar as atualizações.</p>
+        <hr />
+        <p style="font-size: 12px; color: #64748b;">E-mail automático enviado pelo Jornada Dashboard.</p>
+      </div>
+    </body>
+    </html>
+  `;
+
+  if (RESEND_API_KEY) {
+    try {
+      const res = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${RESEND_API_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          from: FROM_EMAIL,
+          to: [adminEmail],
+          subject: `Novo Deck: ${deckName} (por ${playerName})`,
+          html: htmlContent
+        })
+      });
+      return res.ok;
+    } catch (err) {
+      console.error(err);
+      return false;
+    }
+  }
+  return false;
+}
+
 export async function sendWelcomeEmail(playerName, playerEmail) {
   if (!playerEmail || !playerEmail.includes('@')) {
     console.warn('[Email Module] Invalid recipient email address:', playerEmail);
@@ -100,3 +147,4 @@ export async function sendWelcomeEmail(playerName, playerEmail) {
 
   return { success: true, delivered: false, reason: 'RESEND_API_KEY_MISSING' };
 }
+
