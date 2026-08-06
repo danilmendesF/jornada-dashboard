@@ -2,7 +2,7 @@
 
 Este índice permite que assistentes de IA localizem instantaneamente arquivos, funções e elementos do DOM sem ler a base de código inteira, reduzindo o uso de tokens em até 95%.
 
-> **Última Atualização**: 2026-08-06T22:00:33.211Z | **Total Módulos js/**: 13 | **Commit**: `ed2738b`
+> **Última Atualização**: 2026-08-06T22:11:27.955Z | **Total Módulos js/**: 13 | **Commit**: `a07b090`
 
 ---
 
@@ -32,7 +32,7 @@ Este índice permite que assistentes de IA localizem instantaneamente arquivos, 
 > ⚠️ NUNCA leia estes arquivos inteiros. Use a linha indicada abaixo para ir diretamente à função.
 
 
-### 📌 `manager.js` — Funções Críticas (3194 linhas total)
+### 📌 `manager.js` — Funções Críticas (3101 linhas total)
 
 | Função | Linha Aprox. |
 |---|---|
@@ -66,7 +66,7 @@ Este índice permite que assistentes de IA localizem instantaneamente arquivos, 
 | `isMatchFormDirty()` | L142 |
 | `closeModal()` | L148 |
 | `populatePlayerSelects()` | L167 |
-| *(+67 funções adicionais)* | — |
+| *(+65 funções adicionais)* | — |
 
 ### 📌 `app.js` — Funções Críticas (2416 linhas total)
 

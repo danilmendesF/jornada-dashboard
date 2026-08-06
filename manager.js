@@ -2391,8 +2391,7 @@ async function pushToCloud() {
       deletedPlayers: [...loadDeletedPlayers()],
       deletedLocais: [...loadDeletedLocais()],
       deletedColecoes: [...loadDeletedColecoes()],
-      editedMatches: loadEdits(),
-      adminPin: getAdminPin()
+      editedMatches: loadEdits()
     };
     
     console.log(`🌐 Sync [Push]: Enviando dados locais para o banco na nuvem...`, {
@@ -2712,104 +2711,13 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-// ── ADMIN PROTECTION FUNCTIONS ────────────────────────────────────────────────
+// ── ADMIN ACCESS ────────────────────────────────────────────────
 async function openProtectedManager() {
-  if (isAdminUnlocked()) {
-    document.getElementById('managerPanel').classList.add('open');
-    renderDecksList();
-    renderPlayersList();
-    renderLocaisList();
-    renderColecoesList();
-    return;
-  }
-
-  // Check cloud first if token exists to ensure we have cloud adminPin
-  const token = localStorage.getItem('jornada_sync_token');
-  if (token) {
-    showToast('🔄 Verificando permissões na nuvem…');
-    try {
-      await pullFromCloud(true);
-    } catch (e) {
-      console.warn('Cloud PIN check failed', e);
-    }
-  }
-
-  // Always demand Login mode
-  setupAdminAuthModal('login');
-  showModal('modalAdminAuth');
-}
-
-function setupAdminAuthModal(mode = 'login') {
-  adminAuthMode = 'login';
-  const title = document.getElementById('adminAuthTitle');
-  const sub   = document.getElementById('adminAuthSub');
-  const pinInput = document.getElementById('adminPinInput');
-  const confirmWrap = document.getElementById('adminPinConfirmWrap');
-  const btnSubmit = document.getElementById('btnSubmitAdminAuth');
-  const errorEl = document.getElementById('adminAuthError');
-
-  if (pinInput) pinInput.value = '';
-  if (errorEl) errorEl.textContent = '';
-
-  if (title) title.textContent = '🔒 Acesso Privado do Administrador';
-  if (sub)   sub.textContent = 'Digite sua senha ou PIN de administrador para acessar o Gerenciador de Dados.';
-  if (confirmWrap) confirmWrap.style.display = 'none';
-  if (btnSubmit) btnSubmit.textContent = '🔓 Desbloquear Acesso';
-
-  setTimeout(() => pinInput?.focus(), 150);
-}
-
-async function submitAdminAuth() {
-  const pinInput = document.getElementById('adminPinInput');
-  const remember = document.getElementById('adminRememberSession')?.checked;
-  const errorEl = document.getElementById('adminAuthError');
-
-  const val = pinInput ? pinInput.value.trim() : '';
-
-  if (!val) {
-    if (errorEl) errorEl.textContent = '⚠️ Digite a senha ou PIN.';
-    return;
-  }
-
-  let storedPin = getAdminPin();
-
-  // If cloud token is set, check cloud payload for custom cloud adminPin
-  const token = localStorage.getItem('jornada_sync_token');
-  if (token) {
-    try {
-      const res = await fetch(getSyncUrl(token));
-      if (res.ok) {
-        const cloudData = await res.json();
-        if (cloudData && cloudData.adminPin) {
-          storedPin = cloudData.adminPin;
-          localStorage.setItem(KEY_ADMIN_PIN, cloudData.adminPin);
-        }
-      }
-    } catch (e) {
-      console.warn('Cloud verification error:', e);
-    }
-  }
-
-  if (val === storedPin) {
-    if (remember) {
-      sessionStorage.setItem('jornada_admin_unlocked', 'true');
-    }
-    closeModal('modalAdminAuth');
-    document.getElementById('managerPanel').classList.add('open');
-    renderDecksList();
-    renderPlayersList();
-    renderLocaisList();
-    renderColecoesList();
-    showToast('🔓 Acesso liberado!');
-  } else {
-    if (errorEl) errorEl.textContent = '❌ Senha ou PIN incorreto!';
-    if (pinInput) {
-      pinInput.classList.add('shake-error');
-      setTimeout(() => pinInput.classList.remove('shake-error'), 400);
-      pinInput.value = '';
-      pinInput.focus();
-    }
-  }
+  document.getElementById('managerPanel').classList.add('open');
+  renderDecksList();
+  renderPlayersList();
+  renderLocaisList();
+  renderColecoesList();
 }
 
 function lockAdminAccess() {
@@ -2920,8 +2828,7 @@ function checkAndRunDailyAutoBackup(force = false) {
       deletedPlayers: [...loadDeletedPlayers()],
       deletedLocais: [...loadDeletedLocais()],
       deletedColecoes: [...loadDeletedColecoes()],
-      editedMatches: loadEdits(),
-      adminPin: getAdminPin()
+      editedMatches: loadEdits()
     };
 
     const matchesCount = (typeof allData !== 'undefined' && Array.isArray(allData)) ? allData.length : payload.manualMatches.length;
