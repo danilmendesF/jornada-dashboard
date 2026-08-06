@@ -202,10 +202,14 @@ export default async function handler(req, res) {
             }
           }
           await redis.del('users_list');
+          await redis.del('claimed_players');
 
-          const defaultPlayers = ['danilo', 'guivaz', 'victor', 'lipe', 'trevas', 'braz', 'leleco'];
-          for (const p of defaultPlayers) {
-            await redis.del(`player_claim_${p}`);
+          // Clean all player_claim_* keys
+          const keys = await redis.keys('player_claim_*');
+          if (keys && keys.length > 0) {
+            for (const key of keys) {
+              await redis.del(key);
+            }
           }
         } catch (err) {
           console.warn('[Serverless Auth] Reset warning:', err.message);
