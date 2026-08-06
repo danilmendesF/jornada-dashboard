@@ -35,6 +35,12 @@ Este documento estabelece o fluxo inviolável de interação entre o **Usuário*
 
 ### FASE 4: EXECUÇÃO, TESTE AUTOMÁTICO E WALKTHROUGH
 1. Após a aprovação do Usuário, a IA executa as alterações nos módulos específicos (`js/...`).
-2. A IA executa o script de validação automatizada: `node scripts/validate.js`.
-3. A IA executa o auto-atualizador do RAG: `node scripts/update_state.js`.
-4. A IA gera o relatório final `walkthrough.md` detalhando o que foi feito, os testes realizados e o status de aprovação.
+2. A IA executa o script de validação automatizada: `node scripts/validate.cjs` e `node scripts/validate_auth.cjs`.
+3. A IA executa o auto-atualizador do RAG: `node scripts/update_state.cjs`.
+4. A IA gera o relatório final `walkthrough.md` detalhando o que foi feito e os testes realizados.
+
+### FASE 5: APROVAÇÃO EXPLÍCITA PARA DEPLOY (GIT COMMIT & PUSH)
+1. A IA **NÃO** deve fazer git push/deploy em produção automaticamente.
+2. A IA deve apresentar o resultado da validação automatizada e **perguntar explicitamente ao Usuário**:
+   *"Deseja que eu envie as alterações para o GitHub/Vercel (Deploy em Produção) agora ou prefere testar no navegador antes?"*
+3. A IA aguarda a confirmação do Usuário antes de rodar os comandos de git commit e push.

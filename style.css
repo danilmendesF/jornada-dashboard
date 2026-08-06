@@ -2173,16 +2173,18 @@ select.form-input option {
    ============================================================ */
 .auth-wall-container {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
+  inset: 0;
   z-index: 10000;
-  background: var(--bg);
+  background-color: #080c18;
   background-image: 
-    radial-gradient(circle at 20% 20%, rgba(124,106,247,0.22) 0%, transparent 45%),
-    radial-gradient(circle at 80% 80%, rgba(0,200,248,0.20) 0%, transparent 45%),
-    radial-gradient(circle at 50% 50%, rgba(8,12,24,0.95) 0%, rgba(8,12,24,0.98) 100%);
+    radial-gradient(circle at 50% 30%, rgba(0, 200, 248, 0.18) 0%, transparent 65%),
+    radial-gradient(circle at 50% 80%, rgba(124, 106, 247, 0.25) 0%, transparent 65%),
+    linear-gradient(180deg, rgba(8, 12, 24, 0.55) 0%, rgba(8, 12, 24, 0.85) 100%),
+    url("assets/auth_background.jpg");
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-blend-mode: overlay, screen, multiply, normal;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2190,16 +2192,47 @@ select.form-input option {
   box-sizing: border-box;
 }
 
+/* Mobile responsive scaling */
+@media (max-width: 768px) {
+  .auth-wall-container {
+    background-size: cover;
+    background-position: center center;
+    padding: 0.75rem;
+  }
+  .auth-wall-card {
+    padding: 1.6rem 1.25rem;
+    max-width: 100%;
+    background: rgba(13, 18, 37, 0.88);
+  }
+}
+
 .auth-wall-card {
   width: 100%;
-  max-width: 420px;
-  background: rgba(13, 18, 37, 0.85);
-  border: 1px solid var(--accent);
+  max-width: 440px;
+  background: rgba(13, 18, 37, 0.82);
+  border: 1px solid rgba(124, 106, 247, 0.5);
   border-radius: var(--radius);
-  padding: 2rem 1.75rem;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.8), 0 0 30px rgba(124,106,247,0.25);
+  padding: 2.2rem 1.85rem;
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.9), 0 0 35px rgba(0, 200, 248, 0.3);
   backdrop-filter: blur(20px);
   animation: authWallFadeIn 0.4s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.auth-wall-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #7c6af7, #00c8f8, #7c6af7);
+  background-size: 200% 100%;
+  animation: authGlowLine 4s linear infinite;
+}
+
+@keyframes authGlowLine {
+  0% { background-position: 0% 0%; }
+  100% { background-position: 200% 0%; }
 }
 
 @keyframes authWallFadeIn {
