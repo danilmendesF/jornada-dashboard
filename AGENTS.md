@@ -6,16 +6,27 @@ Welcome AI Agent. Read and strictly enforce these directives for any task in thi
 
 ## ⚠️ ZERO-REGRESSION DIRECTIVE (INVIOLABLE RULE)
 
-> **ZERO REGRESSION**: No existing feature, dataset, mirror match contract, calculation formula, or mobile touch layout may be broken or negatively altered. Always run syntax validation (`node -c`) after any edit.
+> **ZERO REGRESSION**: No existing feature, dataset, mirror match contract, calculation formula, or mobile touch layout may be broken or negatively altered. Always run `node scripts/validate.cjs` after any edit.
 
 ---
 
-## 🎯 TOKEN OPTIMIZATION WORKFLOW (RAG & SDD)
+## 📚 MANDATORY READING ORDER ON EACH NEW TASK
 
-1. **DO NOT READ MONOLITHIC FILES**: Never inspect `app.js` or `manager.js` entirely unless explicitly requested.
-2. **USE THE RAG INDEX**: Check [.ai/PROJECT_INDEX.md](file:///.ai/PROJECT_INDEX.md) to locate the exact module in `js/` that contains the target logic.
-3. **READ ONLY TARGET MODULES**: Read the specific modular file in `js/` (e.g. `js/quicklog.js` or `js/md3.js`) which is under 300 lines.
-4. **INSPECT ARCHITECTURE SPEC**: Consult [.ai/ARCHITECTURE.md](file:///.ai/ARCHITECTURE.md) before modifying stats, mirror rules, or storage keys.
+Before writing a single line of code, read in this exact order:
+
+1. **[PROJECT_INDEX.md](.ai/PROJECT_INDEX.md)** — Locate the exact module and function line number. This is your map. Do not skip it.
+2. **[DECISION_LOG.md](.ai/DECISION_LOG.md)** — Check if your proposed change conflicts with a past architectural decision. If it does, flag it in the `implementation_plan.md`.
+3. **[ARCHITECTURE.md](.ai/ARCHITECTURE.md)** — For any change involving stats, mirror matches, localStorage, or sync — this is mandatory.
+4. **[agent_personas.md](.agents/rules/agent_personas.md)** — Adopt the correct persona for the slash command received (`/fix` → BugHunter, `/feat` → FeatureArchitect, `/refactor` → RefactorSurgeon, `/doc` → DocKeeper).
+
+---
+
+## 🎯 TOKEN OPTIMIZATION WORKFLOW (RAG)
+
+1. **DO NOT READ MONOLITHIC FILES ENTIRELY**: Never read `app.js` or `manager.js` in full. Use `PROJECT_INDEX.md` to find the exact function line, then read only ± 30 lines around it.
+2. **USE THE RAG INDEX**: `PROJECT_INDEX.md` now indexes both `js/` modules AND critical functions in `manager.js`/`app.js` with line numbers.
+3. **SEARCH FOR DUPLICATES BEFORE CREATING FUNCTIONS**: For any new function, run a PowerShell `Select-String` across all `.js` files to confirm it doesn't already exist elsewhere.
+4. **VERIFY BUNDLE ORDER**: Check `scripts/build_bundle.cjs → jsOrder` array. Functions in files listed LATER override same-named functions in earlier files (JS hoisting inside IIFE scope).
 
 ---
 
@@ -26,12 +37,17 @@ Welcome AI Agent. Read and strictly enforce these directives for any task in thi
 - **Defensive Programming**: Always check array/object existence before dereferencing (`Array.isArray(x)`, `x?.prop`).
 - **IDs**: Always append random suffixes to timestamp IDs: `Date.now().toString() + Math.random().toString(36).substr(2, 4)`.
 - **CSS**: Use variables from `:root`. Maintain mobile touch targets at `>= 40px` and avoid vertical/horizontal page overflow (`overflow-x: hidden`).
+- **No Duplicate Functions**: Before creating any function, search for it with `Select-String`. A function declared in two files in the same IIFE bundle will cause silent override bugs.
 
 ---
 
-## ⚡ SDD SLASH COMMANDS SUMMARY
+## ⚡ SDD SLASH COMMANDS & PERSONAS
 
-- **/feat <desc>**: Triggers SDD Feature workflow (`SPEC_XXX_FEATURE.md` ➔ `implementation_plan.md` ➔ Approval ➔ Implementation ➔ 61 Validation Tests ➔ Deploy Checkpoint).
-- **/fix <desc>**: Triggers SDD Bugfix workflow (`SPEC_XXX_FIX.md` ➔ `implementation_plan.md` ➔ Approval ➔ Implementation ➔ 61 Validation Tests ➔ Deploy Checkpoint).
-- **/refactor <desc>**: Triggers SDD Refactoring workflow with zero regression enforcement.
-- **/doc <desc>**: Triggers SDD Documentation update and RAG re-indexing (`scripts/update_state.cjs`).
+| Comando | Persona Adotada | Spec Gerada | Workflow |
+|---|---|---|---|
+| `/fix <desc>` | 🔴 **BugHunter** | `SPEC_XXX_FIX.md` | Root Cause → Plan → Proceed → Fix → 61 Tests → Deploy Checkpoint |
+| `/feat <desc>` | 🟢 **FeatureArchitect** | `SPEC_XXX_FEATURE.md` | RFC → Plan → Proceed → Build → 61 Tests → Deploy Checkpoint |
+| `/refactor <desc>` | 🔵 **RefactorSurgeon** | `SPEC_XXX_REFACTOR.md` | Full Read → Plan → Proceed → Refactor → 61 Tests → Deploy Checkpoint |
+| `/doc <desc>` | 🟡 **DocKeeper** | Updates `.ai/` files | Update Specs Status → RAG Re-index → No code changes |
+
+See full persona definitions in [agent_personas.md](.agents/rules/agent_personas.md).

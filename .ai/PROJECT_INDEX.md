@@ -2,88 +2,115 @@
 
 Este índice permite que assistentes de IA localizem instantaneamente arquivos, funções e elementos do DOM sem ler a base de código inteira, reduzindo o uso de tokens em até 95%.
 
+> **Última Atualização**: 2026-08-06T13:34:22.780Z | **Total Módulos js/**: 13 | **Commit**: `4f46436`
+
 ---
 
-> **Última Atualização Automática de Estado**: 2026-08-05T20:58:23.085Z (Total Módulos: 12)
+## 📂 MÓDULOS MODULARIZADOS EM `js/`
 
-> **Última Atualização Automática de Estado**: 2026-08-05T20:58:37.610Z (Total Módulos: 12)
-
-> **Última Atualização Automática de Estado**: 2026-08-05T21:11:06.711Z (Total Módulos: 13)
-
-> **Última Atualização Automática de Estado**: 2026-08-05T21:58:30.741Z (Total Módulos: 13)
-
-> **Última Atualização Automática de Estado**: 2026-08-05T23:28:29.966Z (Total Módulos: 13)
-
-> **Última Atualização Automática de Estado**: 2026-08-05T23:32:33.789Z (Total Módulos: 13)
-
-> **Última Atualização Automática de Estado**: 2026-08-05T23:35:15.829Z (Total Módulos: 13)
-
-> **Última Atualização Automática de Estado**: 2026-08-05T23:44:23.908Z (Total Módulos: 13)
-
-> **Última Atualização Automática de Estado**: 2026-08-05T23:47:19.615Z (Total Módulos: 13)
-
-> **Última Atualização Automática de Estado**: 2026-08-05T23:50:04.894Z (Total Módulos: 13)
-
-> **Última Atualização Automática de Estado**: 2026-08-05T23:50:32.204Z (Total Módulos: 13)
-
-> **Última Atualização Automática de Estado**: 2026-08-05T23:54:07.988Z (Total Módulos: 13)
-
-> **Última Atualização Automática de Estado**: 2026-08-06T00:33:53.097Z (Total Módulos: 13)
-
-> **Última Atualização Automática de Estado**: 2026-08-06T00:45:00.713Z (Total Módulos: 13)
-
-> **Última Atualização Automática de Estado**: 2026-08-06T01:16:52.397Z (Total Módulos: 13)
-
-> **Última Atualização Automática de Estado**: 2026-08-06T01:17:19.021Z (Total Módulos: 13)
-
-> **Última Atualização Automática de Estado**: 2026-08-06T02:01:21.178Z (Total Módulos: 13)
-
-> **Última Atualização Automática de Estado**: 2026-08-06T02:06:00.108Z (Total Módulos: 13)
-
-> **Última Atualização Automática de Estado**: 2026-08-06T02:13:54.988Z (Total Módulos: 13)
-
-> **Última Atualização Automática de Estado**: 2026-08-06T02:14:48.541Z (Total Módulos: 13)
-
-> **Última Atualização Automática de Estado**: 2026-08-06T02:19:01.392Z (Total Módulos: 13)
-
-> **Última Atualização Automática de Estado**: 2026-08-06T02:25:19.375Z (Total Módulos: 13)
-
-> **Última Atualização Automática de Estado**: 2026-08-06T11:22:05.152Z (Total Módulos: 13)
-
-> **Última Atualização Automática de Estado**: 2026-08-06T11:34:45.727Z (Total Módulos: 13)
-
-> **Última Atualização Automática de Estado**: 2026-08-06T11:43:04.248Z (Total Módulos: 13)
-
-> **Última Atualização Automática de Estado**: 2026-08-06T11:50:13.171Z (Total Módulos: 13)
-
-> **Última Atualização Automática de Estado**: 2026-08-06T12:04:47.272Z (Total Módulos: 13)
-
-> **Última Atualização Automática de Estado**: 2026-08-06T12:26:46.456Z (Total Módulos: 13)
-
-> **Última Atualização Automática de Estado**: 2026-08-06T12:37:58.494Z (Total Módulos: 13)
-
-> **Última Atualização Automática de Estado**: 2026-08-06T12:44:13.711Z (Total Módulos: 13)
-
-> **Última Atualização Automática de Estado**: 2026-08-06T12:58:54.772Z (Total Módulos: 13)
-
-> **Última Atualização Automática de Estado**: 2026-08-06T13:12:43.281Z (Total Módulos: 13)
-
-## 📂 ESTRUTURA DE ARQUIVOS E MÓDULOS
-
-| Arquivo Módulo | Linhas Aprox. | Status | Funções Exportadas em window |
+| Arquivo Módulo | Linhas | Status | window.* Exports (primeiros 5) |
 |---|---|---|---|
-| `js/auth.js` | ~272 | 🟢 Ativo | `currentUser, getAuthToken, getCurrentUser, getClaimedPlayers, addClaimedPlayer...` |
-| `js/charts.js` | ~182 | 🟢 Ativo | `charts, destroyChart, renderKPIs, renderDeckWR, renderPlayerPerf...` |
-| `js/config.js` | ~67 | 🟢 Ativo | `KEY_DECKS, KEY_MATCHES, KEY_PLAYERS, KEY_LOCAIS, KEY_COLECOES...` |
-| `js/filters.js` | ~318 | 🟢 Ativo | `selectedPlayers, selectedDecks, populateMultiPlayerFilter, selectedPlayers, renderMultiPlayerItems...` |
-| `js/manager_forms.js` | ~256 | 🟢 Ativo | `editingMatchId, showModal, closeModal, openMatchForm, editingMatchId...` |
-| `js/matchup.js` | ~111 | 🟢 Ativo | `buildMatchupData, showDeckMatchupOverview, renderMatchupMatrix` |
-| `js/md3.js` | ~121 | 🟢 Ativo | `getGameCountFromPlacar, renderMD3GamesUI, _activeMD3GameCount` |
-| `js/mirror.js` | ~127 | 🟢 Ativo | `invertPlacar, buildMirrorMatch, syncAllTeamMirrorMatches` |
-| `js/quicklog.js` | ~215 | 🟢 Ativo | `quickLogPillState, renderQuickLogTouchPills, toggleQuickLogPill, quickLogMatch, filtered...` |
-| `js/stats.js` | ~81 | 🟢 Ativo | `pct, avg, getMatchDeck, getMatchOppDeck, groupBy...` |
-| `js/storage.js` | ~78 | 🟢 Ativo | `safeSetItem, loadDecks, saveDecks, loadManual, saveManual...` |
-| `js/sync_cloud.js` | ~161 | 🟢 Ativo | `syncStatusState, setSyncStatus, syncStatusState, triggerSyncPush, _syncPushTimer...` |
-| `js/table.js` | ~175 | 🟢 Ativo | `currentPage, tableSortState, changePage, currentPage, sortTableByColumn...` |
+| `js/auth.js` | 272 | 🟢 OK | `currentUser, getAuthToken, getCurrentUser, getClaimedPlayers, addClaimedPlayer...` |
+| `js/charts.js` | 182 | 🟢 OK | `charts, destroyChart, renderKPIs, renderDeckWR, renderPlayerPerf...` |
+| `js/config.js` | 67 | 🟢 OK | `KEY_DECKS, KEY_MATCHES, KEY_PLAYERS, KEY_LOCAIS, KEY_COLECOES...` |
+| `js/filters.js` | 318 | 🟢 OK | `selectedPlayers, selectedDecks, populateMultiPlayerFilter, selectedPlayers, renderMultiPlayerItems...` |
+| `js/manager_forms.js` | 256 | 🟢 OK | `editingMatchId, showModal, closeModal, openMatchForm, editingMatchId...` |
+| `js/matchup.js` | 111 | 🟢 OK | `buildMatchupData, showDeckMatchupOverview, renderMatchupMatrix` |
+| `js/md3.js` | 121 | 🟢 OK | `getGameCountFromPlacar, renderMD3GamesUI, _activeMD3GameCount` |
+| `js/mirror.js` | 127 | 🟢 OK | `invertPlacar, buildMirrorMatch, syncAllTeamMirrorMatches` |
+| `js/quicklog.js` | 183 | 🟢 OK | `quickLogPillState, renderQuickLogTouchPills, toggleQuickLogPill, quickLogMatch, filtered...` |
+| `js/stats.js` | 81 | 🟢 OK | `pct, avg, getMatchDeck, getMatchOppDeck, groupBy...` |
+| `js/storage.js` | 78 | 🟢 OK | `safeSetItem, loadDecks, saveDecks, loadManual, saveManual...` |
+| `js/sync_cloud.js` | 161 | 🟢 OK | `syncStatusState, setSyncStatus, syncStatusState, triggerSyncPush, _syncPushTimer...` |
+| `js/table.js` | 175 | 🟢 OK | `currentPage, tableSortState, changePage, currentPage, sortTableByColumn...` |
 
-|
+
+---
+
+## 🏗️ FUNÇÕES CRÍTICAS NOS MONOLITOS (manager.js / app.js)
+
+> ⚠️ NUNCA leia estes arquivos inteiros. Use a linha indicada abaixo para ir diretamente à função.
+
+
+### 📌 `manager.js` — Funções Críticas (3213 linhas total)
+
+| Função | Linha Aprox. |
+|---|---|
+| `getAdminPin()` | L22 |
+| `hasAdminPin()` | L23 |
+| `isAdminUnlocked()` | L24 |
+| `loadDecks()` | L29 |
+| `loadManual()` | L30 |
+| `loadPlayers()` | L31 |
+| `loadLocais()` | L32 |
+| `loadColecoes()` | L33 |
+| `safeSetItem()` | L35 |
+| `saveDecks()` | L48 |
+| `saveManual()` | L49 |
+| `savePlayers()` | L50 |
+| `saveLocais()` | L51 |
+| `saveColecoes()` | L52 |
+| `loadDeleted()` | L54 |
+| `loadDeletedDecks()` | L55 |
+| `loadDeletedPlayers()` | L56 |
+| `loadDeletedLocais()` | L57 |
+| `loadDeletedColecoes()` | L58 |
+| `loadEdits()` | L60 |
+| `saveDeleted()` | L62 |
+| `saveDeletedDecks()` | L63 |
+| `saveDeletedPlayers()` | L64 |
+| `saveDeletedLocais()` | L65 |
+| `saveDeletedColecoes()` | L66 |
+| `saveEdits()` | L67 |
+| `parsePTCGL()` | L76 |
+| `countCards()` | L112 |
+| `showModal()` | L114 |
+| `getMatchFormStateSnapshot()` | L123 |
+| *(+70 funções adicionais)* | — |
+
+### 📌 `app.js` — Funções Críticas (2412 linhas total)
+
+| Função | Linha Aprox. |
+|---|---|
+| `applyDataOverrides()` | L14 |
+| `initializeData()` | L50 |
+| `pct()` | L96 |
+| `avg()` | L97 |
+| `getMatchDeck()` | L99 |
+| `getMatchOppDeck()` | L105 |
+| `groupBy()` | L111 |
+| `isBricked()` | L120 |
+| `calculateStats()` | L128 |
+| `destroyChart()` | L165 |
+| `makeSearchableSelect()` | L170 |
+| `updateInputFromSelect()` | L195 |
+| `renderOptions()` | L204 |
+| `selectOption()` | L238 |
+| `openDropdown()` | L246 |
+| `closeDropdown()` | L254 |
+| `highlightOption()` | L297 |
+| `initAllSearchableSelects()` | L328 |
+| `populateMultiPlayerFilter()` | L346 |
+| `renderMultiPlayerItems()` | L366 |
+| `updateMultiPlayerBtnText()` | L400 |
+| `initMultiPlayerEvents()` | L417 |
+| `populateMultiDeckFilter()` | L480 |
+| `renderMultiDeckItems()` | L505 |
+| `updateMultiDeckBtnText()` | L537 |
+| `initMultiDeckEvents()` | L554 |
+| `populateFilters()` | L609 |
+| `fillSelect()` | L630 |
+| `applyFilters()` | L645 |
+| `renderKPIs()` | L681 |
+| *(+37 funções adicionais)* | — |
+
+
+---
+
+## 🧭 REGRA DE LEITURA RAG (PARA A IA)
+
+1. **Sempre consulte este índice ANTES de abrir qualquer arquivo.**
+2. **Para funções em `js/*`**: Abra apenas o módulo específico (todos < 350 linhas).
+3. **Para funções em `manager.js` ou `app.js`**: Use `view_file` com `StartLine/EndLine` para a linha indicada acima ± 30 linhas.
+4. **Para regras de negócio** (mirror, stats, storage): Consulte `.ai/ARCHITECTURE.md`.
+5. **Para decisões de design passadas**: Consulte `.ai/DECISION_LOG.md` ANTES de propor mudanças arquiteturais.

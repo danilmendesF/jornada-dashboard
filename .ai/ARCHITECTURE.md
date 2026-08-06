@@ -10,6 +10,11 @@
 - `jornada_colecoes` — Lista de coleções/expansões cadastradas.
 - `jornada_deleted_ids` — Array serializado de Set com IDs de partidas deletadas.
 - `jornada_edited_matches` — Objeto JSON com edições em partidas históricas.
+- `jornada_archetype_unifications` — Array de regras `{ from, to }` de unificação de arquétipos.
+- `jornada_auth_token` — JWT do usuário logado.
+- `jornada_user_profile` — Objeto JSON do perfil do usuário `{ id, name, email, linkedPlayer }`.
+- `jornada_claimed_players` — Array de nomes de jogadores que já criaram conta.
+- `jornada_sync_token` — Token de sincronização com a nuvem (Redis KV).
 
 ### Estrutura de Objeto de Partida (`MatchData`)
 ```typescript
@@ -79,3 +84,50 @@ interface MatchData {
 ## 3. CONCORRÊNCIA E SINCRONIZAÇÃO MULTI-SESSÃO
 - Qualquer alteração no `localStorage` dispara evento `storage`.
 - O listener recarrega dados globais e re-renderiza filtros, tabelas e gráficos reativamente.
+- **Payload de Sync Redis KV**: `{ edits, deletedIds, archetypeUnifications, decks, players, locais, colecoes, adminPin }`.
+- Regra: Novos dados compartilhados entre dispositivos DEVEM ser adicionados ao payload em `js/sync_cloud.js`.
+
+---
+
+## 4. MAPA DE DEPENDÊNCIAS ENTRE MÓDULOS
+
+> Use esta seção para entender "quem chama quem" antes de modificar qualquer função.
+
+| Função / Módulo | Chamado Por | Chama |
+|---|---|---|
+| `getActivePlayerName()` — `js/config.js` | `manager.js:populateQuickLogDropdowns`, `manager.js:populatePlayerSelects`, `js/auth.js:updateAuthUI`, `js/table.js:renderTableRows` | `getCurrentUser()`, `localStorage` |
+| `populateQuickLogDropdowns()` — `manager.js:L1804` | `populatePlayerSelects()`, `initDashboard()`, `updateAuthUI()` | `getActivePlayerName()`, `populateLocalSelects()`, `populateColecaoSelects()`, `updatePlacarDropdown()`, `renderQuickLogTouchPills()` |
+| `buildMirrorMatch()` — `js/mirror.js` | `manager.js:submitMatchForm`, `js/quicklog.js:quickLogMatch` | `invertPlacar()`, `loadPlayers()` |
+| `applyDataOverrides()` — `app.js` | `initDashboard()`, `pullFromCloud()` | `loadArchetypeUnifications()`, `loadEdits()`, `loadDeletedIds()` |
+| `calculateStats()` — `js/stats.js` | `js/charts.js:renderKPIs`, `js/charts.js:renderDeckWR`, `js/charts.js:renderPlayerPerf` | `pct()`, `avg()`, `groupBy()` |
+| `pushToCloud()` — `js/sync_cloud.js` | `triggerSyncPush()` (debounced 2s) | `fetch('/api/sync')` |
+| `pullFromCloud()` — `js/sync_cloud.js` | `initDashboard()`, `openProtectedManager()` | `applyDataOverrides()` |
+| `updateAuthUI()` — `js/auth.js` | `verifyAuthToken()`, `logoutUser()`, `initAuthSession()` | `getActivePlayerName()`, `populatePlayerRegisterDropdowns()`, `populateQuickLogDropdowns()` |
+| `populatePlayerSelects()` — `manager.js:L174` | `initDashboard()`, `renderDecksList()` | `populateQuickLogDropdowns()`, `loadPlayers()` |
+| `renderTableRows()` — `js/table.js` | `applyFilters()` | `getActivePlayerName()` (para `isOwner`) |
+
+---
+
+## 5. FLUXO DE INICIALIZAÇÃO DA APLICAÇÃO
+
+```
+index.html carregado
+  └─► Anti-Flicker Script (inline)
+  └─► dist/app.min.js carregado
+        ├─► js/config.js → define constantes e getActivePlayerName()
+        ├─► js/storage.js → define loadDecks(), loadManual(), etc.
+        ├─► js/stats.js → define calculateStats()
+        ├─► js/mirror.js → define buildMirrorMatch()
+        ├─► js/md3.js → define getGameCountFromPlacar()
+        ├─► js/quicklog.js → define quickLogMatch() + stub populateQuickLogDropdowns()
+        ├─► js/filters.js → define applyFilters(), populateMultiPlayerFilter()
+        ├─► js/table.js → define renderTableRows(), changePage()
+        ├─► js/charts.js → define renderKPIs(), renderDeckWR()
+        ├─► js/matchup.js → define buildMatchupData()
+        ├─► js/manager_forms.js → define openMatchForm(), closeModal()
+        ├─► js/sync_cloud.js → define pushToCloud(), pullFromCloud()
+        ├─► js/auth.js → define initAuthSession(), updateAuthUI()
+        ├─► app.js → define initDashboard(), applyDataOverrides()
+        └─► manager.js → define populatePlayerSelects(), populateQuickLogDropdowns() [CANÔNICO]
+              └─► DOMContentLoaded → initDashboard() → initAuthSession() → populatePlayerSelects()
+```
