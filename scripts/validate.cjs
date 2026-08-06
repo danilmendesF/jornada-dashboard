@@ -10,6 +10,12 @@ const { execSync } = require('child_process');
 
 console.log('🚀 Iniciando Suíte de Validação Automatizada SDD...\n');
 
+try {
+  execSync('node scripts/build_bundle.cjs', { stdio: 'ignore' });
+} catch (e) {
+  console.error('❌ Erro ao compilar bundle de produção!');
+}
+
 let errors = 0;
 let passes = 0;
 
