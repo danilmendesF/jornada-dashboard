@@ -1483,11 +1483,19 @@ function saveMatchForm() {
 
 // ── DELETE MATCH ──────────────────────────────────────────────────────────────
 window.deleteMatch = function(matchId) {
-  if (!confirm('Deletar esta partida? Esta ação não pode ser desfeita.')) return;
-  lastWriteTime = Date.now();
-
   const manual = loadManual();
   const targetMatch = manual.find(m => m.id === matchId) || ((typeof allData !== 'undefined') ? allData.find(m => m.id === matchId) : null);
+
+  const currentUserObj = typeof getCurrentUser === 'function' ? getCurrentUser() : window.currentUser;
+  const currentName = currentUserObj?.linkedPlayer || currentUserObj?.name || '';
+
+  if (targetMatch && currentName && targetMatch.Player.trim().toLowerCase() !== currentName.trim().toLowerCase()) {
+    if (typeof showToast === 'function') showToast('⚠️ Você só possui permissão para apagar suas próprias partidas!');
+    return;
+  }
+
+  if (!confirm('Deletar esta partida? Esta ação não pode ser desfeita.')) return;
+  lastWriteTime = Date.now();
   const mirrorId = targetMatch?._mirrorId;
   const mirroredFromId = targetMatch?._mirroredFrom;
 
@@ -1529,6 +1537,15 @@ window.deleteMatch = function(matchId) {
 window.editMatch = function(matchId) {
   const match = (typeof allData !== 'undefined') ? allData.find(m => m.id === matchId) : null;
   if (!match) { showToast('⚠️ Partida não encontrada.'); return; }
+
+  const currentUserObj = typeof getCurrentUser === 'function' ? getCurrentUser() : window.currentUser;
+  const currentName = currentUserObj?.linkedPlayer || currentUserObj?.name || '';
+
+  if (currentName && match.Player.trim().toLowerCase() !== currentName.trim().toLowerCase()) {
+    if (typeof showToast === 'function') showToast('⚠️ Você só possui permissão para editar suas próprias partidas!');
+    return;
+  }
+
   openMatchForm(match);
 };
 
