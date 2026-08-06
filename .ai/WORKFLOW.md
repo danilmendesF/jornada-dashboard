@@ -10,6 +10,17 @@ Este documento estabelece o fluxo inviolável de interação entre o **Usuário*
 
 ---
 
+## 🎨 DIRETRIZ INVIOLÁVEL DE DESIGN SYSTEM & PALETA SEMÂNTICA
+
+> **ESTÉTICA & CORES DO TIME**: Toda nova funcionalidade (`/feat`), correção (`/fix`) ou refatoração (`/refactor`) DEVE seguir rigorosamente a estética **Cyber Space Dark** (`style.css`) e os significados semânticos de cores do projeto:
+> - 🟢 **Verde (`#2ee8a0`)**: Vitória, Desempenho Alto, Status OK, Deck Válido.
+> - 🔴 **Vermelho (`#f75050`)**: Derrota, Ações Destrutivas, Erros, Invalidez.
+> - 🟡 **Amarelo (`#f5c842`)**: Empate, Alerta, Status Neutro.
+> - 🟣 **Roxo Elétrico (`#7c6af7`)**: Identidade do Time, Ações Primárias.
+> - 🔵 **Ciano Néon (`#00c8f8`)**: Destaques Interativos, Badges, Glows.
+
+---
+
 ## 📋 CICLO DE VIDA DE UMA TAREFA (4 FASES)
 
 ```
