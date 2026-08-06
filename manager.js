@@ -2478,11 +2478,8 @@ document.addEventListener('visibilitychange', () => {
 });
 
 function initSyncUI() {
-  let curToken = localStorage.getItem('jornada_sync_token');
-  if (!curToken) {
-    curToken = 'team_default_sync';
-    localStorage.setItem('jornada_sync_token', curToken);
-  }
+  const curToken = 'team_default_sync';
+  localStorage.setItem('jornada_sync_token', curToken);
   pullFromCloud(true);
   startSyncInterval();
 }
