@@ -2,32 +2,30 @@
 
 > **Gerado automaticamente por `node scripts/update_state.cjs`.**
 > **Leia como PRIMEIRO PASSO em qualquer nova sessão ou conversa.**
-> Gerado em: 2026-08-06T20:27:54.407Z | Commit: `eaec99d`
+> Gerado em: 2026-08-06T20:40:53.472Z | Commit: `883bf02`
 
 ---
 
 ## 🚀 ESTADO ATUAL DO PROJETO
 
-- **Último commit**: `eaec99d`
+- **Último commit**: `883bf02`
 - **Produção**: https://jornadatcgteam.com.br (Vercel auto-deploy)
 - **Repositório**: https://github.com/danilmendesF/jornada-dashboard
 
 ### 5 Commits Mais Recentes:
 ```
+883bf02 fix(sync): resolve 500 error on api/sync.js due to undeclared variables in strict mode
 eaec99d refactor(ui): remocao da ui de sincronizacao manual para consolidacao do modo global (SPEC_036)
 59a3115 fix(sync): conexao global automatica e liberacao de private buckets via auth (SPEC_035)
 9d20df0 feat(sync): unificacao em lote e bloqueio definitivo de nome antigo (SPEC_034)
 118fdc3 fix(sync): blacklist autom. em unificacoes e garbage collection na nuvem (SPEC_033)
-7f88c6a fix(api): corrige envio de email 400 forcando identificacao de sessao (SPEC_032)
 ```
 
 ### Arquivos Modificados no Último Commit:
 - `.ai/PROJECT_INDEX.md`
 - `.ai/SESSION_CONTEXT.md`
-- `.ai/specs/SPEC_036_REMOVE_SYNC_UI.md`
-- `dist/app.min.js`
+- `api/sync.js`
 - `index.html`
-- `manager.js`
 - `package.json`
 
 ---
@@ -102,12 +100,12 @@ eaec99d refactor(ui): remocao da ui de sincronizacao manual para consolidacao do
 
 | Arquivo de Contexto | Caracteres | Tokens Estimados |
 |---|---|---|
-| `SESSION_CONTEXT.md` | 5059 | ~1265 tks |
-| `PROJECT_INDEX.md` | 4613 | ~1153 tks |
+| `SESSION_CONTEXT.md` | 5005 | ~1251 tks |
+| `PROJECT_INDEX.md` | 4614 | ~1154 tks |
 | `DECISION_LOG.md` | 4744 | ~1186 tks |
 | `ARCHITECTURE.md` | 7650 | ~1913 tks |
 | `agent_personas.md` | 5129 | ~1282 tks |
-| **TOTAL BASE RAG** | **27195** | **~6799 tks** |
+| **TOTAL BASE RAG** | **27142** | **~6786 tks** |
 
 *(Nota: O GPT-4 / Gemini-1.5 suportam 128k-1M+ tokens. Um RAG base ideal consome < 5.000 tokens).*
 

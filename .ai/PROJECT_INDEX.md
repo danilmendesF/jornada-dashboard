@@ -2,7 +2,7 @@
 
 Este índice permite que assistentes de IA localizem instantaneamente arquivos, funções e elementos do DOM sem ler a base de código inteira, reduzindo o uso de tokens em até 95%.
 
-> **Última Atualização**: 2026-08-06T20:27:54.200Z | **Total Módulos js/**: 13 | **Commit**: `eaec99d`
+> **Última Atualização**: 2026-08-06T20:40:53.260Z | **Total Módulos js/**: 13 | **Commit**: `883bf02`
 
 ---
 
@@ -32,7 +32,7 @@ Este índice permite que assistentes de IA localizem instantaneamente arquivos, 
 > ⚠️ NUNCA leia estes arquivos inteiros. Use a linha indicada abaixo para ir diretamente à função.
 
 
-### 📌 `manager.js` — Funções Críticas (3188 linhas total)
+### 📌 `manager.js` — Funções Críticas (3189 linhas total)
 
 | Função | Linha Aprox. |
 |---|---|
@@ -68,40 +68,40 @@ Este índice permite que assistentes de IA localizem instantaneamente arquivos, 
 | `getMatchFormStateSnapshot()` | L123 |
 | *(+70 funções adicionais)* | — |
 
-### 📌 `app.js` — Funções Críticas (2415 linhas total)
+### 📌 `app.js` — Funções Críticas (2416 linhas total)
 
 | Função | Linha Aprox. |
 |---|---|
 | `applyDataOverrides()` | L14 |
 | `initializeData()` | L50 |
-| `pct()` | L96 |
-| `avg()` | L97 |
-| `getMatchDeck()` | L99 |
-| `getMatchOppDeck()` | L105 |
-| `groupBy()` | L111 |
-| `isBricked()` | L120 |
-| `calculateStats()` | L128 |
-| `destroyChart()` | L165 |
-| `makeSearchableSelect()` | L170 |
-| `updateInputFromSelect()` | L195 |
-| `renderOptions()` | L204 |
-| `selectOption()` | L238 |
-| `openDropdown()` | L246 |
-| `closeDropdown()` | L254 |
-| `highlightOption()` | L297 |
-| `initAllSearchableSelects()` | L328 |
-| `populateMultiPlayerFilter()` | L346 |
-| `renderMultiPlayerItems()` | L366 |
-| `updateMultiPlayerBtnText()` | L400 |
-| `initMultiPlayerEvents()` | L417 |
-| `populateMultiDeckFilter()` | L480 |
-| `renderMultiDeckItems()` | L505 |
-| `updateMultiDeckBtnText()` | L537 |
-| `initMultiDeckEvents()` | L554 |
-| `populateFilters()` | L609 |
-| `fillSelect()` | L630 |
-| `applyFilters()` | L645 |
-| `renderKPIs()` | L681 |
+| `pct()` | L97 |
+| `avg()` | L98 |
+| `getMatchDeck()` | L100 |
+| `getMatchOppDeck()` | L106 |
+| `groupBy()` | L112 |
+| `isBricked()` | L121 |
+| `calculateStats()` | L129 |
+| `destroyChart()` | L166 |
+| `makeSearchableSelect()` | L171 |
+| `updateInputFromSelect()` | L196 |
+| `renderOptions()` | L205 |
+| `selectOption()` | L239 |
+| `openDropdown()` | L247 |
+| `closeDropdown()` | L255 |
+| `highlightOption()` | L298 |
+| `initAllSearchableSelects()` | L329 |
+| `populateMultiPlayerFilter()` | L347 |
+| `renderMultiPlayerItems()` | L367 |
+| `updateMultiPlayerBtnText()` | L401 |
+| `initMultiPlayerEvents()` | L418 |
+| `populateMultiDeckFilter()` | L481 |
+| `renderMultiDeckItems()` | L506 |
+| `updateMultiDeckBtnText()` | L538 |
+| `initMultiDeckEvents()` | L555 |
+| `populateFilters()` | L610 |
+| `fillSelect()` | L631 |
+| `applyFilters()` | L646 |
+| `renderKPIs()` | L682 |
 | *(+37 funções adicionais)* | — |
 
 

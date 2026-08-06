@@ -71,6 +71,7 @@ window.addEventListener('storage', (e) => {
   if (typeof populateFilters === 'function') populateFilters();
   if (typeof populateDeckSelects === 'function') populateDeckSelects();
   if (typeof populatePlayerSelects === 'function') populatePlayerSelects();
+  if (typeof populatePlayerRegisterDropdowns === 'function') populatePlayerRegisterDropdowns();
   if (typeof populateQuickLogDropdowns === 'function') populateQuickLogDropdowns();
   if (typeof applyFilters === 'function') applyFilters();
   if (typeof showToast === 'function') showToast('🔄 Dados atualizados de outra sessão.');

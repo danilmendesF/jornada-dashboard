@@ -2329,6 +2329,7 @@ async function pullFromCloud(quiet = false) {
         if (typeof populateFilters === 'function') populateFilters();
         if (typeof applyFilters === 'function') applyFilters();
         if (typeof populatePlayerSelects === 'function') populatePlayerSelects();
+        if (typeof populatePlayerRegisterDropdowns === 'function') populatePlayerRegisterDropdowns();
         if (typeof populateDeckSelects === 'function') populateDeckSelects();
         if (typeof populateLocalSelects === 'function') populateLocalSelects();
         if (typeof populateColecaoSelects === 'function') populateColecaoSelects();
