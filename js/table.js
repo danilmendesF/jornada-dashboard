@@ -72,11 +72,13 @@ window.renderTable = function(rows, resetPage = false) {
 
     if (res !== 0) return res * mult;
 
-    // Tie-breaker: use createdAt timestamp (newest first), fallback to ID string comparison
+    // Tie-breaker: use createdAt if available, else extract timestamp from ID (first 13 digits)
     const tA = a.createdAt || '';
     const tB = b.createdAt || '';
     if (tA && tB && tA !== tB) return tB > tA ? 1 : -1;
-    return String(b.id || '').localeCompare(String(a.id || ''));
+    // Fallback: extract numeric timestamp from ID (Date.now() = 13 digits at start)
+    const idNum = (id) => parseInt(String(id || '0').substring(0, 13), 10) || 0;
+    return idNum(b.id) - idNum(a.id);
   });
 
   const totalItems = toRender.length;
