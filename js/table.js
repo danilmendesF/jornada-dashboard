@@ -92,7 +92,7 @@ window.renderTable = function(rows, resetPage = false) {
   }
 
   tbody.innerHTML = pagedRows.map((r, i) => {
-    const idxDisplay = totalItems - (startIdx + i);
+    const idxDisplay = r.id || (startIdx + i + 1);
     const resClass = r.Resultado === 'Vitória' ? 'res-win' : r.Resultado === 'Empate' ? 'res-draw' : 'res-loss';
     const isBrk = typeof isBricked === 'function' ? isBricked(r) : r.Brick === 'Sim';
 
