@@ -1621,6 +1621,14 @@ window.resetPlayerAccount = async function(playerName) {
     const data = await res.json();
     if (res.ok) {
       showToast?.(`✅ Conta de ${playerName} resetada com sucesso!`);
+      // Remove from local cache immediately
+      try {
+        const claimed = JSON.parse(localStorage.getItem('jornada_claimed_players') || '[]');
+        const updated = claimed.filter(n => n.trim() !== playerName.trim());
+        localStorage.setItem('jornada_claimed_players', JSON.stringify(updated));
+      } catch(e) {}
+      // Refresh from cloud and update dropdowns
+      if (typeof fetchClaimedPlayers === 'function') await fetchClaimedPlayers();
       if (typeof populatePlayerRegisterDropdowns === 'function') populatePlayerRegisterDropdowns();
     } else {
       showToast?.(`❌ Erro ao resetar: ${data.error}`);

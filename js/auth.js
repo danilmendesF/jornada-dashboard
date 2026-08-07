@@ -34,10 +34,8 @@ window.fetchClaimedPlayers = async function() {
     const res = await fetch('/api/auth?action=claimed');
     if (res.ok) {
       const data = await res.json();
-      if (Array.isArray(data.claimed) && data.claimed.length > 0) {
-        const current = getClaimedPlayers();
-        const combined = Array.from(new Set([...current, ...data.claimed]));
-        localStorage.setItem('jornada_claimed_players', JSON.stringify(combined));
+      if (Array.isArray(data.claimed)) {
+        localStorage.setItem('jornada_claimed_players', JSON.stringify(data.claimed));
         if (typeof populatePlayerRegisterDropdowns === 'function') populatePlayerRegisterDropdowns();
       }
     }

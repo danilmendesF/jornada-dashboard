@@ -2,7 +2,7 @@
 
 Este índice permite que assistentes de IA localizem instantaneamente arquivos, funções e elementos do DOM sem ler a base de código inteira, reduzindo o uso de tokens em até 95%.
 
-> **Última Atualização**: 2026-08-07T12:24:11.776Z | **Total Módulos js/**: 13 | **Commit**: `545c568`
+> **Última Atualização**: 2026-08-07T12:28:56.707Z | **Total Módulos js/**: 13 | **Commit**: `dada274`
 
 ---
 
@@ -10,7 +10,7 @@ Este índice permite que assistentes de IA localizem instantaneamente arquivos, 
 
 | Arquivo Módulo | Linhas | Status | window.* Exports (primeiros 5) |
 |---|---|---|---|
-| `js/auth.js` | 342 | 🟢 OK | `currentUser, getAuthToken, getCurrentUser, getClaimedPlayers, addClaimedPlayer...` |
+| `js/auth.js` | 340 | 🟢 OK | `currentUser, getAuthToken, getCurrentUser, getClaimedPlayers, addClaimedPlayer...` |
 | `js/charts.js` | 182 | 🟢 OK | `charts, destroyChart, renderKPIs, renderDeckWR, renderPlayerPerf...` |
 | `js/config.js` | 67 | 🟢 OK | `KEY_DECKS, KEY_MATCHES, KEY_PLAYERS, KEY_LOCAIS, KEY_COLECOES...` |
 | `js/filters.js` | 318 | 🟢 OK | `selectedPlayers, selectedDecks, populateMultiPlayerFilter, selectedPlayers, renderMultiPlayerItems...` |
@@ -32,7 +32,7 @@ Este índice permite que assistentes de IA localizem instantaneamente arquivos, 
 > ⚠️ NUNCA leia estes arquivos inteiros. Use a linha indicada abaixo para ir diretamente à função.
 
 
-### 📌 `manager.js` — Funções Críticas (3124 linhas total)
+### 📌 `manager.js` — Funções Críticas (3132 linhas total)
 
 | Função | Linha Aprox. |
 |---|---|
