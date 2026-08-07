@@ -2,7 +2,7 @@
 
 Este índice permite que assistentes de IA localizem instantaneamente arquivos, funções e elementos do DOM sem ler a base de código inteira, reduzindo o uso de tokens em até 95%.
 
-> **Última Atualização**: 2026-08-07T13:01:17.890Z | **Total Módulos js/**: 13 | **Commit**: `5816168`
+> **Última Atualização**: 2026-08-07T13:08:57.678Z | **Total Módulos js/**: 13 | **Commit**: `fafade1`
 
 ---
 
@@ -22,7 +22,7 @@ Este índice permite que assistentes de IA localizem instantaneamente arquivos, 
 | `js/stats.js` | 81 | 🟢 OK | `pct, avg, getMatchDeck, getMatchOppDeck, groupBy...` |
 | `js/storage.js` | 78 | 🟢 OK | `safeSetItem, loadDecks, saveDecks, loadManual, saveManual...` |
 | `js/sync_cloud.js` | 161 | 🟢 OK | `syncStatusState, setSyncStatus, syncStatusState, triggerSyncPush, _syncPushTimer...` |
-| `js/table.js` | 176 | 🟢 OK | `currentPage, tableSortState, changePage, currentPage, sortTableByColumn...` |
+| `js/table.js` | 181 | 🟢 OK | `currentPage, tableSortState, changePage, currentPage, sortTableByColumn...` |
 
 
 ---
@@ -32,7 +32,7 @@ Este índice permite que assistentes de IA localizem instantaneamente arquivos, 
 > ⚠️ NUNCA leia estes arquivos inteiros. Use a linha indicada abaixo para ir diretamente à função.
 
 
-### 📌 `manager.js` — Funções Críticas (3132 linhas total)
+### 📌 `manager.js` — Funções Críticas (3134 linhas total)
 
 | Função | Linha Aprox. |
 |---|---|

@@ -1428,6 +1428,7 @@ function saveMatchForm() {
     ListaMeuDeck:     ownListRaw,
     ListaDeckAdv:     advListRaw,
     Comentarios:      getVal('formMatchComentarios').trim(),
+    createdAt:        new Date().toISOString(),
     _manual:          true,
   };
 
@@ -2080,6 +2081,7 @@ window.quickLogMatch = function(resultado) {
     Confiabilidade: document.getElementById('quickLogConfiabilidade')?.value || 'Alta',
     GamesDetail:    gamesDetail,
     Comentarios:    'Registrado via Quick Log (Mobile)',
+    createdAt:      new Date().toISOString(),
     _manual:        true
   };
 
