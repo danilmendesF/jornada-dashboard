@@ -52,8 +52,9 @@ window.renderTable = function(rows, resetPage = false) {
 
   toRender.sort((a, b) => {
     let res = 0;
+    const numId = (id) => parseInt(String(id).replace(/[^0-9]/g, ''), 10) || 0;
     if (column === 'id') {
-      res = (Number(a.id) || 0) - (Number(b.id) || 0);
+      res = numId(a.id) - numId(b.id);
     } else if (column === 'Resultado') {
       const rank = { 'Vitória': 2, 'Empate': 1, 'Derrota': 0 };
       res = (rank[a.Resultado] ?? 0) - (rank[b.Resultado] ?? 0);
@@ -69,8 +70,8 @@ window.renderTable = function(rows, resetPage = false) {
 
     if (res !== 0) return res * mult;
 
-    // Tie-breaker by numeric ID desc
-    return (Number(b.id) || 0) - (Number(a.id) || 0);
+    // Tie-breaker by numeric timestamp in ID desc (newest first)
+    return numId(b.id) - numId(a.id);
   });
 
   const totalItems = toRender.length;
