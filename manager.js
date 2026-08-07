@@ -1621,6 +1621,7 @@ window.resetPlayerAccount = async function(playerName) {
     const data = await res.json();
     if (res.ok) {
       showToast?.(`✅ Conta de ${playerName} resetada com sucesso!`);
+      if (typeof populatePlayerRegisterDropdowns === 'function') populatePlayerRegisterDropdowns();
     } else {
       showToast?.(`❌ Erro ao resetar: ${data.error}`);
     }

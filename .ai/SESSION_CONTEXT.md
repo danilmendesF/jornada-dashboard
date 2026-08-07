@@ -2,30 +2,33 @@
 
 > **Gerado automaticamente por `node scripts/update_state.cjs`.**
 > **Leia como PRIMEIRO PASSO em qualquer nova sessão ou conversa.**
-> Gerado em: 2026-08-07T12:19:27.426Z | Commit: `d545f66`
+> Gerado em: 2026-08-07T12:24:12.026Z | Commit: `545c568`
 
 ---
 
 ## 🚀 ESTADO ATUAL DO PROJETO
 
-- **Último commit**: `d545f66`
+- **Último commit**: `545c568`
 - **Produção**: https://jornadatcgteam.com.br (Vercel auto-deploy)
 - **Repositório**: https://github.com/danilmendesF/jornada-dashboard
 
 ### 5 Commits Mais Recentes:
 ```
+545c568 feat(auth): remove botão global de reset e implementa reset cirúrgico de senhas no painel de players para o admin (SPEC_040)
 d545f66 fix(auth): limpa resquicios do getAdminPin e isAdminUnlocked que quebravam o envio pra nuvem
 a07b090 feat(auth): implementa sistema RBAC (Acesso Master via email) e exclui legados de PIN (SPEC_039)
 ed2738b fix(auth): limpeza completa do claimed_players no reset de contas
 a24b401 feat(sync): implementa auto-update forçado via version tracking em tempo real (SPEC_038)
-e7bf1ef fix(sync): forca a chave global no cache de todos os usuarios ignorando chaves obsoletas (SPEC_037)
 ```
 
 ### Arquivos Modificados no Último Commit:
 - `.ai/PROJECT_INDEX.md`
 - `.ai/SESSION_CONTEXT.md`
+- `.ai/specs/SPEC_040_INDIVIDUAL_RESET.md`
+- `api/auth.js`
 - `dist/app.min.js`
 - `index.html`
+- `js/auth.js`
 - `manager.js`
 - `package.json`
 - `version.json`
@@ -106,12 +109,12 @@ e7bf1ef fix(sync): forca a chave global no cache de todos os usuarios ignorando 
 
 | Arquivo de Contexto | Caracteres | Tokens Estimados |
 |---|---|---|
-| `SESSION_CONTEXT.md` | 5198 | ~1300 tks |
+| `SESSION_CONTEXT.md` | 5297 | ~1324 tks |
 | `PROJECT_INDEX.md` | 4627 | ~1157 tks |
 | `DECISION_LOG.md` | 4744 | ~1186 tks |
 | `ARCHITECTURE.md` | 7650 | ~1913 tks |
 | `agent_personas.md` | 5129 | ~1282 tks |
-| **TOTAL BASE RAG** | **27348** | **~6837 tks** |
+| **TOTAL BASE RAG** | **27447** | **~6862 tks** |
 
 *(Nota: O GPT-4 / Gemini-1.5 suportam 128k-1M+ tokens. Um RAG base ideal consome < 5.000 tokens).*
 
