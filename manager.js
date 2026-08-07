@@ -1602,10 +1602,32 @@ function renderPlayersList() {
   el.innerHTML = players.map(p => `
     <div class="player-tag">
       <span>👤 ${p}</span>
-      <button class="icon-btn danger sm" onclick="deletePlayer('${p.replace(/'/g, "\\'")}')">✕</button>
+      <div style="display:flex; gap:0.25rem;">
+        <button class="icon-btn warning sm" onclick="resetPlayerAccount('${p.replace(/'/g, "\\'")}')" title="Resetar Senha da Conta">🔑</button>
+        <button class="icon-btn danger sm" onclick="deletePlayer('${p.replace(/'/g, "\\'")}')" title="Excluir Jogador do Time">🗑️</button>
+      </div>
     </div>
   `).join('');
 }
+
+window.resetPlayerAccount = async function(playerName) {
+  if (!confirm(`⚠️ Tem certeza que deseja resetar a senha da conta de "${playerName}"?\nO e-mail atrelado será apagado e a pessoa precisará se cadastrar novamente.`)) return;
+  try {
+    const res = await fetch('/api/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'reset_single', playerName })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      showToast?.(`✅ Conta de ${playerName} resetada com sucesso!`);
+    } else {
+      showToast?.(`❌ Erro ao resetar: ${data.error}`);
+    }
+  } catch (e) {
+    showToast?.(`❌ Erro de conexão com o servidor.`);
+  }
+};
 
 // ── LOCAL MANAGEMENT ──────────────────────────────────────────────────────────
 function addLocal() {

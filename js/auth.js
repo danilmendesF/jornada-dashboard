@@ -338,9 +338,4 @@ window.checkPasswordMatch = function(prefix) {
     : '<span style="color:var(--red); font-size:0.78rem; font-weight:600; display:inline-block; margin-top:4px;">❌ As senhas não coincidem</span>';
 };
 
-window.resetAllUserAccounts = async function() {
-  if (!confirm('⚠️ Tem certeza que deseja apagar TODAS as contas de usuários e cadastros de jogadores? Todos os e-mails e nomes ficarão liberados para novos cadastros do zero.')) return;
-  try { await fetch('/api/auth', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'reset_all' }) }); } catch (e) {}
-  ['jornada_claimed_players','jornada_user_profile','jornada_auth_token'].forEach(k => localStorage.removeItem(k));
-  window.currentUser = null; clearAuthForms(); populatePlayerRegisterDropdowns(); updateAuthUI(); showToast?.('🧹 Todas as contas foram resetadas com sucesso!');
-};
+

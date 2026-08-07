@@ -2,35 +2,32 @@
 
 > **Gerado automaticamente por `node scripts/update_state.cjs`.**
 > **Leia como PRIMEIRO PASSO em qualquer nova sessão ou conversa.**
-> Gerado em: 2026-08-06T22:11:28.169Z | Commit: `a07b090`
+> Gerado em: 2026-08-07T12:19:27.426Z | Commit: `d545f66`
 
 ---
 
 ## 🚀 ESTADO ATUAL DO PROJETO
 
-- **Último commit**: `a07b090`
+- **Último commit**: `d545f66`
 - **Produção**: https://jornadatcgteam.com.br (Vercel auto-deploy)
 - **Repositório**: https://github.com/danilmendesF/jornada-dashboard
 
 ### 5 Commits Mais Recentes:
 ```
+d545f66 fix(auth): limpa resquicios do getAdminPin e isAdminUnlocked que quebravam o envio pra nuvem
 a07b090 feat(auth): implementa sistema RBAC (Acesso Master via email) e exclui legados de PIN (SPEC_039)
 ed2738b fix(auth): limpeza completa do claimed_players no reset de contas
 a24b401 feat(sync): implementa auto-update forçado via version tracking em tempo real (SPEC_038)
 e7bf1ef fix(sync): forca a chave global no cache de todos os usuarios ignorando chaves obsoletas (SPEC_037)
-cbf5a3c fix(sync): renderizar jogadores no dropdown de auth apos o primeiro sync
 ```
 
 ### Arquivos Modificados no Último Commit:
 - `.ai/PROJECT_INDEX.md`
 - `.ai/SESSION_CONTEXT.md`
-- `.ai/specs/SPEC_039_ADMIN_ROLE.md`
 - `dist/app.min.js`
 - `index.html`
-- `js/auth.js`
 - `manager.js`
 - `package.json`
-- `scripts/validate.cjs`
 - `version.json`
 
 ---
@@ -76,6 +73,7 @@ cbf5a3c fix(sync): renderizar jogadores no dropdown de auth apos o primeiro sync
 | `SPEC_037_FORCE_GLOBAL_TOKEN.md` | — |
 | `SPEC_038_HOT_RELOAD.md` | — |
 | `SPEC_039_ADMIN_ROLE.md` | — |
+| `SPEC_040_INDIVIDUAL_RESET.md` | — |
 
 
 ---
@@ -108,12 +106,12 @@ cbf5a3c fix(sync): renderizar jogadores no dropdown de auth apos o primeiro sync
 
 | Arquivo de Contexto | Caracteres | Tokens Estimados |
 |---|---|---|
-| `SESSION_CONTEXT.md` | 5216 | ~1304 tks |
+| `SESSION_CONTEXT.md` | 5198 | ~1300 tks |
 | `PROJECT_INDEX.md` | 4627 | ~1157 tks |
 | `DECISION_LOG.md` | 4744 | ~1186 tks |
 | `ARCHITECTURE.md` | 7650 | ~1913 tks |
 | `agent_personas.md` | 5129 | ~1282 tks |
-| **TOTAL BASE RAG** | **27366** | **~6842 tks** |
+| **TOTAL BASE RAG** | **27348** | **~6837 tks** |
 
 *(Nota: O GPT-4 / Gemini-1.5 suportam 128k-1M+ tokens. Um RAG base ideal consome < 5.000 tokens).*
 

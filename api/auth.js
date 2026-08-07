@@ -191,7 +191,26 @@ export default async function handler(req, res) {
       return res.status(200).json({ valid: true, user: verified });
     }
 
-    // ── ACTION 4: RESET ALL ACCOUNTS ─────────────────────────────────────────
+    // ── ACTION 4: RESET SINGLE ACCOUNT ───────────────────────────────────────
+    if (req.method === 'POST' && action === 'reset_single') {
+      const { playerName } = req.body || {};
+      if (!playerName) return res.status(400).json({error: 'Nome do jogador não informado.'});
+      if (redis) {
+        try {
+          const nameKey = `player_claim_${playerName.toLowerCase().trim()}`;
+          const email = await redis.get(nameKey);
+          if (email) {
+            await redis.del(`user_${email.toLowerCase().trim()}`);
+            await redis.sRem('users_list', email);
+          }
+          await redis.del(nameKey);
+          await redis.sRem('claimed_players', playerName.trim());
+        } catch(e) { console.warn('Single reset error', e); }
+      }
+      return res.status(200).json({ success: true, message: `Conta de ${playerName} resetada com sucesso.` });
+    }
+
+    // ── ACTION 5: RESET ALL ACCOUNTS ─────────────────────────────────────────
     if (req.method === 'POST' && action === 'reset_all') {
       if (redis) {
         try {
