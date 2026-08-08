@@ -2,23 +2,23 @@
 
 > **Gerado automaticamente por `node scripts/update_state.cjs`.**
 > **Leia como PRIMEIRO PASSO em qualquer nova sessão ou conversa.**
-> Gerado em: 2026-08-07T13:17:03.959Z | Commit: `b66946e`
+> Gerado em: 2026-08-08T12:05:10.878Z | Commit: `def7ba6`
 
 ---
 
 ## 🚀 ESTADO ATUAL DO PROJETO
 
-- **Último commit**: `b66946e`
+- **Último commit**: `def7ba6`
 - **Produção**: https://jornadatcgteam.com.br (Vercel auto-deploy)
 - **Repositório**: https://github.com/danilmendesF/jornada-dashboard
 
 ### 5 Commits Mais Recentes:
 ```
+def7ba6 fix(table): extrai e compara os 13 digitos numericos do ID no desempate para garantir ordem cronologica correta
 b66946e fix(table): adiciona campo createdAt nas partidas e usa timestamp completo para ordenar partidas do mesmo dia corretamente
 fafade1 fix(table): corrige desempate de ordenacao extraindo timestamp numerico de IDs alfanumericos
 5816168 fix(table): coluna # agora mostra o ID real da partida em vez de indice posicional invertido
 a61f5a2 fix(ui): eleva z-index do gerenciador acima do header sticky para nao esconder o topo
-2557d39 fix(auth): nuvem agora e fonte da verdade para nomes reservados - corrige cache fantasma apos reset individual
 ```
 
 ### Arquivos Modificados no Último Commit:
@@ -26,9 +26,7 @@ a61f5a2 fix(ui): eleva z-index do gerenciador acima do header sticky para nao es
 - `.ai/SESSION_CONTEXT.md`
 - `dist/app.min.js`
 - `index.html`
-- `jornada_backup_auto_2026-08-07 (1).json`
 - `js/table.js`
-- `manager.js`
 - `package.json`
 - `version.json`
 
@@ -108,12 +106,12 @@ a61f5a2 fix(ui): eleva z-index do gerenciador acima do header sticky para nao es
 
 | Arquivo de Contexto | Caracteres | Tokens Estimados |
 |---|---|---|
-| `SESSION_CONTEXT.md` | 5319 | ~1330 tks |
+| `SESSION_CONTEXT.md` | 5261 | ~1315 tks |
 | `PROJECT_INDEX.md` | 4627 | ~1157 tks |
 | `DECISION_LOG.md` | 4744 | ~1186 tks |
 | `ARCHITECTURE.md` | 7650 | ~1913 tks |
 | `agent_personas.md` | 5129 | ~1282 tks |
-| **TOTAL BASE RAG** | **27469** | **~6867 tks** |
+| **TOTAL BASE RAG** | **27411** | **~6853 tks** |
 
 *(Nota: O GPT-4 / Gemini-1.5 suportam 128k-1M+ tokens. Um RAG base ideal consome < 5.000 tokens).*
 

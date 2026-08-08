@@ -64,11 +64,20 @@ if (fs.existsSync(htmlPath)) {
   
   if (regex.test(html)) {
     html = html.replace(regex, `$1${newVersion}$3`);
-    fs.writeFileSync(htmlPath, html, 'utf8');
-    console.log(`✅ Nova versão (v${newVersion}) injetada com sucesso no index.html!`);
   } else {
     console.error('⚠️ Tag <span id="appVersion"> ou <span id="appVersionAuth"> não encontrada no index.html. Não foi possível injetar a versão.');
   }
+
+  // Cache busting para app.min.js
+  const scriptRegex = /src="dist\/app\.min\.js(\?v=[0-9\.]+)?"/g;
+  html = html.replace(scriptRegex, `src="dist/app.min.js?v=${newVersion}"`);
+
+  // Cache busting para style.min.css
+  const cssRegex = /href="dist\/style\.min\.css(\?v=[0-9\.]+)?"/g;
+  html = html.replace(cssRegex, `href="dist/style.min.css?v=${newVersion}"`);
+
+  fs.writeFileSync(htmlPath, html, 'utf8');
+  console.log(`✅ Nova versão (v${newVersion}) injetada com sucesso no index.html (e cache busting atualizado)!`);
 } else {
   console.error('❌ index.html não encontrado.');
   process.exit(1);

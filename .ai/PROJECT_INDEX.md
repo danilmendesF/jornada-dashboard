@@ -2,7 +2,7 @@
 
 Este índice permite que assistentes de IA localizem instantaneamente arquivos, funções e elementos do DOM sem ler a base de código inteira, reduzindo o uso de tokens em até 95%.
 
-> **Última Atualização**: 2026-08-07T13:17:03.739Z | **Total Módulos js/**: 13 | **Commit**: `b66946e`
+> **Última Atualização**: 2026-08-08T12:05:10.628Z | **Total Módulos js/**: 13 | **Commit**: `def7ba6`
 
 ---
 
