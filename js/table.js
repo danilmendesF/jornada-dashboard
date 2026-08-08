@@ -72,10 +72,13 @@ window.renderTable = function(rows, resetPage = false) {
 
     if (res !== 0) return res * mult;
 
-    // Tie-breaker: use createdAt if available, else extract timestamp from ID (first 13 digits)
-    const tA = a.createdAt || '';
-    const tB = b.createdAt || '';
-    if (tA && tB && tA !== tB) return tB > tA ? 1 : -1;
+    // Tie-breaker: use createdAt se disponível (via Date.parse para precisão numérica)
+    const timeA = a.createdAt ? Date.parse(a.createdAt) : 0;
+    const timeB = b.createdAt ? Date.parse(b.createdAt) : 0;
+    if (timeA && timeB && timeA !== timeB) {
+      return timeB - timeA; // Descending: mais novo (maior timestamp) primeiro
+    }
+
     // Fallback: extract numeric timestamp from ID (Date.now() = 13 digits at start)
     const idNum = (id) => parseInt(String(id || '0').substring(0, 13), 10) || 0;
     return idNum(b.id) - idNum(a.id);
