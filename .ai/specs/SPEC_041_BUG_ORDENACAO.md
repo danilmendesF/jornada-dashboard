@@ -1,7 +1,7 @@
 # SPEC_041: Bug Ordenação de Partidas
 
-## Problema
-O usuário relatou que a ordenação cronológica das partidas no painel não está correta:
+## Status
+- **Status**: 🟢 IMPLEMENTADO
 - A partida mais recente adicionada não aparece no topo.
 - O campo `#` (que é numérico posicional com base no index, e.g., 357, 356) está designando o número maior (#357) para a partida mais antiga do mesmo dia, e colocando ela acima da partida mais nova (#356).
 

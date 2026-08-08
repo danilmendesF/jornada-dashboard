@@ -72,16 +72,20 @@ window.renderTable = function(rows, resetPage = false) {
 
     if (res !== 0) return res * mult;
 
-    // Tie-breaker: use createdAt se disponível (via Date.parse para precisão numérica)
+    // Tie-breaker: utilizar createdAt ou fallback numérico do ID
     const timeA = a.createdAt ? Date.parse(a.createdAt) : 0;
     const timeB = b.createdAt ? Date.parse(b.createdAt) : 0;
+    
+    let tbRes = 0;
     if (timeA && timeB && timeA !== timeB) {
-      return timeB - timeA; // Descending: mais novo (maior timestamp) primeiro
+      tbRes = timeA < timeB ? -1 : 1;
+    } else {
+      const idA = parseInt(String(a.id || '0').substring(0, 13), 10) || 0;
+      const idB = parseInt(String(b.id || '0').substring(0, 13), 10) || 0;
+      tbRes = idA < idB ? -1 : (idA > idB ? 1 : 0);
     }
-
-    // Fallback: extract numeric timestamp from ID (Date.now() = 13 digits at start)
-    const idNum = (id) => parseInt(String(id || '0').substring(0, 13), 10) || 0;
-    return idNum(b.id) - idNum(a.id);
+    
+    return tbRes * mult;
   });
 
   const totalItems = toRender.length;
