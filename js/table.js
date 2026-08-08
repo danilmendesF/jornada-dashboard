@@ -52,18 +52,21 @@ window.renderTable = function(rows, resetPage = false) {
 
   toRender.sort((a, b) => {
     let res = 0;
-    if (column === 'id') {
-      // Sort by createdAt timestamp for reliable ordering
-      const tA = a.createdAt || a.Data || '';
-      const tB = b.createdAt || b.Data || '';
-      res = tA < tB ? -1 : tA > tB ? 1 : 0;
-    } else if (column === 'Resultado') {
+    
+    if (column === 'Resultado') {
       const rank = { 'Vitória': 2, 'Empate': 1, 'Derrota': 0 };
       res = (rank[a.Resultado] ?? 0) - (rank[b.Resultado] ?? 0);
     } else if (column === 'Brick') {
       const bA = typeof isBricked === 'function' && isBricked(a) ? 1 : 0;
       const bB = typeof isBricked === 'function' && isBricked(b) ? 1 : 0;
       res = bA - bB;
+    } else if (column === 'Data' || column === 'id') {
+      // Comparação estrita de data (YYYY-MM-DD)
+      const dA = a.Data || '';
+      const dB = b.Data || '';
+      if (dA !== dB) {
+        res = dA < dB ? -1 : 1;
+      }
     } else {
       const valA = String(a[column] || '');
       const valB = String(b[column] || '');
@@ -72,20 +75,25 @@ window.renderTable = function(rows, resetPage = false) {
 
     if (res !== 0) return res * mult;
 
-    // Tie-breaker: utilizar createdAt ou fallback numérico do ID
-    const timeA = a.createdAt ? Date.parse(a.createdAt) : 0;
-    const timeB = b.createdAt ? Date.parse(b.createdAt) : 0;
-    
-    let tbRes = 0;
-    if (timeA && timeB && timeA !== timeB) {
-      tbRes = timeA < timeB ? -1 : 1;
-    } else {
-      const idA = parseInt(String(a.id || '0').substring(0, 13), 10) || 0;
-      const idB = parseInt(String(b.id || '0').substring(0, 13), 10) || 0;
-      tbRes = idA < idB ? -1 : (idA > idB ? 1 : 0);
+    // Tie-breaker: Se for o mesmo dia (ou coluna diferente empatada)
+    const getTimestamp = (match) => {
+      if (match.createdAt) {
+        const t = Date.parse(match.createdAt);
+        if (!isNaN(t)) return t;
+      }
+      const idStr = String(match.id || '0').substring(0, 13);
+      const idNum = parseInt(idStr, 10);
+      return isNaN(idNum) ? 0 : idNum;
+    };
+
+    const tA = getTimestamp(a);
+    const tB = getTimestamp(b);
+
+    if (tA !== tB) {
+      return (tA < tB ? -1 : 1) * mult;
     }
-    
-    return tbRes * mult;
+
+    return 0;
   });
 
   const totalItems = toRender.length;
