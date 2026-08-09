@@ -144,6 +144,12 @@ window.quickLogMatch = function(resultado) {
   };
 
   const currentManual = typeof loadManual === 'function' ? loadManual() : [];
+
+  if (!matchData.seqId) {
+    matchData.seqId = typeof getNextSeqId === 'function' ? getNextSeqId(currentManual) : (currentManual.length + 1);
+    matchData._displayId = matchData.seqId;
+  }
+
   currentManual.push(matchData);
 
   let mirrorMatch = null;
@@ -151,6 +157,10 @@ window.quickLogMatch = function(resultado) {
     mirrorMatch = buildMirrorMatch(matchData);
     if (mirrorMatch) {
       matchData._mirrorId = mirrorMatch.id;
+      if (!mirrorMatch.seqId) {
+        mirrorMatch.seqId = typeof getNextSeqId === 'function' ? getNextSeqId(currentManual) : (matchData.seqId + 1);
+        mirrorMatch._displayId = mirrorMatch.seqId;
+      }
       currentManual.push(mirrorMatch);
     }
   }

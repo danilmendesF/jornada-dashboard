@@ -21,9 +21,18 @@ window.saveDecks = function(d) {
 };
 
 window.loadManual = function() {
-  try { return JSON.parse(localStorage.getItem(KEY_MATCHES)) || []; } catch(e) { return []; }
+  try {
+    const m = JSON.parse(localStorage.getItem(KEY_MATCHES)) || [];
+    if (Array.isArray(m) && typeof ensureMatchSequence === 'function') {
+      ensureMatchSequence(m);
+    }
+    return m;
+  } catch(e) { return []; }
 };
 window.saveManual = function(m) {
+  if (Array.isArray(m) && typeof ensureMatchSequence === 'function') {
+    ensureMatchSequence(m);
+  }
   safeSetItem(KEY_MATCHES, JSON.stringify(m));
   if (typeof triggerSyncPush === 'function') triggerSyncPush();
 };

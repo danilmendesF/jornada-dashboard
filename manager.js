@@ -1442,6 +1442,10 @@ function saveMatchForm() {
     // --- EDIT mode ---
     const midx = manual.findIndex(m => m.id === editingMatchId);
     if (midx >= 0) {
+      if (manual[midx].seqId) {
+        matchData.seqId = manual[midx].seqId;
+        matchData._displayId = matchData.seqId;
+      }
       manual[midx] = matchData;
     } else {
       const edits = loadEdits();
@@ -1450,11 +1454,19 @@ function saveMatchForm() {
     }
   } else {
     // --- NEW match ---
+    if (!matchData.seqId) {
+      matchData.seqId = typeof getNextSeqId === 'function' ? getNextSeqId(manual) : (manual.length + 1);
+      matchData._displayId = matchData.seqId;
+    }
     manual.push(matchData);
   }
 
   // Sync Mirror Match in manual store
   if (mirrorMatch) {
+    if (!mirrorMatch.seqId) {
+      mirrorMatch.seqId = typeof getNextSeqId === 'function' ? getNextSeqId(manual) : (matchData.seqId + 1);
+      mirrorMatch._displayId = mirrorMatch.seqId;
+    }
     const mIdx = manual.findIndex(m => m.id === mirrorMatch.id || m._mirroredFrom === matchData.id);
     if (mIdx >= 0) manual[mIdx] = mirrorMatch;
     else manual.push(mirrorMatch);
@@ -2085,12 +2097,22 @@ window.quickLogMatch = function(resultado) {
     _manual:        true
   };
 
+  const manual = loadManual();
+
+  if (!matchData.seqId) {
+    matchData.seqId = typeof getNextSeqId === 'function' ? getNextSeqId(manual) : (manual.length + 1);
+    matchData._displayId = matchData.seqId;
+  }
+
   const mirrorMatch = buildMirrorMatch(matchData);
   if (mirrorMatch) {
     matchData._mirrorId = mirrorMatch.id;
+    if (!mirrorMatch.seqId) {
+      mirrorMatch.seqId = typeof getNextSeqId === 'function' ? getNextSeqId(manual) : (matchData.seqId + 1);
+      mirrorMatch._displayId = mirrorMatch.seqId;
+    }
   }
 
-  const manual = loadManual();
   manual.push(matchData);
   if (mirrorMatch) manual.push(mirrorMatch);
   saveManual(manual);

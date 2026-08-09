@@ -44,26 +44,55 @@ function applyDataOverrides(rawData) {
     }
   }
 
-  // Ordenação cronológica absoluta (do passado pro futuro) para auto-incremento real
-  const getTimestamp = (match) => {
-    if (match.createdAt) {
-      const t = Date.parse(match.createdAt);
-      if (!isNaN(t)) return t;
-    }
-    const idStr = String(match.id || '0').substring(0, 13);
-    const idNum = parseInt(idStr, 10);
-    return isNaN(idNum) ? 0 : idNum;
-  };
-
-  baseData.sort((a, b) => getTimestamp(a) - getTimestamp(b));
-
-  // Assina o ID cronológico permanente (#1, #2, ... #360)
-  baseData.forEach((m, idx) => {
-    m._displayId = idx + 1;
-  });
+  // Ensure every match has a valid seqId & _displayId
+  if (typeof ensureMatchSequence === 'function') {
+    ensureMatchSequence(baseData);
+  }
 
   return baseData;
 }
+
+window.getMatchTimestamp = function(match) {
+  if (match.createdAt) {
+    const t = Date.parse(match.createdAt);
+    if (!isNaN(t)) return t;
+  }
+  const idStr = String(match.id || '0').substring(0, 13);
+  const idNum = parseInt(idStr, 10);
+  return isNaN(idNum) ? 0 : idNum;
+};
+
+window.ensureMatchSequence = function(matches) {
+  if (!Array.isArray(matches) || matches.length === 0) return matches;
+
+  const needsSeq = matches.some(m => typeof m.seqId !== 'number' || m.seqId <= 0);
+  if (needsSeq) {
+    // Sort chronologically from past to present to assign sequential integer IDs 1..N
+    matches.sort((a, b) => getMatchTimestamp(a) - getMatchTimestamp(b));
+    matches.forEach((m, idx) => {
+      if (typeof m.seqId !== 'number' || m.seqId <= 0) {
+        m.seqId = idx + 1;
+      }
+      m._displayId = m.seqId;
+    });
+  } else {
+    matches.forEach(m => {
+      m._displayId = m.seqId;
+    });
+  }
+
+  return matches;
+};
+
+window.getNextSeqId = function(list) {
+  const dataset = (Array.isArray(list) && list.length > 0) ? list : (typeof allData !== 'undefined' && Array.isArray(allData) ? allData : []);
+  let maxSeq = 0;
+  dataset.forEach(m => {
+    const s = Number(m.seqId || m._displayId || 0);
+    if (s > maxSeq) maxSeq = s;
+  });
+  return maxSeq + 1;
+};
 
 function initializeData() {
   if (typeof syncAllTeamMirrorMatches === 'function') {

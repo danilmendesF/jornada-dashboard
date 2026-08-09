@@ -75,9 +75,9 @@ window.renderTable = function(rows, resetPage = false) {
 
     if (res !== 0) return res * mult;
 
-    // Tie-breaker: Usar o ID Cronológico Permanente (_displayId)
-    const idA = a._displayId || 0;
-    const idB = b._displayId || 0;
+    // Tie-breaker: Usar o ID Cronológico Sequencial (seqId)
+    const idA = Number(a.seqId || a._displayId || 0);
+    const idB = Number(b.seqId || b._displayId || 0);
 
     if (idA !== idB) {
       return (idA < idB ? -1 : 1) * mult;
@@ -105,7 +105,7 @@ window.renderTable = function(rows, resetPage = false) {
   }
 
   tbody.innerHTML = pagedRows.map((r, i) => {
-    const displayId = r._displayId || r.id || '-';
+    const displayId = r.seqId || r._displayId || r.id || '-';
     const resClass = r.Resultado === 'Vitória' ? 'res-win' : r.Resultado === 'Empate' ? 'res-draw' : 'res-loss';
     const isBrk = typeof isBricked === 'function' ? isBricked(r) : r.Brick === 'Sim';
 
