@@ -8,16 +8,19 @@ const path = require('path');
 
 console.log('🧪 Iniciando Suíte de Testes do seqID Incremental...');
 
-const backupPath = path.join(__dirname, '..', 'jornada_backup_2026-08-09.json');
-if (!fs.existsSync(backupPath)) {
-  console.error('❌ ERRO: Arquivo de backup jornada_backup_2026-08-09.json não encontrado!');
+const backupPath1 = path.join(__dirname, '..', 'jornada_backup_2026-08-09 (1).json');
+const backupPath2 = path.join(__dirname, '..', 'jornada_backup_2026-08-09.json');
+const activeBackupPath = fs.existsSync(backupPath1) ? backupPath1 : backupPath2;
+
+if (!fs.existsSync(activeBackupPath)) {
+  console.error('❌ ERRO: Nenhum arquivo de backup encontrado!');
   process.exit(1);
 }
 
-const backupData = JSON.parse(fs.readFileSync(backupPath, 'utf8'));
+const backupData = JSON.parse(fs.readFileSync(activeBackupPath, 'utf8'));
 let manualMatches = backupData.manualMatches || [];
 
-console.log(`📦 Dados de produção carregados: ${manualMatches.length} partidas.`);
+console.log(`📦 Dados de produção carregados de (${path.basename(activeBackupPath)}): ${manualMatches.length} partidas.`);
 
 // --- Helper Functions to test ---
 const getMatchTimestamp = (match) => {
@@ -32,9 +35,18 @@ const getMatchTimestamp = (match) => {
 
 const ensureMatchSequence = (matches) => {
   if (!Array.isArray(matches) || matches.length === 0) return matches;
-  const needsSeq = matches.some(m => typeof m.seqID !== 'number' || m.seqID <= 0);
-  if (needsSeq) {
-    matches.sort((a, b) => getMatchTimestamp(a) - getMatchTimestamp(b));
+
+  matches.sort((a, b) => getMatchTimestamp(a) - getMatchTimestamp(b));
+
+  let isStrictlySequential = true;
+  for (let i = 0; i < matches.length; i++) {
+    if (matches[i].seqID !== (i + 1)) {
+      isStrictlySequential = false;
+      break;
+    }
+  }
+
+  if (!isStrictlySequential) {
     matches.forEach((m, idx) => {
       m.seqID = idx + 1;
       m.seqId = m.seqID;
@@ -42,11 +54,11 @@ const ensureMatchSequence = (matches) => {
     });
   } else {
     matches.forEach(m => {
-      if (!m.seqID && m.seqId) m.seqID = m.seqId;
       m.seqId = m.seqID;
       m._displayId = m.seqID;
     });
   }
+
   return matches;
 };
 

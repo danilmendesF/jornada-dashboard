@@ -65,10 +65,18 @@ window.getMatchTimestamp = function(match) {
 window.ensureMatchSequence = function(matches) {
   if (!Array.isArray(matches) || matches.length === 0) return matches;
 
-  const needsSeq = matches.some(m => (typeof m.seqID !== 'number' || m.seqID <= 0) && (typeof m.seqId !== 'number' || m.seqId <= 0));
-  if (needsSeq) {
-    // Sort chronologically from past to present to assign sequential integer IDs 1..N
-    matches.sort((a, b) => getMatchTimestamp(a) - getMatchTimestamp(b));
+  // Always sort chronologically from past to present
+  matches.sort((a, b) => getMatchTimestamp(a) - getMatchTimestamp(b));
+
+  let isStrictlySequential = true;
+  for (let i = 0; i < matches.length; i++) {
+    if (matches[i].seqID !== (i + 1)) {
+      isStrictlySequential = false;
+      break;
+    }
+  }
+
+  if (!isStrictlySequential) {
     matches.forEach((m, idx) => {
       m.seqID = idx + 1;
       m.seqId = m.seqID;
@@ -76,7 +84,6 @@ window.ensureMatchSequence = function(matches) {
     });
   } else {
     matches.forEach(m => {
-      if (!m.seqID && m.seqId) m.seqID = m.seqId;
       m.seqId = m.seqID;
       m._displayId = m.seqID;
     });
