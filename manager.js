@@ -1442,9 +1442,11 @@ function saveMatchForm() {
     // --- EDIT mode ---
     const midx = manual.findIndex(m => m.id === editingMatchId);
     if (midx >= 0) {
-      if (manual[midx].seqId) {
-        matchData.seqId = manual[midx].seqId;
-        matchData._displayId = matchData.seqId;
+      const s = manual[midx].seqID || manual[midx].seqId;
+      if (s) {
+        matchData.seqID = s;
+        matchData.seqId = s;
+        matchData._displayId = s;
       }
       manual[midx] = matchData;
     } else {
@@ -1454,18 +1456,20 @@ function saveMatchForm() {
     }
   } else {
     // --- NEW match ---
-    if (!matchData.seqId) {
-      matchData.seqId = typeof getNextSeqId === 'function' ? getNextSeqId(manual) : (manual.length + 1);
-      matchData._displayId = matchData.seqId;
+    if (!matchData.seqID && !matchData.seqId) {
+      matchData.seqID = typeof getNextSeqID === 'function' ? getNextSeqID(manual) : (manual.length + 1);
+      matchData.seqId = matchData.seqID;
+      matchData._displayId = matchData.seqID;
     }
     manual.push(matchData);
   }
 
   // Sync Mirror Match in manual store
   if (mirrorMatch) {
-    if (!mirrorMatch.seqId) {
-      mirrorMatch.seqId = typeof getNextSeqId === 'function' ? getNextSeqId(manual) : (matchData.seqId + 1);
-      mirrorMatch._displayId = mirrorMatch.seqId;
+    if (!mirrorMatch.seqID && !mirrorMatch.seqId) {
+      mirrorMatch.seqID = typeof getNextSeqID === 'function' ? getNextSeqID(manual) : (matchData.seqID + 1);
+      mirrorMatch.seqId = mirrorMatch.seqID;
+      mirrorMatch._displayId = mirrorMatch.seqID;
     }
     const mIdx = manual.findIndex(m => m.id === mirrorMatch.id || m._mirroredFrom === matchData.id);
     if (mIdx >= 0) manual[mIdx] = mirrorMatch;
@@ -2099,17 +2103,19 @@ window.quickLogMatch = function(resultado) {
 
   const manual = loadManual();
 
-  if (!matchData.seqId) {
-    matchData.seqId = typeof getNextSeqId === 'function' ? getNextSeqId(manual) : (manual.length + 1);
-    matchData._displayId = matchData.seqId;
+  if (!matchData.seqID && !matchData.seqId) {
+    matchData.seqID = typeof getNextSeqID === 'function' ? getNextSeqID(manual) : (manual.length + 1);
+    matchData.seqId = matchData.seqID;
+    matchData._displayId = matchData.seqID;
   }
 
   const mirrorMatch = buildMirrorMatch(matchData);
   if (mirrorMatch) {
     matchData._mirrorId = mirrorMatch.id;
-    if (!mirrorMatch.seqId) {
-      mirrorMatch.seqId = typeof getNextSeqId === 'function' ? getNextSeqId(manual) : (matchData.seqId + 1);
-      mirrorMatch._displayId = mirrorMatch.seqId;
+    if (!mirrorMatch.seqID && !mirrorMatch.seqId) {
+      mirrorMatch.seqID = typeof getNextSeqID === 'function' ? getNextSeqID(manual) : (matchData.seqID + 1);
+      mirrorMatch.seqId = mirrorMatch.seqID;
+      mirrorMatch._displayId = mirrorMatch.seqID;
     }
   }
 

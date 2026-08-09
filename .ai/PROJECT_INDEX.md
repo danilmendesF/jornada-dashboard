@@ -2,7 +2,7 @@
 
 Este índice permite que assistentes de IA localizem instantaneamente arquivos, funções e elementos do DOM sem ler a base de código inteira, reduzindo o uso de tokens em até 95%.
 
-> **Última Atualização**: 2026-08-09T13:02:23.706Z | **Total Módulos js/**: 13 | **Commit**: `2781f68`
+> **Última Atualização**: 2026-08-09T22:18:20.207Z | **Total Módulos js/**: 13 | **Commit**: `1b691c0`
 
 ---
 
@@ -18,11 +18,11 @@ Este índice permite que assistentes de IA localizem instantaneamente arquivos, 
 | `js/matchup.js` | 111 | 🟢 OK | `buildMatchupData, showDeckMatchupOverview, renderMatchupMatrix` |
 | `js/md3.js` | 121 | 🟢 OK | `getGameCountFromPlacar, renderMD3GamesUI, _activeMD3GameCount` |
 | `js/mirror.js` | 127 | 🟢 OK | `invertPlacar, buildMirrorMatch, syncAllTeamMirrorMatches` |
-| `js/quicklog.js` | 193 | 🟢 OK | `quickLogPillState, renderQuickLogTouchPills, toggleQuickLogPill, quickLogMatch, filtered...` |
+| `js/quicklog.js` | 195 | 🟢 OK | `quickLogPillState, renderQuickLogTouchPills, toggleQuickLogPill, quickLogMatch, filtered...` |
 | `js/stats.js` | 81 | 🟢 OK | `pct, avg, getMatchDeck, getMatchOppDeck, groupBy...` |
 | `js/storage.js` | 87 | 🟢 OK | `safeSetItem, loadDecks, saveDecks, loadManual, saveManual...` |
 | `js/sync_cloud.js` | 161 | 🟢 OK | `syncStatusState, setSyncStatus, syncStatusState, triggerSyncPush, _syncPushTimer...` |
-| `js/table.js` | 187 | 🟢 OK | `currentPage, tableSortState, changePage, currentPage, sortTableByColumn...` |
+| `js/table.js` | 188 | 🟢 OK | `currentPage, tableSortState, changePage, currentPage, sortTableByColumn...` |
 
 
 ---
@@ -32,7 +32,7 @@ Este índice permite que assistentes de IA localizem instantaneamente arquivos, 
 > ⚠️ NUNCA leia estes arquivos inteiros. Use a linha indicada abaixo para ir diretamente à função.
 
 
-### 📌 `manager.js` — Funções Críticas (3156 linhas total)
+### 📌 `manager.js` — Funções Críticas (3162 linhas total)
 
 | Função | Linha Aprox. |
 |---|---|
@@ -68,40 +68,40 @@ Este índice permite que assistentes de IA localizem instantaneamente arquivos, 
 | `populatePlayerSelects()` | L167 |
 | *(+66 funções adicionais)* | — |
 
-### 📌 `app.js` — Funções Críticas (2463 linhas total)
+### 📌 `app.js` — Funções Críticas (2465 linhas total)
 
 | Função | Linha Aprox. |
 |---|---|
 | `applyDataOverrides()` | L14 |
 | `getMatchTimestamp()` | L55 |
 | `ensureMatchSequence()` | L65 |
-| `getNextSeqId()` | L87 |
-| `initializeData()` | L97 |
-| `pct()` | L144 |
-| `avg()` | L145 |
-| `getMatchDeck()` | L147 |
-| `getMatchOppDeck()` | L153 |
-| `groupBy()` | L159 |
-| `isBricked()` | L168 |
-| `calculateStats()` | L176 |
-| `destroyChart()` | L213 |
-| `makeSearchableSelect()` | L218 |
-| `updateInputFromSelect()` | L243 |
-| `renderOptions()` | L252 |
-| `selectOption()` | L286 |
-| `openDropdown()` | L294 |
-| `closeDropdown()` | L302 |
-| `highlightOption()` | L345 |
-| `initAllSearchableSelects()` | L376 |
-| `populateMultiPlayerFilter()` | L394 |
-| `renderMultiPlayerItems()` | L414 |
-| `updateMultiPlayerBtnText()` | L448 |
-| `initMultiPlayerEvents()` | L465 |
-| `populateMultiDeckFilter()` | L528 |
-| `renderMultiDeckItems()` | L553 |
-| `updateMultiDeckBtnText()` | L585 |
-| `initMultiDeckEvents()` | L602 |
-| `populateFilters()` | L657 |
+| `getNextSeqID()` | L88 |
+| `initializeData()` | L99 |
+| `pct()` | L146 |
+| `avg()` | L147 |
+| `getMatchDeck()` | L149 |
+| `getMatchOppDeck()` | L155 |
+| `groupBy()` | L161 |
+| `isBricked()` | L170 |
+| `calculateStats()` | L178 |
+| `destroyChart()` | L215 |
+| `makeSearchableSelect()` | L220 |
+| `updateInputFromSelect()` | L245 |
+| `renderOptions()` | L254 |
+| `selectOption()` | L288 |
+| `openDropdown()` | L296 |
+| `closeDropdown()` | L304 |
+| `highlightOption()` | L347 |
+| `initAllSearchableSelects()` | L378 |
+| `populateMultiPlayerFilter()` | L396 |
+| `renderMultiPlayerItems()` | L416 |
+| `updateMultiPlayerBtnText()` | L450 |
+| `initMultiPlayerEvents()` | L467 |
+| `populateMultiDeckFilter()` | L530 |
+| `renderMultiDeckItems()` | L555 |
+| `updateMultiDeckBtnText()` | L587 |
+| `initMultiDeckEvents()` | L604 |
+| `populateFilters()` | L659 |
 | *(+40 funções adicionais)* | — |
 
 

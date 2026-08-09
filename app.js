@@ -65,34 +65,36 @@ window.getMatchTimestamp = function(match) {
 window.ensureMatchSequence = function(matches) {
   if (!Array.isArray(matches) || matches.length === 0) return matches;
 
-  const needsSeq = matches.some(m => typeof m.seqId !== 'number' || m.seqId <= 0);
+  const needsSeq = matches.some(m => (typeof m.seqID !== 'number' || m.seqID <= 0) && (typeof m.seqId !== 'number' || m.seqId <= 0));
   if (needsSeq) {
     // Sort chronologically from past to present to assign sequential integer IDs 1..N
     matches.sort((a, b) => getMatchTimestamp(a) - getMatchTimestamp(b));
     matches.forEach((m, idx) => {
-      if (typeof m.seqId !== 'number' || m.seqId <= 0) {
-        m.seqId = idx + 1;
-      }
-      m._displayId = m.seqId;
+      m.seqID = idx + 1;
+      m.seqId = m.seqID;
+      m._displayId = m.seqID;
     });
   } else {
     matches.forEach(m => {
-      m._displayId = m.seqId;
+      if (!m.seqID && m.seqId) m.seqID = m.seqId;
+      m.seqId = m.seqID;
+      m._displayId = m.seqID;
     });
   }
 
   return matches;
 };
 
-window.getNextSeqId = function(list) {
+window.getNextSeqID = function(list) {
   const dataset = (Array.isArray(list) && list.length > 0) ? list : (typeof allData !== 'undefined' && Array.isArray(allData) ? allData : []);
   let maxSeq = 0;
   dataset.forEach(m => {
-    const s = Number(m.seqId || m._displayId || 0);
+    const s = Number(m.seqID || m.seqId || m._displayId || 0);
     if (s > maxSeq) maxSeq = s;
   });
   return maxSeq + 1;
 };
+window.getNextSeqId = window.getNextSeqID;
 
 function initializeData() {
   if (typeof syncAllTeamMirrorMatches === 'function') {

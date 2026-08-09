@@ -2,36 +2,31 @@
 
 > **Gerado automaticamente por `node scripts/update_state.cjs`.**
 > **Leia como PRIMEIRO PASSO em qualquer nova sessão ou conversa.**
-> Gerado em: 2026-08-09T13:02:23.917Z | Commit: `2781f68`
+> Gerado em: 2026-08-09T22:18:20.461Z | Commit: `1b691c0`
 
 ---
 
 ## 🚀 ESTADO ATUAL DO PROJETO
 
-- **Último commit**: `2781f68`
+- **Último commit**: `1b691c0`
 - **Produção**: https://jornadatcgteam.com.br (Vercel auto-deploy)
 - **Repositório**: https://github.com/danilmendesF/jornada-dashboard
 
 ### 5 Commits Mais Recentes:
 ```
+1b691c0 fix(table): separa ordenacao por id da coluna Data e estabelece desempate incondicional por seqId decrescente
 2781f68 fix(table): implementa seqId incremental sequencial fixo persistido em todas as partidas antigas e novas
 00dddf5 fix(table): implementa auto-incremento real (_displayId) preenchendo falhas de ordenacao e numeros de ID retroativos
 095e0b8 fix: ajuste da ordenacao de partidas
 aaddd46 fix: ajuste do bug
-eb5cfe1 fix(table): substitui string localeCompare no desempate por conversao matematica usando Date.parse() para assegurar robustez cross-browser
 ```
 
 ### Arquivos Modificados no Último Commit:
 - `.ai/PROJECT_INDEX.md`
 - `.ai/SESSION_CONTEXT.md`
-- `app.js`
 - `dist/app.min.js`
 - `index.html`
-- `jornada_backup_2026-08-09.json`
-- `js/quicklog.js`
-- `js/storage.js`
 - `js/table.js`
-- `manager.js`
 - `package.json`
 - `version.json`
 
@@ -112,12 +107,12 @@ eb5cfe1 fix(table): substitui string localeCompare no desempate por conversao ma
 
 | Arquivo de Contexto | Caracteres | Tokens Estimados |
 |---|---|---|
-| `SESSION_CONTEXT.md` | 5319 | ~1330 tks |
+| `SESSION_CONTEXT.md` | 5192 | ~1298 tks |
 | `PROJECT_INDEX.md` | 4642 | ~1161 tks |
 | `DECISION_LOG.md` | 4744 | ~1186 tks |
 | `ARCHITECTURE.md` | 7650 | ~1913 tks |
 | `agent_personas.md` | 5129 | ~1282 tks |
-| **TOTAL BASE RAG** | **27484** | **~6871 tks** |
+| **TOTAL BASE RAG** | **27357** | **~6839 tks** |
 
 *(Nota: O GPT-4 / Gemini-1.5 suportam 128k-1M+ tokens. Um RAG base ideal consome < 5.000 tokens).*
 

@@ -2,7 +2,7 @@
 // Match History Table Rendering, Sort & Pagination
 
 window.currentPage = 1;
-window.tableSortState = { column: 'Data', dir: 'desc' };
+window.tableSortState = { column: 'seqID', dir: 'desc' };
 
 window.changePage = function(page) {
   window.currentPage = page;
@@ -17,7 +17,7 @@ window.sortTableByColumn = function(colKey) {
     window.tableSortState.dir = window.tableSortState.dir === 'asc' ? 'desc' : 'asc';
   } else {
     window.tableSortState.column = colKey;
-    window.tableSortState.dir = (colKey === 'id' || colKey === 'Data' || colKey === 'Placar') ? 'desc' : 'asc';
+    window.tableSortState.dir = (colKey === 'seqID' || colKey === 'seqId' || colKey === 'id' || colKey === 'Data' || colKey === 'Placar') ? 'desc' : 'asc';
   }
   if (typeof renderTable === 'function' && Array.isArray(window.filtered)) {
     renderTable(window.filtered, true);
@@ -42,12 +42,13 @@ window.renderTable = function(rows, resetPage = false) {
       const plc = (r.Placar || '').toLowerCase();
       const loc = (r.Local || '').toLowerCase();
       const col = (r.Colecao || '').toLowerCase();
+      const sid = String(r.seqID || r.seqId || '');
       return p.includes(searchQuery) || d.includes(searchQuery) || da.includes(searchQuery) || 
-             adv.includes(searchQuery) || plc.includes(searchQuery) || loc.includes(searchQuery) || col.includes(searchQuery);
+             adv.includes(searchQuery) || plc.includes(searchQuery) || loc.includes(searchQuery) || col.includes(searchQuery) || sid.includes(searchQuery);
     });
   }
 
-  const { column, dir } = window.tableSortState || { column: 'Data', dir: 'desc' };
+  const { column, dir } = window.tableSortState || { column: 'seqID', dir: 'desc' };
   const mult = dir === 'asc' ? 1 : -1;
 
   toRender.sort((a, b) => {
@@ -60,9 +61,9 @@ window.renderTable = function(rows, resetPage = false) {
       const bA = typeof isBricked === 'function' && isBricked(a) ? 1 : 0;
       const bB = typeof isBricked === 'function' && isBricked(b) ? 1 : 0;
       res = bA - bB;
-    } else if (column === 'id') {
-      const idA = Number(a.seqId || a._displayId || 0);
-      const idB = Number(b.seqId || b._displayId || 0);
+    } else if (column === 'seqID' || column === 'seqId' || column === 'id') {
+      const idA = Number(a.seqID || a.seqId || a._displayId || 0);
+      const idB = Number(b.seqID || b.seqId || b._displayId || 0);
       res = idA - idB;
     } else if (column === 'Data') {
       // Comparação estrita de data (YYYY-MM-DD)
@@ -79,9 +80,9 @@ window.renderTable = function(rows, resetPage = false) {
 
     if (res !== 0) return res * mult;
 
-    // Tie-breaker incondicional: partida mais recente (maior seqId) no topo
-    const idA = Number(a.seqId || a._displayId || 0);
-    const idB = Number(b.seqId || b._displayId || 0);
+    // Tie-breaker incondicional por seqID decrescente
+    const idA = Number(a.seqID || a.seqId || a._displayId || 0);
+    const idB = Number(b.seqID || b.seqId || b._displayId || 0);
     return idB - idA;
   });
 
@@ -104,7 +105,7 @@ window.renderTable = function(rows, resetPage = false) {
   }
 
   tbody.innerHTML = pagedRows.map((r, i) => {
-    const displayId = r.seqId || r._displayId || r.id || '-';
+    const displayId = r.seqID || r.seqId || r._displayId || r.id || '-';
     const resClass = r.Resultado === 'Vitória' ? 'res-win' : r.Resultado === 'Empate' ? 'res-draw' : 'res-loss';
     const isBrk = typeof isBricked === 'function' ? isBricked(r) : r.Brick === 'Sim';
 

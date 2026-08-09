@@ -145,9 +145,10 @@ window.quickLogMatch = function(resultado) {
 
   const currentManual = typeof loadManual === 'function' ? loadManual() : [];
 
-  if (!matchData.seqId) {
-    matchData.seqId = typeof getNextSeqId === 'function' ? getNextSeqId(currentManual) : (currentManual.length + 1);
-    matchData._displayId = matchData.seqId;
+  if (!matchData.seqID && !matchData.seqId) {
+    matchData.seqID = typeof getNextSeqID === 'function' ? getNextSeqID(currentManual) : (currentManual.length + 1);
+    matchData.seqId = matchData.seqID;
+    matchData._displayId = matchData.seqID;
   }
 
   currentManual.push(matchData);
@@ -157,9 +158,10 @@ window.quickLogMatch = function(resultado) {
     mirrorMatch = buildMirrorMatch(matchData);
     if (mirrorMatch) {
       matchData._mirrorId = mirrorMatch.id;
-      if (!mirrorMatch.seqId) {
-        mirrorMatch.seqId = typeof getNextSeqId === 'function' ? getNextSeqId(currentManual) : (matchData.seqId + 1);
-        mirrorMatch._displayId = mirrorMatch.seqId;
+      if (!mirrorMatch.seqID && !mirrorMatch.seqId) {
+        mirrorMatch.seqID = typeof getNextSeqID === 'function' ? getNextSeqID(currentManual) : (matchData.seqID + 1);
+        mirrorMatch.seqId = mirrorMatch.seqID;
+        mirrorMatch._displayId = mirrorMatch.seqID;
       }
       currentManual.push(mirrorMatch);
     }
