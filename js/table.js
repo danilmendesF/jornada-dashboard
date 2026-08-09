@@ -60,7 +60,11 @@ window.renderTable = function(rows, resetPage = false) {
       const bA = typeof isBricked === 'function' && isBricked(a) ? 1 : 0;
       const bB = typeof isBricked === 'function' && isBricked(b) ? 1 : 0;
       res = bA - bB;
-    } else if (column === 'Data' || column === 'id') {
+    } else if (column === 'id') {
+      const idA = Number(a.seqId || a._displayId || 0);
+      const idB = Number(b.seqId || b._displayId || 0);
+      res = idA - idB;
+    } else if (column === 'Data') {
       // Comparação estrita de data (YYYY-MM-DD)
       const dA = a.Data || '';
       const dB = b.Data || '';
@@ -75,15 +79,10 @@ window.renderTable = function(rows, resetPage = false) {
 
     if (res !== 0) return res * mult;
 
-    // Tie-breaker: Usar o ID Cronológico Sequencial (seqId)
+    // Tie-breaker incondicional: partida mais recente (maior seqId) no topo
     const idA = Number(a.seqId || a._displayId || 0);
     const idB = Number(b.seqId || b._displayId || 0);
-
-    if (idA !== idB) {
-      return (idA < idB ? -1 : 1) * mult;
-    }
-
-    return 0;
+    return idB - idA;
   });
 
   const totalItems = toRender.length;

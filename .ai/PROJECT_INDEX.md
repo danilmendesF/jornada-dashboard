@@ -2,7 +2,7 @@
 
 Este índice permite que assistentes de IA localizem instantaneamente arquivos, funções e elementos do DOM sem ler a base de código inteira, reduzindo o uso de tokens em até 95%.
 
-> **Última Atualização**: 2026-08-09T12:16:58.145Z | **Total Módulos js/**: 13 | **Commit**: `00dddf5`
+> **Última Atualização**: 2026-08-09T13:02:23.706Z | **Total Módulos js/**: 13 | **Commit**: `2781f68`
 
 ---
 
@@ -22,7 +22,7 @@ Este índice permite que assistentes de IA localizem instantaneamente arquivos, 
 | `js/stats.js` | 81 | 🟢 OK | `pct, avg, getMatchDeck, getMatchOppDeck, groupBy...` |
 | `js/storage.js` | 87 | 🟢 OK | `safeSetItem, loadDecks, saveDecks, loadManual, saveManual...` |
 | `js/sync_cloud.js` | 161 | 🟢 OK | `syncStatusState, setSyncStatus, syncStatusState, triggerSyncPush, _syncPushTimer...` |
-| `js/table.js` | 188 | 🟢 OK | `currentPage, tableSortState, changePage, currentPage, sortTableByColumn...` |
+| `js/table.js` | 187 | 🟢 OK | `currentPage, tableSortState, changePage, currentPage, sortTableByColumn...` |
 
 
 ---
