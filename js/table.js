@@ -75,22 +75,12 @@ window.renderTable = function(rows, resetPage = false) {
 
     if (res !== 0) return res * mult;
 
-    // Tie-breaker: Se for o mesmo dia (ou coluna diferente empatada)
-    const getTimestamp = (match) => {
-      if (match.createdAt) {
-        const t = Date.parse(match.createdAt);
-        if (!isNaN(t)) return t;
-      }
-      const idStr = String(match.id || '0').substring(0, 13);
-      const idNum = parseInt(idStr, 10);
-      return isNaN(idNum) ? 0 : idNum;
-    };
+    // Tie-breaker: Usar o ID Cronológico Permanente (_displayId)
+    const idA = a._displayId || 0;
+    const idB = b._displayId || 0;
 
-    const tA = getTimestamp(a);
-    const tB = getTimestamp(b);
-
-    if (tA !== tB) {
-      return (tA < tB ? -1 : 1) * mult;
+    if (idA !== idB) {
+      return (idA < idB ? -1 : 1) * mult;
     }
 
     return 0;
@@ -115,7 +105,7 @@ window.renderTable = function(rows, resetPage = false) {
   }
 
   tbody.innerHTML = pagedRows.map((r, i) => {
-    const idxDisplay = totalItems - (startIdx + i);
+    const displayId = r._displayId || r.id || '-';
     const resClass = r.Resultado === 'Vitória' ? 'res-win' : r.Resultado === 'Empate' ? 'res-draw' : 'res-loss';
     const isBrk = typeof isBricked === 'function' ? isBricked(r) : r.Brick === 'Sim';
 
@@ -125,7 +115,7 @@ window.renderTable = function(rows, resetPage = false) {
 
     return `
       <tr>
-        <td style="font-weight:700; color:var(--accent2);">${r.id || idxDisplay}</td>
+        <td style="font-weight:700; color:var(--accent2);">${displayId}</td>
         <td>${r.Data || '—'}</td>
         <td style="font-weight:600;">${r.Player || '—'}</td>
         <td style="color:var(--text);">${r.Deck || '—'}</td>

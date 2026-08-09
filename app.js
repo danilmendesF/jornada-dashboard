@@ -44,6 +44,24 @@ function applyDataOverrides(rawData) {
     }
   }
 
+  // Ordenação cronológica absoluta (do passado pro futuro) para auto-incremento real
+  const getTimestamp = (match) => {
+    if (match.createdAt) {
+      const t = Date.parse(match.createdAt);
+      if (!isNaN(t)) return t;
+    }
+    const idStr = String(match.id || '0').substring(0, 13);
+    const idNum = parseInt(idStr, 10);
+    return isNaN(idNum) ? 0 : idNum;
+  };
+
+  baseData.sort((a, b) => getTimestamp(a) - getTimestamp(b));
+
+  // Assina o ID cronológico permanente (#1, #2, ... #360)
+  baseData.forEach((m, idx) => {
+    m._displayId = idx + 1;
+  });
+
   return baseData;
 }
 
