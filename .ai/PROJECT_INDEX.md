@@ -2,7 +2,7 @@
 
 Este índice permite que assistentes de IA localizem instantaneamente arquivos, funções e elementos do DOM sem ler a base de código inteira, reduzindo o uso de tokens em até 95%.
 
-> **Última Atualização**: 2026-08-09T22:46:50.511Z | **Total Módulos js/**: 13 | **Commit**: `5bbeb2e`
+> **Última Atualização**: 2026-08-09T22:57:40.192Z | **Total Módulos js/**: 13 | **Commit**: `e9adf3f`
 
 ---
 
@@ -21,7 +21,7 @@ Este índice permite que assistentes de IA localizem instantaneamente arquivos, 
 | `js/quicklog.js` | 195 | 🟢 OK | `quickLogPillState, renderQuickLogTouchPills, toggleQuickLogPill, quickLogMatch, filtered...` |
 | `js/stats.js` | 81 | 🟢 OK | `pct, avg, getMatchDeck, getMatchOppDeck, groupBy...` |
 | `js/storage.js` | 87 | 🟢 OK | `safeSetItem, loadDecks, saveDecks, loadManual, saveManual...` |
-| `js/sync_cloud.js` | 161 | 🟢 OK | `syncStatusState, setSyncStatus, syncStatusState, triggerSyncPush, _syncPushTimer...` |
+| `js/sync_cloud.js` | 170 | 🟢 OK | `syncStatusState, setSyncStatus, syncStatusState, triggerSyncPush, _syncPushTimer...` |
 | `js/table.js` | 188 | 🟢 OK | `currentPage, tableSortState, changePage, currentPage, sortTableByColumn...` |
 
 
@@ -68,40 +68,40 @@ Este índice permite que assistentes de IA localizem instantaneamente arquivos, 
 | `populatePlayerSelects()` | L167 |
 | *(+66 funções adicionais)* | — |
 
-### 📌 `app.js` — Funções Críticas (2490 linhas total)
+### 📌 `app.js` — Funções Críticas (2482 linhas total)
 
 | Função | Linha Aprox. |
 |---|---|
 | `applyDataOverrides()` | L14 |
 | `getMatchTimestamp()` | L55 |
 | `ensureMatchSequence()` | L83 |
-| `getNextSeqID()` | L113 |
-| `initializeData()` | L124 |
-| `pct()` | L171 |
-| `avg()` | L172 |
-| `getMatchDeck()` | L174 |
-| `getMatchOppDeck()` | L180 |
-| `groupBy()` | L186 |
-| `isBricked()` | L195 |
-| `calculateStats()` | L203 |
-| `destroyChart()` | L240 |
-| `makeSearchableSelect()` | L245 |
-| `updateInputFromSelect()` | L270 |
-| `renderOptions()` | L279 |
-| `selectOption()` | L313 |
-| `openDropdown()` | L321 |
-| `closeDropdown()` | L329 |
-| `highlightOption()` | L372 |
-| `initAllSearchableSelects()` | L403 |
-| `populateMultiPlayerFilter()` | L421 |
-| `renderMultiPlayerItems()` | L441 |
-| `updateMultiPlayerBtnText()` | L475 |
-| `initMultiPlayerEvents()` | L492 |
-| `populateMultiDeckFilter()` | L555 |
-| `renderMultiDeckItems()` | L580 |
-| `updateMultiDeckBtnText()` | L612 |
-| `initMultiDeckEvents()` | L629 |
-| `populateFilters()` | L684 |
+| `getNextSeqID()` | L99 |
+| `initializeData()` | L113 |
+| `pct()` | L163 |
+| `avg()` | L164 |
+| `getMatchDeck()` | L166 |
+| `getMatchOppDeck()` | L172 |
+| `groupBy()` | L178 |
+| `isBricked()` | L187 |
+| `calculateStats()` | L195 |
+| `destroyChart()` | L232 |
+| `makeSearchableSelect()` | L237 |
+| `updateInputFromSelect()` | L262 |
+| `renderOptions()` | L271 |
+| `selectOption()` | L305 |
+| `openDropdown()` | L313 |
+| `closeDropdown()` | L321 |
+| `highlightOption()` | L364 |
+| `initAllSearchableSelects()` | L395 |
+| `populateMultiPlayerFilter()` | L413 |
+| `renderMultiPlayerItems()` | L433 |
+| `updateMultiPlayerBtnText()` | L467 |
+| `initMultiPlayerEvents()` | L484 |
+| `populateMultiDeckFilter()` | L547 |
+| `renderMultiDeckItems()` | L572 |
+| `updateMultiDeckBtnText()` | L604 |
+| `initMultiDeckEvents()` | L621 |
+| `populateFilters()` | L676 |
 | *(+40 funções adicionais)* | — |
 
 

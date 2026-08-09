@@ -83,35 +83,24 @@ window.getMatchTimestamp = function(match) {
 window.ensureMatchSequence = function(matches) {
   if (!Array.isArray(matches) || matches.length === 0) return matches;
 
-  // Always sort chronologically from past to present
+  // Unconditionally sort chronologically from past to present
   matches.sort((a, b) => getMatchTimestamp(a) - getMatchTimestamp(b));
 
-  let isStrictlySequential = true;
-  for (let i = 0; i < matches.length; i++) {
-    if (matches[i].seqID !== (i + 1)) {
-      isStrictlySequential = false;
-      break;
-    }
-  }
-
-  if (!isStrictlySequential) {
-    matches.forEach((m, idx) => {
-      m.seqID = idx + 1;
-      m.seqId = m.seqID;
-      m._displayId = m.seqID;
-    });
-  } else {
-    matches.forEach(m => {
-      m.seqId = m.seqID;
-      m._displayId = m.seqID;
-    });
-  }
+  // Unconditionally re-index 1..N
+  matches.forEach((m, idx) => {
+    m.seqID = idx + 1;
+    m.seqId = m.seqID;
+    m._displayId = m.seqID;
+  });
 
   return matches;
 };
 
 window.getNextSeqID = function(list) {
   const dataset = (Array.isArray(list) && list.length > 0) ? list : (typeof allData !== 'undefined' && Array.isArray(allData) ? allData : []);
+  if (dataset.length > 0) {
+    ensureMatchSequence(dataset);
+  }
   let maxSeq = 0;
   dataset.forEach(m => {
     const s = Number(m.seqID || m.seqId || m._displayId || 0);
@@ -127,6 +116,9 @@ function initializeData() {
   }
   const manual = (typeof loadManual === 'function') ? loadManual() : [];
   allData = applyDataOverrides(manual);
+  if (typeof saveManual === 'function' && Array.isArray(allData) && allData.length > 0) {
+    saveManual(allData);
+  }
   filtered = [...allData];
   if (typeof initAuthSession === 'function') {
     initAuthSession();

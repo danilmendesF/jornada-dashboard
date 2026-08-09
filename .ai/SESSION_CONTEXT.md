@@ -2,23 +2,23 @@
 
 > **Gerado automaticamente por `node scripts/update_state.cjs`.**
 > **Leia como PRIMEIRO PASSO em qualquer nova sessão ou conversa.**
-> Gerado em: 2026-08-09T22:46:50.737Z | Commit: `5bbeb2e`
+> Gerado em: 2026-08-09T22:57:40.412Z | Commit: `e9adf3f`
 
 ---
 
 ## 🚀 ESTADO ATUAL DO PROJETO
 
-- **Último commit**: `5bbeb2e`
+- **Último commit**: `e9adf3f`
 - **Produção**: https://jornadatcgteam.com.br (Vercel auto-deploy)
 - **Repositório**: https://github.com/danilmendesF/jornada-dashboard
 
 ### 5 Commits Mais Recentes:
 ```
+e9adf3f fix(table): implementa getMatchTimestamp em 3 camadas prevenindo erro de data ano 1970 para IDs curtos v1.0.39
 5bbeb2e fix(table): forca re-sequenciamento cronologico absoluto do seqID v1.0.38 e limpa IDs corrompidos
 de073d5 fix(table): implementa seqID incremental numérico estrito, ordenação primária por seqID e suíte de validação automatizada
 1b691c0 fix(table): separa ordenacao por id da coluna Data e estabelece desempate incondicional por seqId decrescente
 2781f68 fix(table): implementa seqId incremental sequencial fixo persistido em todas as partidas antigas e novas
-00dddf5 fix(table): implementa auto-incremento real (_displayId) preenchendo falhas de ordenacao e numeros de ID retroativos
 ```
 
 ### Arquivos Modificados no Último Commit:
@@ -27,7 +27,6 @@ de073d5 fix(table): implementa seqID incremental numérico estrito, ordenação 
 - `app.js`
 - `dist/app.min.js`
 - `index.html`
-- `jornada_backup_2026-08-09 (1).json`
 - `package.json`
 - `scripts/validate_seqID.cjs`
 - `version.json`
@@ -109,12 +108,12 @@ de073d5 fix(table): implementa seqID incremental numérico estrito, ordenação 
 
 | Arquivo de Contexto | Caracteres | Tokens Estimados |
 |---|---|---|
-| `SESSION_CONTEXT.md` | 5421 | ~1355 tks |
-| `PROJECT_INDEX.md` | 4644 | ~1161 tks |
+| `SESSION_CONTEXT.md` | 5376 | ~1344 tks |
+| `PROJECT_INDEX.md` | 4643 | ~1161 tks |
 | `DECISION_LOG.md` | 4744 | ~1186 tks |
 | `ARCHITECTURE.md` | 7650 | ~1913 tks |
 | `agent_personas.md` | 5129 | ~1282 tks |
-| **TOTAL BASE RAG** | **27588** | **~6897 tks** |
+| **TOTAL BASE RAG** | **27542** | **~6886 tks** |
 
 *(Nota: O GPT-4 / Gemini-1.5 suportam 128k-1M+ tokens. Um RAG base ideal consome < 5.000 tokens).*
 

@@ -92,8 +92,11 @@ window.pushToCloud = async function() {
 
   setSyncStatus('syncing', 'Enviando dados para a nuvem…');
 
+  const manual = typeof loadManual === 'function' ? loadManual() : [];
+  if (typeof ensureMatchSequence === 'function') ensureMatchSequence(manual);
+
   const payload = {
-    manualMatches: typeof loadManual === 'function' ? loadManual() : [],
+    manualMatches: manual,
     decks: typeof loadDecks === 'function' ? loadDecks() : [],
     players: typeof loadPlayers === 'function' ? loadPlayers() : [],
     edits: typeof loadEdits === 'function' ? loadEdits() : {},
@@ -119,8 +122,11 @@ window.pushToCloud = async function() {
 };
 
 window.exportBackup = function() {
+  const manual = typeof loadManual === 'function' ? loadManual() : [];
+  if (typeof ensureMatchSequence === 'function') ensureMatchSequence(manual);
+
   const data = {
-    manualMatches: typeof loadManual === 'function' ? loadManual() : [],
+    manualMatches: manual,
     decks: typeof loadDecks === 'function' ? loadDecks() : [],
     players: typeof loadPlayers === 'function' ? loadPlayers() : [],
     locais: typeof loadLocais === 'function' ? loadLocais() : [],
@@ -140,9 +146,12 @@ window.exportBackup = function() {
 window.importBackup = function(file) {
   if (!file) return;
   const reader = new FileReader();
-  reader.onload = (e) => {
+  reader.onload = function(e) {
     try {
       const data = JSON.parse(e.target.result);
+      if (Array.isArray(data.manualMatches) && typeof ensureMatchSequence === 'function') {
+        ensureMatchSequence(data.manualMatches);
+      }
       if (data.manualMatches && typeof saveManual === 'function') saveManual(data.manualMatches);
       if (data.decks && typeof saveDecks === 'function') saveDecks(data.decks);
       if (data.players && typeof savePlayers === 'function') savePlayers(data.players);
