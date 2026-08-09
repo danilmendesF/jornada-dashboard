@@ -53,13 +53,31 @@ function applyDataOverrides(rawData) {
 }
 
 window.getMatchTimestamp = function(match) {
+  if (!match) return 0;
+
+  // Layer 1: ISO createdAt timestamp (> Year 2001 threshold 1000000000000)
   if (match.createdAt) {
     const t = Date.parse(match.createdAt);
-    if (!isNaN(t)) return t;
+    if (!isNaN(t) && t > 1000000000000) return t;
   }
-  const idStr = String(match.id || '0').substring(0, 13);
-  const idNum = parseInt(idStr, 10);
-  return isNaN(idNum) ? 0 : idNum;
+
+  // Layer 2: Extract 13-digit epoch timestamp from match.id (> Year 2001 threshold)
+  if (match.id) {
+    const idStr = String(match.id).substring(0, 13);
+    const idNum = parseInt(idStr, 10);
+    if (!isNaN(idNum) && idNum > 1000000000000) return idNum;
+  }
+
+  // Layer 3: Fallback parsing match.Data ('YYYY-MM-DD')
+  if (match.Data) {
+    const dateParsed = Date.parse(match.Data + 'T12:00:00Z');
+    if (!isNaN(dateParsed) && dateParsed > 1000000000000) {
+      const subId = parseInt(String(match.seqID || match.seqId || match.id || '0').replace(/\D/g, ''), 10) || 0;
+      return dateParsed + (subId % 86400000);
+    }
+  }
+
+  return 0;
 };
 
 window.ensureMatchSequence = function(matches) {

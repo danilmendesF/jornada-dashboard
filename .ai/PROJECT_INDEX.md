@@ -2,7 +2,7 @@
 
 Este índice permite que assistentes de IA localizem instantaneamente arquivos, funções e elementos do DOM sem ler a base de código inteira, reduzindo o uso de tokens em até 95%.
 
-> **Última Atualização**: 2026-08-09T22:39:03.086Z | **Total Módulos js/**: 13 | **Commit**: `de073d5`
+> **Última Atualização**: 2026-08-09T22:46:50.511Z | **Total Módulos js/**: 13 | **Commit**: `5bbeb2e`
 
 ---
 
@@ -68,40 +68,40 @@ Este índice permite que assistentes de IA localizem instantaneamente arquivos, 
 | `populatePlayerSelects()` | L167 |
 | *(+66 funções adicionais)* | — |
 
-### 📌 `app.js` — Funções Críticas (2472 linhas total)
+### 📌 `app.js` — Funções Críticas (2490 linhas total)
 
 | Função | Linha Aprox. |
 |---|---|
 | `applyDataOverrides()` | L14 |
 | `getMatchTimestamp()` | L55 |
-| `ensureMatchSequence()` | L65 |
-| `getNextSeqID()` | L95 |
-| `initializeData()` | L106 |
-| `pct()` | L153 |
-| `avg()` | L154 |
-| `getMatchDeck()` | L156 |
-| `getMatchOppDeck()` | L162 |
-| `groupBy()` | L168 |
-| `isBricked()` | L177 |
-| `calculateStats()` | L185 |
-| `destroyChart()` | L222 |
-| `makeSearchableSelect()` | L227 |
-| `updateInputFromSelect()` | L252 |
-| `renderOptions()` | L261 |
-| `selectOption()` | L295 |
-| `openDropdown()` | L303 |
-| `closeDropdown()` | L311 |
-| `highlightOption()` | L354 |
-| `initAllSearchableSelects()` | L385 |
-| `populateMultiPlayerFilter()` | L403 |
-| `renderMultiPlayerItems()` | L423 |
-| `updateMultiPlayerBtnText()` | L457 |
-| `initMultiPlayerEvents()` | L474 |
-| `populateMultiDeckFilter()` | L537 |
-| `renderMultiDeckItems()` | L562 |
-| `updateMultiDeckBtnText()` | L594 |
-| `initMultiDeckEvents()` | L611 |
-| `populateFilters()` | L666 |
+| `ensureMatchSequence()` | L83 |
+| `getNextSeqID()` | L113 |
+| `initializeData()` | L124 |
+| `pct()` | L171 |
+| `avg()` | L172 |
+| `getMatchDeck()` | L174 |
+| `getMatchOppDeck()` | L180 |
+| `groupBy()` | L186 |
+| `isBricked()` | L195 |
+| `calculateStats()` | L203 |
+| `destroyChart()` | L240 |
+| `makeSearchableSelect()` | L245 |
+| `updateInputFromSelect()` | L270 |
+| `renderOptions()` | L279 |
+| `selectOption()` | L313 |
+| `openDropdown()` | L321 |
+| `closeDropdown()` | L329 |
+| `highlightOption()` | L372 |
+| `initAllSearchableSelects()` | L403 |
+| `populateMultiPlayerFilter()` | L421 |
+| `renderMultiPlayerItems()` | L441 |
+| `updateMultiPlayerBtnText()` | L475 |
+| `initMultiPlayerEvents()` | L492 |
+| `populateMultiDeckFilter()` | L555 |
+| `renderMultiDeckItems()` | L580 |
+| `updateMultiDeckBtnText()` | L612 |
+| `initMultiDeckEvents()` | L629 |
+| `populateFilters()` | L684 |
 | *(+40 funções adicionais)* | — |
 
 

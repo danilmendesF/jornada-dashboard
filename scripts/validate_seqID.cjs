@@ -24,13 +24,24 @@ console.log(`📦 Dados de produção carregados de (${path.basename(activeBacku
 
 // --- Helper Functions to test ---
 const getMatchTimestamp = (match) => {
+  if (!match) return 0;
   if (match.createdAt) {
     const t = Date.parse(match.createdAt);
-    if (!isNaN(t)) return t;
+    if (!isNaN(t) && t > 1000000000000) return t;
   }
-  const idStr = String(match.id || '0').substring(0, 13);
-  const idNum = parseInt(idStr, 10);
-  return isNaN(idNum) ? 0 : idNum;
+  if (match.id) {
+    const idStr = String(match.id).substring(0, 13);
+    const idNum = parseInt(idStr, 10);
+    if (!isNaN(idNum) && idNum > 1000000000000) return idNum;
+  }
+  if (match.Data) {
+    const dateParsed = Date.parse(match.Data + 'T12:00:00Z');
+    if (!isNaN(dateParsed) && dateParsed > 1000000000000) {
+      const subId = parseInt(String(match.seqID || match.seqId || match.id || '0').replace(/\D/g, ''), 10) || 0;
+      return dateParsed + (subId % 86400000);
+    }
+  }
+  return 0;
 };
 
 const ensureMatchSequence = (matches) => {
