@@ -16,7 +16,7 @@ Fornecer uma ferramenta ágil, precisa e visual para jogadores competitivos de P
 - **Backend / API Serverless:** Vercel Serverless Functions (`api/sync.js`, `api/auth.js`, `api/notifyDeck.js`, `api/email.js`) com integração Redis / keyvalue.xyz e autenticação JWT (HMAC-SHA256)
 - **Serviço de E-mail:** Resend API para envio de notificações automatizadas de novos decks cadastrados
 - **Armazenamento:** LocalStorage (Offline-First) + Cloud Sync (`/api/sync`)
-- **Ferramentas de Build e Testes:** Node.js (scripts automatizados em `scripts/`: `build_bundle.cjs`, `bump_version.cjs`, `validate_seqID.cjs`, `validate_auth.cjs`)
+- **Ferramentas de Build e Testes:** Node.js, `vitest` para testes unitários isolados (`/tests`) com `@vitest/coverage-v8`, PurgeCSS para otimização de estilos, scripts automatizados em `scripts/` (`build_bundle.cjs`, `bump_version.cjs`, `validate_seqID.cjs`).
 
 ## Arquitetura e convenções
 
@@ -35,7 +35,8 @@ Fornecer uma ferramenta ágil, precisa e visual para jogadores competitivos de P
   - `mirror.js`: Lógica de espelhamento automático de partidas entre jogadores do mesmo time.
 - `api/`: Serverless Functions no padrão Vercel para autenticação, sincronização e notificações.
 - `dist/`: Artifacts de produção minificados (`app.min.js`, `style.min.css`) gerados automaticamente.
-- `scripts/`: Scripts automatizados para minificação, versão semântica (`version.json`) e validação de integridade.
+- `tests/`: Suítes de testes unitários (`app.test.js`, etc.) escritos com Vitest para garantir integridade matemática, de datas e estatística.
+- `scripts/`: Scripts automatizados para minificação, otimização de bundle, PurgeCSS, versão semântica (`version.json`) e validação de integridade.
 
 ---
 
@@ -85,3 +86,8 @@ Fornecer uma ferramenta ágil, precisa e visual para jogadores competitivos de P
 - **Fallback de Armazenamento Nuvem:** Suporte primário a Redis com fallback automático transparente para keyvalue.xyz.
 - **Notificações por E-mail:** Envio automatizado de e-mail via Resend API quando novos decks são criados.
 - **Auto-Backups:** Geração de snapshots diários automáticos e suporte a exportação/importação manual em formato JSON.
+
+### 7. Qualidade de Código e Testes (QA)
+- **Framework:** `vitest` e `@vitest/coverage-v8`.
+- **Clean Code:** Aplicação otimizada via processos de expurgo dinâmico (`purgecss`) que eliminam classes fantasmas no HTML/CSS, e expurgo de comentários e console logs mortos em tempo de build.
+- **Cobertura Esperada:** É obrigatório manter testes atualizados na pasta `/tests` para funções core (lógicas cronológicas como `getMatchTimestamp`, calculadoras de taxa de vitória e re-indexação absoluta).

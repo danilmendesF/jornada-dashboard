@@ -1,1159 +1,1 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Jornada TCG Team — Dashboard Regional</title>
-  <meta name="description" content="Dashboard de análise de winrate, matchups e performance do Team Jornada TCG para regionais." />
-  <link rel="icon" type="image/png" href="logo.png" />
-  <link rel="apple-touch-icon" href="logo.png" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-  <link rel="stylesheet" href="dist/style.min.css?v=1.0.42" />
-  <script>
-    (function() {
-      try {
-        var token = localStorage.getItem('jornada_auth_token');
-        var user = localStorage.getItem('jornada_user_profile');
-        if (token && user) {
-          document.documentElement.classList.add('auth-session-active');
-        }
-      } catch (e) {}
-    })();
-  </script>
-</head>
-<body>
-
-  <!-- ===== TELA DE LOGIN FULLSCREEN (AUTH WALL) ===== -->
-  <div id="authPageWall" class="auth-wall-container" style="display: flex;">
-    <div class="auth-wall-card">
-      <div class="auth-wall-brand">
-        <img src="logo.png" alt="Jornada TCG Team" class="auth-wall-logo" />
-        <h1 class="auth-wall-title">Jornada Dashboard</h1>
-        <p class="auth-wall-sub">TCG Team &middot; Análise Regional & Matchups</p>
-      </div>
-
-      <!-- Tabs Header -->
-      <div style="display: flex; gap: 0.5rem; margin: 1.2rem 0; border-bottom: 1px solid var(--border);">
-        <button id="tabWallLogin" class="tab-btn active" style="flex: 1; text-align: center; padding: 0.6rem;" onclick="switchAuthTab('login')">🔑 Entrar</button>
-        <button id="tabWallRegister" class="tab-btn" style="flex: 1; text-align: center; padding: 0.6rem;" onclick="switchAuthTab('register')">📝 Cadastrar-se</button>
-      </div>
-
-      <!-- Login Form -->
-      <div id="wallLoginForm" style="display: flex; flex-direction: column; gap: 0.9rem;">
-        <div class="form-group">
-          <label class="form-label">E-mail do Jogador *</label>
-          <input type="email" id="wallLoginEmail" class="form-input" placeholder="seu.email@jornada.com" />
-        </div>
-        <div class="form-group">
-          <label class="form-label">Senha *</label>
-          <div class="password-input-wrap">
-            <input type="password" id="wallLoginPassword" class="form-input" placeholder="••••••••" />
-            <button type="button" class="toggle-password-btn" onclick="togglePasswordVisibility('wallLoginPassword', this)" title="Mostrar / Ocultar Senha">👁️</button>
-          </div>
-        </div>
-        <div id="wallLoginFeedback" class="auth-feedback-msg" style="display:none;"></div>
-        <button id="btnWallLogin" class="save-btn" style="width: 100%; margin-top: 0.5rem; justify-content: center; height: 48px; font-size: 1rem;" onclick="submitWallLogin()">
-          ⚡ Entrar no Painel
-        </button>
-      </div>
-
-      <!-- Register Form -->
-      <div id="wallRegisterForm" style="display: none; flex-direction: column; gap: 0.9rem;">
-        <div class="form-group">
-          <label class="form-label">Vincular Jogador do Time *</label>
-          <select id="wallRegName" class="form-select"></select>
-        </div>
-        <div class="form-group">
-          <label class="form-label">E-mail *</label>
-          <input type="email" id="wallRegEmail" class="form-input" placeholder="seu.email@jornada.com" />
-        </div>
-        <div class="form-group">
-          <label class="form-label">Senha *</label>
-          <div class="password-input-wrap">
-            <input type="password" id="wallRegPassword" class="form-input" placeholder="Mínimo 6 caracteres" oninput="checkPasswordMatch('wall')" />
-            <button type="button" class="toggle-password-btn" onclick="togglePasswordVisibility('wallRegPassword', this)" title="Mostrar / Ocultar Senha">👁️</button>
-          </div>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Confirmar Senha *</label>
-          <div class="password-input-wrap">
-            <input type="password" id="wallRegConfirm" class="form-input" placeholder="Confirme sua senha" oninput="checkPasswordMatch('wall')" />
-            <button type="button" class="toggle-password-btn" onclick="togglePasswordVisibility('wallRegConfirm', this)" title="Mostrar / Ocultar Senha">👁️</button>
-          </div>
-          <div id="wallPasswordMatchHint" class="password-match-hint"></div>
-        </div>
-        <div id="wallRegFeedback" class="auth-feedback-msg" style="display:none;"></div>
-        <button id="btnWallRegister" class="save-btn" style="width: 100%; margin-top: 0.5rem; justify-content: center; height: 48px; font-size: 1rem;" onclick="submitWallRegister()">
-          📝 Finalizar Cadastro
-        </button>
-      </div>
-
-      <div style="text-align: center; margin-top: 1rem; border-top: 1px dashed var(--border); padding-top: 0.8rem;">
-        <div style="margin-top: 0.8rem; font-size: 0.7rem; color: var(--text2); opacity: 0.5; font-family: 'Outfit', sans-serif;">
-          v<span id="appVersionAuth">1.0.42</span>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ===== DASHBOARD CONTAINER (LIBERADO APÓS LOGIN) ===== -->
-  <div id="appDashboardContainer" style="display: none;">
-  <!-- ===== HEADER ===== -->
-  <header class="header">
-    <div class="header-inner">
-      <div class="logo">
-        <div class="logo-icon">
-          <img src="logo.png" alt="Jornada TCG Team" class="logo-img" />
-        </div>
-        <div>
-          <h1 class="logo-title">Jornada Dashboard</h1>
-          <p class="logo-sub">TCG Team &middot; Análise Regional</p>
-        </div>
-      </div>
-      <div class="header-actions">
-        <div id="userProfileBadge"></div>
-
-        <button class="manager-btn" id="btnOpenManager" style="display:none;">&#x1F4CB; Gerenciar</button>
-        <div class="last-update" id="lastUpdate">Aguardando dados…</div>
-      </div>
-    </div>
-  </header>
-
-  <!-- ===== FILTERS ===== -->
-  <section class="filters-bar">
-    <div class="filters-inner">
-      <div class="filter-group">
-        <label class="filter-label">Player (Multi-Seleção)</label>
-        <div class="multi-deck-wrap" id="multiPlayerWrap">
-          <button type="button" class="multi-deck-btn" id="btnMultiPlayerToggle">
-            <span id="multiPlayerBtnText">Todos os Players</span>
-            <span class="multi-deck-arrow">▾</span>
-          </button>
-          <div class="multi-deck-dropdown" id="multiPlayerDropdown">
-            <div class="multi-deck-header">
-              <input type="text" id="multiPlayerSearch" class="multi-deck-search" placeholder="🔍 Buscar player…" />
-              <div class="multi-deck-actions">
-                <button type="button" class="multi-deck-act-btn" id="btnMultiPlayerSelectAll">Marcar Todos</button>
-                <button type="button" class="multi-deck-act-btn" id="btnMultiPlayerClearAll">Desmarcar</button>
-              </div>
-            </div>
-            <div class="multi-deck-list" id="multiPlayerList"></div>
-          </div>
-        </div>
-      </div>
-      <div class="filter-group">
-        <label class="filter-label">Decks (Multi-Seleção)</label>
-        <div class="multi-deck-wrap" id="multiDeckWrap">
-          <button type="button" class="multi-deck-btn" id="btnMultiDeckToggle">
-            <span id="multiDeckBtnText">Todos os Decks</span>
-            <span class="multi-deck-arrow">▾</span>
-          </button>
-          <div class="multi-deck-dropdown" id="multiDeckDropdown">
-            <div class="multi-deck-header">
-              <input type="text" id="multiDeckSearch" class="multi-deck-search" placeholder="🔍 Buscar deck…" />
-              <div class="multi-deck-actions">
-                <button type="button" class="multi-deck-act-btn" id="btnMultiDeckSelectAll">Marcar Todos</button>
-                <button type="button" class="multi-deck-act-btn" id="btnMultiDeckClearAll">Desmarcar</button>
-              </div>
-            </div>
-            <div class="multi-deck-list" id="multiDeckList"></div>
-          </div>
-        </div>
-      </div>
-      <div class="filter-group">
-        <label class="filter-label">Formato</label>
-        <select id="filterFormato" class="filter-select">
-          <option value="">Todos</option>
-        </select>
-      </div>
-      <div class="filter-group">
-        <label class="filter-label">Local</label>
-        <select id="filterLocal" class="filter-select">
-          <option value="">Todos</option>
-        </select>
-      </div>
-      <div class="filter-group">
-        <label class="filter-label">Coleção</label>
-        <select id="filterColecao" class="filter-select"></select>
-      </div>
-      <div class="filter-group">
-        <label class="filter-label">Data Início</label>
-        <input type="date" id="filterDateStart" class="filter-select" style="min-width:135px;" />
-      </div>
-      <div class="filter-group">
-        <label class="filter-label">Data Fim</label>
-        <input type="date" id="filterDateEnd" class="filter-select" style="min-width:135px;" />
-      </div>
-      <div class="filter-group">
-        <label class="filter-label">Confiabilidade</label>
-        <div class="checkbox-group" style="display:flex;gap:0.6rem;align-items:center;padding:0.42rem 0.75rem;background:var(--bg3);border:1px solid var(--glass-bd);border-radius:var(--radius-sm);height:38px;box-sizing:border-box;">
-          <label style="font-size:0.8rem;color:var(--text);display:flex;align-items:center;gap:0.3rem;cursor:pointer;user-select:none;">
-            <input type="checkbox" id="filterConfAlta" value="Alta" checked onchange="applyFilters()" /> 🟢 Alta
-          </label>
-          <label style="font-size:0.8rem;color:var(--text);display:flex;align-items:center;gap:0.3rem;cursor:pointer;user-select:none;">
-            <input type="checkbox" id="filterConfBaixa" value="Baixa" checked onchange="applyFilters()" /> 🔴 Baixa
-          </label>
-        </div>
-      </div>
-      <div style="display:flex;gap:0.5rem;align-items:flex-end">
-        <button class="btn-apply-filters" id="btnApplyFilters" onclick="applyFilters()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg> APLICAR</button>
-        <button class="reset-btn" id="resetFilters" onclick="resetAllFilters()">↺ Limpar</button>
-      </div>
-    </div>
-  </section>
-
-  <!-- ===== MAIN ===== -->
-  <main class="main">
-
-    <!-- ===== QUICK LOG PANEL ===== -->
-    <section class="quick-log-section">
-      <div class="quick-log-card">
-        <div class="quick-log-header">
-          <div style="display:flex;align-items:center;gap:.5rem">
-            <!-- Pokeball SVG icon -->
-            <svg width="22" height="22" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0">
-              <circle cx="16" cy="16" r="15" stroke="var(--accent2)" stroke-width="2" fill="none"/>
-              <path d="M1 16 Q1 16 31 16" stroke="var(--accent2)" stroke-width="2"/>
-              <circle cx="16" cy="16" r="5" fill="var(--bg3)" stroke="var(--accent2)" stroke-width="2"/>
-              <circle cx="16" cy="16" r="2.5" fill="var(--accent2)"/>
-              <path d="M1 14 Q8 4 16 4" stroke="var(--accent)" stroke-width="1.5" fill="none" opacity="0.5"/>
-            </svg>
-            <div>
-              <h3 class="quick-log-title">Registrar Partida</h3>
-              <span class="quick-log-sub">Log rápido — 1 clique por resultado</span>
-            </div>
-          </div>
-          <button class="icon-btn sm" id="btnToggleQuickLog">▼ Recolher</button>
-        </div>
-        <div class="quick-log-body" id="quickLogBody">
-          <!-- Row 1: Players & Decks -->
-          <div class="quick-log-grid-top">
-            <div class="form-group">
-              <label class="form-label">👤 Meu Player *</label>
-              <select id="quickLogPlayer" class="form-input"></select>
-            </div>
-            <div class="form-group">
-              <div style="display:flex; justify-content:space-between; align-items:center;">
-                <label class="form-label">🃏 Meu Deck *</label>
-                <button type="button" class="btn-add-deck" id="btnQuickAddDeckOwn" title="Cadastrar novo deck">+</button>
-              </div>
-              <select id="quickLogDeck" class="form-input">
-                <option value="">Selecione…</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label class="form-label">⚔️ Oponente (ou Jogador do Time)</label>
-              <input list="playerOptionsAdv" id="quickLogAdvName" class="form-input" placeholder="Ex: GuiVaz ou Oponente" autocomplete="off" />
-            </div>
-            <div class="form-group">
-              <div style="display:flex; justify-content:space-between; align-items:center;">
-                <label class="form-label">🃏 Deck Oponente *</label>
-                <button type="button" class="btn-add-deck" id="btnQuickAddDeckAdv" title="Cadastrar novo deck">+</button>
-              </div>
-              <select id="quickLogDeckAdv" class="form-input">
-                <option value="">Selecione…</option>
-              </select>
-            </div>
-          </div>
-
-          <!-- Row 2: Match Parameters -->
-          <div class="quick-log-grid-bottom">
-            <div class="form-group">
-              <label class="form-label">🏆 Formato *</label>
-              <select id="quickLogFormato" class="form-input">
-                <option value="MD1" selected>MD1</option>
-                <option value="MD3">MD3</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label class="form-label">🎲 Start *</label>
-              <select id="quickLogStart" class="form-input">
-                <option value="1º">1º (Saiu Jogando)</option>
-                <option value="2º">2º (Foi Segundo)</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label class="form-label">📦 Coleção *</label>
-              <select id="quickLogColecao" class="form-input">
-                <option value="">Selecione…</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label class="form-label">📍 Local *</label>
-              <select id="quickLogLocal" class="form-input">
-                <option value="">Selecione…</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label class="form-label">🎯 Placar *</label>
-              <select id="quickLogPlacar" class="form-input">
-                <option value="1-0">1-0</option>
-                <option value="0-1">0-1</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label class="form-label">🟢 Confiabilidade</label>
-              <select id="quickLogConfiabilidade" class="form-input">
-                <option value="Alta">🟢 Alta</option>
-                <option value="Baixa">🔴 Baixa</option>
-              </select>
-            </div>
-          </div>
-          <!-- Touch-Optimized Games Strip for Quick Log (MD1 & MD3) -->
-          <div id="quickLogGamesStrip" class="quick-log-games-strip">
-            <div class="strip-header">
-              <span class="strip-title">🎮 Detalhes dos Games <span id="quickLogFormatoLabel" style="color:var(--text2); font-weight:normal;">(MD1)</span></span>
-              <span class="strip-subtitle" id="quickLogGamesHint">Toque nas pílulas para alternar</span>
-            </div>
-            <div id="quickLogGamesPillGrid" class="pill-grid-wrap">
-              <!-- Touch Pills rendered dynamically by JS -->
-            </div>
-          </div>
-
-          <div class="quick-log-actions">
-            <button class="quick-log-btn win" id="btnQuickWin">🏆 VITÓRIA</button>
-            <button class="quick-log-btn draw" id="btnQuickDraw">🤝 EMPATE</button>
-            <button class="quick-log-btn loss" id="btnQuickLoss">❌ DERROTA</button>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- KPI Cards -->
-    <section class="kpi-grid" id="kpiGrid">
-      <div class="kpi-card">
-        <!-- Pokeball -->
-        <div class="kpi-icon">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="9"/>
-            <path d="M3 12h18"/>
-            <circle cx="12" cy="12" r="3" fill="var(--bg2)"/>
-          </svg>
-        </div>
-        <div class="kpi-info">
-          <div class="kpi-value" id="kpiTotal">—</div>
-          <div class="kpi-label">Partidas Totais</div>
-        </div>
-      </div>
-
-      <div class="kpi-card">
-        <!-- Vitórias: Troféu -->
-        <div class="kpi-icon" style="color:var(--green)">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/>
-            <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/>
-            <path d="M4 22h16"/>
-            <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/>
-            <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/>
-            <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/>
-          </svg>
-        </div>
-        <div class="kpi-info">
-          <div class="kpi-value green" id="kpiWin">—</div>
-          <div class="kpi-label">Vitórias</div>
-        </div>
-      </div>
-
-      <div class="kpi-card">
-        <!-- Empates: Balança / Equilíbrio -->
-        <div class="kpi-icon" style="color:var(--yellow)">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/>
-            <path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/>
-            <path d="M7 21h10"/>
-            <path d="M12 3v18"/>
-            <path d="M3 7h18"/>
-          </svg>
-        </div>
-        <div class="kpi-info">
-          <div class="kpi-value yellow" id="kpiDraw">—</div>
-          <div class="kpi-label">Empates</div>
-        </div>
-      </div>
-
-      <div class="kpi-card">
-        <!-- Derrotas: X-Circle -->
-        <div class="kpi-icon" style="color:var(--red)">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10"/>
-            <path d="m15 9-6 6"/>
-            <path d="m9 9 6 6"/>
-          </svg>
-        </div>
-        <div class="kpi-info">
-          <div class="kpi-value red" id="kpiLoss">—</div>
-          <div class="kpi-label">Derrotas</div>
-        </div>
-      </div>
-
-      <div class="kpi-card">
-        <!-- Win Rate: TrendingUp -->
-        <div class="kpi-icon" style="color:var(--cyan)">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/>
-            <polyline points="16 7 22 7 22 13"/>
-          </svg>
-        </div>
-        <div class="kpi-info">
-          <div class="kpi-value cyan" id="kpiWR">—</div>
-          <div class="kpi-label">Win Rate</div>
-        </div>
-      </div>
-
-      <div class="kpi-card">
-        <!-- Brick: Alerta -->
-        <div class="kpi-icon" style="color:var(--red)">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
-            <line x1="12" y1="9" x2="12" y2="13"/>
-            <line x1="12" y1="17" x2="12.01" y2="17"/>
-          </svg>
-        </div>
-        <div class="kpi-info">
-          <div class="kpi-value red" id="kpiBrick">—</div>
-          <div class="kpi-label">% Brick</div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Charts Row 1 -->
-    <section class="charts-grid two-col">
-      <div class="chart-card">
-        <div class="chart-header">
-          <h2 class="chart-title">🃏 Win Rate por Deck</h2>
-          <span class="chart-sub">Top 7 decks com maiores win rates da equipe</span>
-        </div>
-        <div class="chart-wrap"><canvas id="chartDeckWR"></canvas></div>
-      </div>
-      <div class="chart-card">
-        <div class="chart-header">
-          <h2 class="chart-title">🧢 Performance por Treinador</h2>
-          <span class="chart-sub">Treinadores ordenados por maior número de vitórias</span>
-        </div>
-        <div class="chart-wrap"><canvas id="chartPlayerPerf"></canvas></div>
-      </div>
-    </section>
-
-    <!-- Individual Player Subtype/Variant Breakdown (Visible ONLY when exactly 1 player is selected) -->
-    <section class="charts-grid one-col" id="playerSubtypeSection" style="display:none; margin-top: 1.2rem;">
-      <div class="chart-card" style="border: 1px solid rgba(0,200,248,0.3); background: linear-gradient(135deg, var(--bg2) 0%, rgba(13,26,48,0.75) 100%);">
-        <div class="chart-header" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.5rem;">
-          <div>
-            <h2 class="chart-title" id="playerSubtypeTitle">📊 Variantes & Subtipos do Player</h2>
-            <span class="chart-sub" id="playerSubtypeSub">Desempenho individual detalhado por versão de deck de um único jogador</span>
-          </div>
-          <span class="badge" style="background:rgba(0,200,248,0.15); color:var(--accent2); font-weight:700;" id="playerSubtypeBadge">👤 Visão Individual de Player</span>
-        </div>
-        <div id="playerSubtypeBody" style="padding-top: 0.5rem;"></div>
-      </div>
-    </section>
-
-    <!-- Charts Row 2 -->
-    <section class="charts-grid three-col">
-      <div class="chart-card">
-        <div class="chart-header">
-          <h2 class="chart-title">📊 Resultados Gerais</h2>
-          <span class="chart-sub">Distribuição total de vitórias, empates e derrotas</span>
-        </div>
-        <div class="chart-wrap chart-wrap-sm"><canvas id="chartResultPie"></canvas></div>
-      </div>
-      <div class="chart-card">
-        <div class="chart-header">
-          <h2 class="chart-title">🏟️ Torneios &amp; Locais</h2>
-          <span class="chart-sub">Frequência de jogos presenciais e online</span>
-        </div>
-        <div class="chart-wrap chart-wrap-sm"><canvas id="chartLocal"></canvas></div>
-      </div>
-      <div class="chart-card">
-        <div class="chart-header">
-          <h2 class="chart-title">⚔️ Formato das Partidas</h2>
-          <span class="chart-sub">Distribuição de jogos MD1 vs MD3</span>
-        </div>
-        <div class="chart-wrap chart-wrap-sm"><canvas id="chartFormato"></canvas></div>
-      </div>
-    </section>
-
-    <!-- Charts Row 3 -->
-    <section class="charts-grid three-col">
-      <div class="chart-card">
-        <div class="chart-header">
-          <h2 class="chart-title">🃏 Volume de Jogos por Deck</h2>
-          <span class="chart-sub">Quantidade total de partidas registradas</span>
-        </div>
-        <div class="chart-wrap chart-wrap-sm"><canvas id="chartDeckCount"></canvas></div>
-      </div>
-      <div class="chart-card">
-        <div class="chart-header">
-          <h2 class="chart-title">🪙 1º vs 2º a Jogar (Moeda)</h2>
-          <span class="chart-sub">Impacto de começar jogando no resultado final</span>
-        </div>
-        <div class="chart-wrap chart-wrap-sm"><canvas id="chartStart"></canvas></div>
-      </div>
-      <div class="chart-card">
-        <div class="chart-header">
-          <h2 class="chart-title">🧱 Brick Analysis por Deck</h2>
-          <span class="chart-sub">Porcentagem de mãos ruins / zoadas por deck</span>
-        </div>
-        <div class="chart-wrap chart-wrap-sm"><canvas id="chartBrick"></canvas></div>
-      </div>
-    </section>
-
-    <!-- ===== MATCHUP WIN RATE ===== -->
-    <section class="chart-card matchup-section">
-      <div class="matchup-header">
-        <div>
-          <h2 class="chart-title">⚔️ Matriz de Matchups (Deck vs Deck)</h2>
-          <span class="chart-sub">Taxa de vitória em confrontos diretos — clique em uma célula para ver o raio-x</span>
-        </div>
-        <div class="matchup-controls">
-          <div class="filter-group">
-            <label class="filter-label">Treinador</label>
-            <select id="matchupPlayer" class="filter-select">
-              <option value="">Todos os Treinadores</option>
-            </select>
-          </div>
-          <div class="filter-group">
-            <label class="filter-label">Meu Deck</label>
-            <select id="matchupSelectMyDeck" class="filter-select">
-              <option value="">Todos os Decks</option>
-            </select>
-          </div>
-          <div class="filter-group">
-            <label class="filter-label">vs Deck Oponente</label>
-            <select id="matchupSelectOppDeck" class="filter-select">
-              <option value="">Todos os Decks</option>
-            </select>
-          </div>
-          <div class="filter-group">
-            <label class="filter-label">Ordenação WR</label>
-            <button type="button" class="btn-sort-toggle" id="btnMatchupSortToggle" onclick="toggleMatchupSortOrder()" title="Alternar ordenação por Win Rate (Maior WR / Menor WR / Alfabética)">
-              <span id="matchupSortIcon">⬇️</span> <span id="matchupSortLabel">Maior WR</span>
-            </button>
-          </div>
-          <button class="btn-apply-matchup" id="btnApplyMatchup" onclick="applyMatchupFilter()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> APLICAR</button>
-          <button class="btn-reset-matchup" id="btnResetMatchupFilter" onclick="resetMatchupFilters()" title="Resetar todos os filtros de matchup"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> RESETAR</button>
-        </div>
-      </div>
-
-      <!-- Matrix view -->
-      <div id="matchupMatrixView" class="matchup-view">
-        <div class="matrix-legend">
-          <div class="legend-gradient"></div>
-          <div class="legend-labels"><span>0%</span><span>50%</span><span>100%</span></div>
-          <span class="legend-hint">* sem dados suficientes</span>
-        </div>
-        <div class="matrix-scroll">
-          <div id="matchupMatrix" class="matchup-matrix"></div>
-        </div>
-      </div>
-
-      <!-- Detail tooltip panel -->
-      <div id="matchupDetail" class="matchup-detail" style="display:none">
-        <div class="detail-header">
-          <strong id="detailTitle"></strong>
-          <button class="icon-btn" onclick="document.getElementById('matchupDetail').style.display='none'">✕</button>
-        </div>
-        <div id="detailBody" class="detail-body"></div>
-      </div>
-    </section>
-
-    <!-- Match History Table -->
-    <section class="table-section">
-      <div class="table-header">
-        <h2 class="chart-title">📋 Registro de Partidas</h2>
-        <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
-          <div style="position: relative; display: flex; align-items: center;">
-            <input type="search" id="tableSearch" class="table-search" placeholder="🔍 Buscar player, deck, placar…" style="padding-right: 2rem;" onkeyup="if(event.key==='Enter') triggerTableSearch(); else triggerTableSearch();" onsearch="triggerTableSearch()" />
-            <button type="button" id="btnClearTableSearch" title="Limpar busca" onclick="clearTableSearch()" style="position: absolute; right: 0.6rem; background: none; border: none; color: var(--text2); cursor: pointer; display: none; font-size: 0.85rem; padding: 0;">✕</button>
-          </div>
-          <button type="button" class="btn-apply-filters" id="btnTableSearch" onclick="triggerTableSearch()" style="height: 35px; padding: 0 1rem; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 0.4rem;">
-            🔍 Buscar
-          </button>
-        </div>
-      </div>
-      <div class="table-wrap">
-        <table id="matchTable">
-          <thead>
-            <tr id="matchTableHeaderRow">
-              <th class="sortable-th" onclick="sortTableByColumn('seqID')" title="Ordenar por ID da Partida"># <span id="sort-icon-seqID"></span></th>
-              <th class="sortable-th" onclick="sortTableByColumn('Data')" title="Ordenar por data">Data <span id="sort-icon-Data"></span></th>
-              <th class="sortable-th" onclick="sortTableByColumn('Player')" title="Ordenar por player">Player <span id="sort-icon-Player"></span></th>
-              <th class="sortable-th" onclick="sortTableByColumn('Deck')" title="Ordenar por deck">Deck <span id="sort-icon-Deck"></span></th>
-              <th class="sortable-th" onclick="sortTableByColumn('DeckAdv')" title="Ordenar por deck oponente">Deck Adv. <span id="sort-icon-DeckAdv"></span></th>
-              <th class="sortable-th" onclick="sortTableByColumn('Formato')" title="Ordenar por formato">Formato <span id="sort-icon-Formato"></span></th>
-              <th class="sortable-th" onclick="sortTableByColumn('Colecao')" title="Ordenar por coleção">Coleção <span id="sort-icon-Colecao"></span></th>
-              <th class="sortable-th" onclick="sortTableByColumn('Confiabilidade')" title="Ordenar por confiabilidade">Conf. <span id="sort-icon-Confiabilidade"></span></th>
-              <th class="sortable-th" onclick="sortTableByColumn('Start')" title="Ordenar por quem começou">Start <span id="sort-icon-Start"></span></th>
-              <th class="sortable-th" onclick="sortTableByColumn('Placar')" title="Ordenar por placar">Placar <span id="sort-icon-Placar"></span></th>
-              <th class="sortable-th" onclick="sortTableByColumn('Resultado')" title="Ordenar por resultado">Resultado <span id="sort-icon-Resultado"></span></th>
-              <th class="sortable-th" onclick="sortTableByColumn('Brick')" title="Ordenar por brick">Brick <span id="sort-icon-Brick"></span></th>
-              <th class="sortable-th" onclick="sortTableByColumn('Local')" title="Ordenar por local">Local <span id="sort-icon-Local"></span></th>
-              <th style="cursor:default; text-align:center;" title="Lista de cartas (não ordenável)">Listas</th>
-              <th style="cursor:default; text-align:center;" title="Ações">Ações</th>
-            </tr>
-          </thead>
-          <tbody id="tableBody"></tbody>
-        </table>
-      </div>
-      <!-- Pagination Controls -->
-      <div class="table-pagination" id="tablePagination">
-        <div class="pagination-info" id="paginationInfo">Mostrando 0–0 de 0 partidas</div>
-        <div class="pagination-controls" id="paginationControls"></div>
-      </div>
-    </section>
-
-  </main>
-
-  <footer class="footer">
-    <p>&#x1F30A; Jornada TCG Team &middot; Dados sincronizados &middot; <span id="footerCount"></span></p>
-  </footer>
-
-  <!-- ===== FAB: REGISTRAR PARTIDA ===== -->
-  <button class="fab" id="fabBtn" title="Registrar Partida">
-    <!-- Custom Pokeball + symbol -->
-    <svg width="22" height="22" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0">
-      <circle cx="16" cy="16" r="14" stroke="white" stroke-width="2" fill="none" opacity="0.7"/>
-      <path d="M2 16 H30" stroke="white" stroke-width="2" opacity="0.7"/>
-      <circle cx="16" cy="16" r="5" fill="rgba(0,0,0,0.3)" stroke="white" stroke-width="2"/>
-      <path d="M16 12 V20 M12 16 H20" stroke="white" stroke-width="2" stroke-linecap="round"/>
-    </svg>
-    <span class="fab-label">Registrar Partida</span>
-  </button>
-
-  <!-- ===================================================
-       MANAGER PANEL (side drawer)
-       =================================================== -->
-  <div class="manager-panel" id="managerPanel">
-    <div class="manager-header">
-      <h2>📋 Gerenciador de Dados</h2>
-      <div style="display:flex;align-items:center;gap:0.5rem;margin-left:auto;">
-        <button class="icon-btn sm" id="btnLockManager" title="Bloquear Acesso" style="font-size:0.75rem;padding:4px 9px;background:rgba(240,80,80,0.15);border:1px solid rgba(240,80,80,0.3);color:var(--red);border-radius:var(--radius-sm);cursor:pointer;display:flex;align-items:center;gap:4px;">
-          🔒 Bloquear
-        </button>
-        <button class="icon-btn close-panel-btn" id="btnCloseManager" title="Fechar Gerenciador" style="font-size:0.82rem;padding:4px 10px;background:var(--bg3);border:1px solid var(--glass-bd);color:var(--text);border-radius:var(--radius-sm);cursor:pointer;display:flex;align-items:center;gap:4px;font-weight:600;">
-          ✕ Fechar
-        </button>
-      </div>
-    </div>
-
-    <!-- Tabs -->
-    <div class="tab-bar">
-      <button class="tab-btn active" data-tab="tabDecks">🃏 Arquétipos</button>
-      <button class="tab-btn" data-tab="tabVariantes">📜 Variantes & Listas</button>
-      <button class="tab-btn" data-tab="tabPlayers">Players</button>
-      <button class="tab-btn" data-tab="tabLocais">Locais</button>
-      <button class="tab-btn" data-tab="tabColecoes">Coleções</button>
-      <button class="tab-btn" data-tab="tabBackup">Backup</button>
-      <button class="tab-btn" data-tab="tabSeguranca">🔒 Segurança</button>
-    </div>
-
-    <!-- Tab: Arquétipos Principais -->
-    <div class="tab-pane active" id="tabDecks">
-      <div class="panel-toolbar" style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
-        <div style="font-size:0.8rem; color:var(--text2); font-weight:600;">🃏 Arquétipos Principais da Equipe</div>
-        <button class="action-btn" onclick="openUnifyArchetypesModal()" style="margin-left:auto;background:rgba(0,200,248,0.15);border:1px solid rgba(0,200,248,0.3);color:var(--accent2);">🔗 Unificar Arquétipos</button>
-      </div>
-      <div id="archetypesList" class="decks-list"></div>
-    </div>
-
-    <!-- Tab: Variantes & Listas -->
-    <div class="tab-pane" id="tabVariantes">
-      <div class="panel-toolbar" style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
-        <button class="action-btn" onclick="openNewDeck()">+ Nova Variante / Deck</button>
-      </div>
-      <div id="decksList" class="decks-list"></div>
-    </div>
-
-    <!-- Tab: Players -->
-    <div class="tab-pane" id="tabPlayers">
-      <div class="add-player-row">
-        <input type="text" id="newPlayerName" class="filter-select" placeholder="Nome do player…" />
-        <button class="action-btn" id="btnAddPlayer">+ Adicionar</button>
-      </div>
-      <div id="playersList" class="players-list"></div>
-    </div>
-
-    <!-- Tab: Locais -->
-    <div class="tab-pane" id="tabLocais">
-      <div class="add-player-row">
-        <input type="text" id="newLocalName" class="filter-select" placeholder="Nome do local (ex: Regional SP)…" />
-        <button class="action-btn" id="btnAddLocal">+ Adicionar</button>
-      </div>
-      <div id="locaisList" class="players-list"></div>
-    </div>
-
-    <!-- Tab: Coleções -->
-    <div class="tab-pane" id="tabColecoes">
-      <div class="add-player-row">
-        <input type="text" id="newColecaoName" class="filter-select" placeholder="Nome da coleção (ex: SV8 Surging Sparks)…" />
-        <button class="action-btn" id="btnAddColecao">+ Adicionar</button>
-      </div>
-      <div id="colecoesList" class="players-list"></div>
-    </div>
-
-    <!-- Tab: Backup -->
-    <!-- Tab: Backup & Restauração -->
-    <div class="tab-pane" id="tabBackup" style="padding: 1.25rem;">
-      <p style="font-size: .8rem; color: var(--text2); line-height: 1.5; margin-bottom: 1rem;">
-        O sistema gera um <strong>backup diário automático</strong> a cada novo dia de uso (mantendo os últimos 7 dias). Você também pode exportar/importar arquivos JSON manualmente a qualquer momento.
-      </p>
-      
-      <div style="display: flex; flex-direction: column; gap: 1rem;">
-        <button class="action-btn" id="btnExportBackup" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: .5rem; padding: .65rem;">
-          📥 Exportar Backup Completo (.json)
-        </button>
-        
-        <div style="border-top: 1px solid var(--border); padding-top: 1rem;">
-          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.6rem;">
-            <label class="form-label" style="margin: 0; font-weight: 700;">💾 Snapshots Diários Automáticos</label>
-            <button class="icon-btn sm" onclick="triggerManualSnapshot()" title="Criar Snapshot Manual Agora" style="font-size: 0.72rem; padding: 2px 8px;">+ Snapshot</button>
-          </div>
-          <div id="autoBackupsList" style="max-height: 180px; overflow-y: auto;">
-            <!-- Rendered dynamically -->
-          </div>
-        </div>
-
-        <div style="border-top: 1px solid var(--border); padding-top: 1rem;">
-          <label class="form-label" style="margin-bottom: .5rem; display: block;">Importar Arquivo de Backup Manual</label>
-          <label class="file-btn" for="backupFileInput" style="width: 100%; justify-content: center; padding: .65rem; background: var(--bg3); border: 1px dashed var(--glass-bd); box-shadow: none; box-sizing: border-box; cursor: pointer;">
-            <span>📤 Selecionar Arquivo .json</span>
-            <input type="file" id="backupFileInput" accept=".json" style="display:none" />
-          </label>
-        </div>
-      </div>
-    </div>
-
-    <!-- Tab: Segurança -->
-    <div class="tab-pane" id="tabSeguranca" style="padding: 1.25rem;">
-      <h4 style="font-family:'Rajdhani',sans-serif;font-size:1rem;color:var(--text);margin-bottom:0.5rem;display:flex;align-items:center;gap:0.4rem;">🔑 Proteção do Administrador</h4>
-      <p style="font-size:.78rem;color:var(--text2);line-height:1.4;margin-bottom:1rem;">
-        Altere ou remova o PIN/Senha de Administrador para controlar o acesso privado ao Gerenciador de Dados.
-      </p>
-
-
-    </div>
-
-    <!-- Manager Panel Footer -->
-    <div style="padding:0.75rem 1.25rem;border-top:1px solid var(--border);background:var(--bg3);display:flex;justify-content:flex-end;flex-shrink:0;">
-      <button class="reset-btn" id="btnCloseManagerFooter" style="font-size:0.8rem;padding:0.4rem 1rem;display:flex;align-items:center;gap:0.4rem;font-weight:600;">
-        ✕ Fechar Gerenciador
-      </button>
-    </div>
-  </div>
-  <div class="panel-overlay" id="panelOverlay"></div>
-
-  <!-- ===================================================
-       MODAL: AUTENTICAÇÃO DO ADMINISTRADOR (PIN / SENHA)
-       =================================================== -->
-
-
-  <!-- ===================================================
-       MODAL: DECK FORM (Novo / Editar)
-       =================================================== -->
-  <div class="modal-overlay" id="modalDeckForm">
-    <div class="modal modal-wide">
-      <div class="modal-header">
-        <h3 id="deckFormTitle">+ Novo Deck</h3>
-      </div>
-      <div class="modal-body">
-        <div class="form-row three-col">
-          <div class="form-group">
-            <label class="form-label">Arquétipo do Deck *</label>
-            <input type="text" id="formDeckArquetipo" class="form-input" placeholder="Ex: Zoroark ex, Mega Excadrill" />
-          </div>
-          <div class="form-group">
-            <label class="form-label">Subtipo / Apelido (Opcional)</label>
-            <input type="text" id="formDeckSubtipo" class="form-input" placeholder="Ex: Versão Dusknoir, teste 1" />
-          </div>
-          <div class="form-group">
-            <label class="form-label">Player (Opcional)</label>
-            <select id="formDeckPlayer" class="form-input">
-              <option value="">Sem player atribuído</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="form-group">
-          <div class="list-label-row">
-            <label class="form-label">Lista PTCGL (cole o export aqui)</label>
-            <span class="card-counter under" id="cardCounter">0/60 cartas</span>
-          </div>
-          <textarea
-            id="formDeckList"
-            class="form-textarea"
-            rows="18"
-            placeholder="Cole aqui a lista exportada do PTCGL:
-
-Pokémon: 12
-4 Zoroark ex sv5 159
-2 Zorua sv5 103
-...
-
-Treinador: 36
-4 Arven sv5 186
-...
-
-Energia: 12
-4 Energia Psíquica básica SVE 5
-...
-
-Total de cartas: 60"
-          ></textarea>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="cancel-btn" data-close-modal="modalDeckForm">Cancelar</button>
-        <button class="save-btn" id="btnSaveDeck">💾 Salvar Deck</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ===================================================
-       MODAL: DECK LIST VIEWER
-       =================================================== -->
-  <div class="modal-overlay" id="modalDeckList">
-    <div class="modal modal-wide">
-      <div class="modal-header">
-        <div>
-          <h3 id="deckListTitle">Lista do Deck</h3>
-          <span id="deckListPlayer" class="modal-sub"></span>
-        </div>
-        <div style="display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;">
-          <button class="action-btn sm" id="btnExportTCGLive" style="font-size: 0.75rem; padding: 5px 12px; background: linear-gradient(135deg, #1a7fff, #00c8f8); border: none; color: #fff; display: inline-flex; align-items: center; gap: 5px; font-weight: 600; box-shadow: 0 2px 10px rgba(0,200,248,0.3); border-radius: var(--radius-sm); cursor: pointer;" title="Copiar lista em formato Pokémon TCG Live">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;">
-              <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
-              <line x1="2" y1="12" x2="22" y2="12" stroke="currentColor" stroke-width="2"/>
-              <circle cx="12" cy="12" r="3" fill="currentColor"/>
-            </svg>
-            <span>Exportar TCG/LIVE</span>
-          </button>
-          <button class="action-btn sm" id="btnEditDeckListFromModal" style="font-size: .75rem; padding: 4px 10px;">✏️ Editar / Importar Lista</button>
-          <span id="deckListCount" class="deck-list-count"></span>
-        </div>
-      </div>
-      <div class="modal-body">
-        <input type="search" id="deckListSearch" class="table-search" placeholder="Buscar carta…" style="width:100%;margin-bottom:1rem" />
-        <div id="deckListBody" class="deck-list-body"></div>
-      </div>
-      <div class="modal-footer">
-        <button class="cancel-btn" data-close-modal="modalDeckList" style="width: 100%; text-align: center;">✕ Fechar Lista</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ===================================================
-       MODAL: REGISTRAR PARTIDA
-       =================================================== -->
-  <div class="modal-overlay" id="modalMatchForm">
-    <div class="modal modal-wide">
-      <div class="modal-header">
-        <h3>⚔️ Registrar Partida</h3>
-      </div>
-      <div class="modal-body">
-
-        <!-- Row 1 -->
-        <div class="form-row three-col">
-          <div class="form-group">
-            <label class="form-label">Data *</label>
-            <input type="date" id="formMatchData" class="form-input" />
-          </div>
-          <div class="form-group">
-            <label class="form-label">Player *</label>
-            <select id="formMatchPlayer" class="form-input">
-              <option value="">Selecione…</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-              <label class="form-label">Meu Deck (Arquétipo)</label>
-              <button type="button" class="btn-add-deck" id="btnFormAddDeckOwn" title="Cadastrar novo deck">+</button>
-            </div>
-            <select id="formMatchDeck" class="form-input">
-              <option value="">Sem deck cadastrado</option>
-            </select>
-            <input list="subtipoOptionsOwn" id="formMatchSubtipo" class="form-input" placeholder="Subtipo / Apelido (Selecione da lista ou digite um novo...)" style="margin-top:0.35rem; font-size:0.78rem;" autocomplete="off" />
-            <datalist id="subtipoOptionsOwn"></datalist>
-          </div>
-        </div>
-
-        <!-- Row 2 -->
-        <div class="form-row two-col">
-          <div class="form-group">
-            <label class="form-label">Adversário / Treinador Oponente</label>
-            <input list="playerOptionsAdv" id="formMatchAdv" class="form-input" placeholder="Digite o nome ou selecione um jogador do time..." autocomplete="off" />
-            <datalist id="playerOptionsAdv"></datalist>
-          </div>
-          <div class="form-group">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-              <label class="form-label">Deck do Adversário (Arquétipo)</label>
-              <button type="button" class="btn-add-deck" id="btnFormAddDeckAdv" title="Cadastrar novo deck">+</button>
-            </div>
-            <select id="formMatchDeckAdv" class="form-input">
-              <option value="">Selecione…</option>
-            </select>
-            <input list="subtipoOptionsAdv" id="formMatchSubtipoAdv" class="form-input" placeholder="Subtipo Oponente (Selecione da lista ou digite um novo...)" style="margin-top:0.35rem; font-size:0.78rem;" autocomplete="off" />
-            <datalist id="subtipoOptionsAdv"></datalist>
-          </div>
-        </div>
-
-        <!-- Row 3 -->
-        <div class="form-row four-col">
-          <div class="form-group">
-            <label class="form-label">Formato</label>
-            <select id="formMatchFormato" class="form-input">
-              <option value="MD1" selected>MD1</option>
-              <option value="MD3">MD3</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Start</label>
-            <select id="formMatchStart" class="form-input">
-              <option value="1º">1º</option>
-              <option value="2º">2º</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Resultado</label>
-            <select id="formMatchResultado" class="form-input">
-              <option value="Vitória">✅ Vitória</option>
-              <option value="Empate">🤝 Empate</option>
-              <option value="Derrota">❌ Derrota</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Placar</label>
-            <select id="formMatchPlacar" class="form-input">
-              <option value="1-0">1-0</option>
-              <option value="0-1">0-1</option>
-            </select>
-          </div>
-        </div>
-
-        <!-- Row 4: Brick & Confiabilidade toggles -->
-        <div class="form-row three-col" id="singleMatchParametersRow">
-          <div class="form-group" id="singleMatchBrickGroup">
-            <label class="form-label">Brickei?</label>
-            <div class="brick-toggle-group" id="brickToggleGroup">
-              <button type="button" class="brick-toggle active" data-value="Não" id="brickNo">✅ Não</button>
-              <button type="button" class="brick-toggle" data-value="Sim" id="brickYes">💥 Sim</button>
-            </div>
-            <input type="hidden" id="formMatchBrick" value="Não" />
-          </div>
-          <div class="form-group" id="singleMatchBrickOpGroup">
-            <label class="form-label">Oponente brickou?</label>
-            <div class="brick-toggle-group" id="brickOpToggleGroup">
-              <button type="button" class="brick-toggle active" data-value="Não" id="brickOpNo">✅ Não</button>
-              <button type="button" class="brick-toggle" data-value="Sim" id="brickOpYes">💥 Sim</button>
-            </div>
-            <input type="hidden" id="formMatchBrickOp" value="Não" />
-          </div>
-          <div class="form-group">
-            <label class="form-label">Confiabilidade *</label>
-            <div class="brick-toggle-group" id="confiabilidadeToggleGroup">
-              <button type="button" class="brick-toggle active" data-value="Alta" id="confAltaBtn">🟢 Alta</button>
-              <button type="button" class="brick-toggle" data-value="Baixa" id="confBaixaBtn">🔴 Baixa</button>
-            </div>
-            <input type="hidden" id="formMatchConfiabilidade" value="Alta" />
-          </div>
-        </div>
-
-        <!-- MD3 Games Breakdown Section (Shown dynamically when Formato == MD3) -->
-        <div id="md3GamesSection" style="display:none; margin: 0.85rem 0; padding: 0.85rem 1rem; border: 1px dashed var(--accent2); border-radius: 8px; background: rgba(0, 200, 248, 0.04);">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 0.75rem;">
-            <h4 style="margin:0; font-size:0.9rem; color:var(--accent2); font-weight:600; display:flex; align-items:center; gap:0.4rem;">
-              🎮 Detalhamento dos Games da MD3
-            </h4>
-            <span style="font-size:0.75rem; color:var(--text2);" id="md3GamesCountHint">0 games conforme placar</span>
-          </div>
-          <div id="md3GamesGrid" style="display:flex; flex-direction:column; gap:0.75rem;">
-            <!-- Rendered dynamically by manager.js -->
-          </div>
-        </div>
-
-        <!-- Row 5: Local & Coleção -->
-        <div class="form-row two-col">
-          <div class="form-group">
-            <label class="form-label">Coleção *</label>
-            <select id="formMatchColecao" class="form-input">
-              <option value="">Selecione…</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Local</label>
-            <select id="formMatchLocal" class="form-input">
-              <option value="">Selecione…</option>
-              <option value="__outro__">Outro…</option>
-            </select>
-          </div>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Local personalizado</label>
-          <input type="text" id="formMatchLocalCustom" class="form-input" placeholder="Digite o local…" style="display:none" />
-        </div>
-
-        <!-- Listas de Decks (Opcionais) -->
-        <div class="form-row two-col">
-          <div class="form-group">
-            <div class="list-label-row">
-              <label class="form-label">📜 Lista do Meu Deck (Opcional)</label>
-              <span class="card-counter under" id="formMatchDeckOwnCounter">0/60</span>
-            </div>
-            <textarea id="formMatchDeckOwnList" class="form-textarea" rows="3" placeholder="Opcional: Cole o export PTCGL do seu deck…"></textarea>
-          </div>
-          <div class="form-group">
-            <div class="list-label-row">
-              <label class="form-label">📜 Lista do Deck Oponente (Opcional)</label>
-              <span class="card-counter under" id="formMatchDeckAdvCounter">0/60</span>
-            </div>
-            <textarea id="formMatchDeckAdvList" class="form-textarea" rows="3" placeholder="Opcional: Cole o export PTCGL do deck do oponente…"></textarea>
-          </div>
-        </div>
-
-        <!-- Comentários -->
-        <div class="form-group">
-          <label class="form-label">Comentários</label>
-          <textarea id="formMatchComentarios" class="form-textarea" rows="3" placeholder="Observações sobre a partida…"></textarea>
-        </div>
-
-      </div>
-      <div class="modal-footer">
-        <button class="cancel-btn" data-close-modal="modalMatchForm">Cancelar</button>
-        <button class="save-btn" id="btnSaveMatch">⚔️ Salvar Partida</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ===================================================
-       MODAL: VER COMENTÁRIO
-       =================================================== -->
-  <div class="modal-overlay" id="modalViewComment">
-    <div class="modal" style="max-width: 480px; max-height: 85vh; max-height: 85dvh;">
-      <div class="modal-header">
-        <h3>💬 Comentário da Partida</h3>
-      </div>
-      <div class="modal-body" style="padding: 1.25rem; overflow-y: auto;">
-        <div id="commentMatchInfo" style="font-size: 0.8rem; color: var(--text2); margin-bottom: 0.85rem; padding-bottom: 0.6rem; border-bottom: 1px solid var(--border);"></div>
-        <div id="commentTextBody" style="background: var(--bg3); padding: 1rem; border-radius: var(--radius-sm); border: 1px solid var(--glass-bd); font-size: 0.9rem; line-height: 1.6; color: var(--text); white-space: pre-wrap; word-break: break-word; max-height: 45vh; overflow-y: auto;"></div>
-      </div>
-      <div class="modal-footer">
-        <button class="cancel-btn" data-close-modal="modalViewComment" style="width: 100%; text-align: center; font-weight: 600;">✕ Fechar Comentário</button>
-      </div>
-    </div>
-  </div>
-
-
-
-  <!-- ===================================================
-       MODAL: UNIFICAR ARQUÉTIPOS
-       =================================================== -->
-  <div class="modal-overlay" id="modalUnifyArchetypes">
-    <div class="modal modal-wide">
-      <div class="modal-header">
-        <h3>🔗 Unificar Arquétipos em Lote</h3>
-      </div>
-      <div class="modal-body">
-        <p class="modal-sub" style="margin-bottom: 1rem;">
-          Selecione o deck/variante que deseja unificar e escolha o arquétipo principal para onde todas as estatísticas históricas devem ser associadas.
-        </p>
-
-        <div class="form-row two-col" style="margin-bottom: 1rem;">
-          <div class="form-group">
-            <label class="form-label">Deck / Variante Atual *</label>
-            <select id="unifyFromDeckSelect" class="form-input">
-              <option value="">Selecione o deck para unificar…</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Arquétipo Principal Alvo *</label>
-            <input type="text" id="unifyTargetArchetypeInput" class="form-input" placeholder="Ex: Mega Excadrill" />
-          </div>
-        </div>
-
-        <div style="background: rgba(26,127,255,0.08); border: 1px solid var(--glass-bd); padding: 0.8rem; border-radius: var(--radius-sm); font-size: 0.78rem; color: var(--text2);">
-          💡 <strong>Como funciona:</strong> Todas as partidas registradas no histórico que usavam esse deck passarão a agrupar sob o arquétipo principal nos gráficos, matriz de matchups e estatísticas gerais.
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="cancel-btn" data-close-modal="modalUnifyArchetypes">Cancelar</button>
-        <button class="save-btn" id="btnSubmitUnifyArchetypes" onclick="submitUnifyArchetypes()">🔗 Unificar em Lote</button>
-      </div>
-    </div>
-  </div>
-  </div> <!-- Fim de #appDashboardContainer -->
-
-  <!-- ===== MODAL: LOGIN / CADASTRO DE JOGADOR ===== -->
-  <div class="modal-overlay" id="modalAuth" style="display:none;">
-    <div class="modal" style="max-width: 420px; border: 1px solid var(--accent); background: var(--bg2); backdrop-filter: blur(16px);">
-      <div class="modal-header" style="border-bottom: 1px solid var(--border); padding-bottom: 0.8rem;">
-        <h2 class="modal-title" style="font-size: 1.1rem; color: var(--accent2);">⚡ Acesso do Time</h2>
-        <button class="modal-close" data-close-modal="modalAuth">✕</button>
-      </div>
-      <div class="modal-body" style="padding: 1.2rem;">
-        <!-- Tabs Header -->
-        <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border);">
-          <button id="tabAuthLogin" class="tab-btn active" style="flex: 1; text-align: center;" onclick="switchAuthTab('login')">🔑 Entrar</button>
-          <button id="tabAuthRegister" class="tab-btn" style="flex: 1; text-align: center;" onclick="switchAuthTab('register')">📝 Cadastrar-se</button>
-        </div>
-
-        <!-- Login Form -->
-        <div id="authLoginForm" style="display: flex; flex-direction: column; gap: 0.85rem;">
-          <div class="form-group">
-            <label class="form-label">E-mail *</label>
-            <input type="email" id="authLoginEmail" class="form-input" placeholder="seu.email@jornada.com" />
-          </div>
-          <div class="form-group">
-            <label class="form-label">Senha *</label>
-            <div class="password-input-wrap">
-              <input type="password" id="authLoginPassword" class="form-input" placeholder="••••••••" />
-              <button type="button" class="toggle-password-btn" onclick="togglePasswordVisibility('authLoginPassword', this)" title="Mostrar / Ocultar Senha">👁️</button>
-            </div>
-          </div>
-          <button class="save-btn" style="width: 100%; margin-top: 0.5rem; justify-content: center;" onclick="submitUserLogin()">
-            ⚡ Entrar no Painel
-          </button>
-        </div>
-
-        <!-- Register Form -->
-        <div id="authRegisterForm" style="display: none; flex-direction: column; gap: 0.85rem;">
-          <div class="form-group">
-            <label class="form-label">Vincular Jogador do Time *</label>
-            <select id="authRegName" class="form-select"></select>
-          </div>
-          <div class="form-group">
-            <label class="form-label">E-mail *</label>
-            <input type="email" id="authRegEmail" class="form-input" placeholder="seu.email@jornada.com" />
-          </div>
-          <div class="form-group">
-            <label class="form-label">Senha *</label>
-            <div class="password-input-wrap">
-              <input type="password" id="authRegPassword" class="form-input" placeholder="Mínimo 6 caracteres" oninput="checkPasswordMatch('auth')" />
-              <button type="button" class="toggle-password-btn" onclick="togglePasswordVisibility('authRegPassword', this)" title="Mostrar / Ocultar Senha">👁️</button>
-            </div>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Confirmar Senha *</label>
-            <div class="password-input-wrap">
-              <input type="password" id="authRegConfirm" class="form-input" placeholder="Confirme sua senha" oninput="checkPasswordMatch('auth')" />
-              <button type="button" class="toggle-password-btn" onclick="togglePasswordVisibility('authRegConfirm', this)" title="Mostrar / Ocultar Senha">👁️</button>
-            </div>
-            <div id="authPasswordMatchHint" class="password-match-hint"></div>
-          </div>
-          <button class="save-btn" style="width: 100%; margin-top: 0.5rem; justify-content: center;" onclick="submitUserRegister()">
-            📝 Finalizar Cadastro
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Production Minified Bundle -->
-  <script src="dist/app.min.js?v=1.0.42"></script>  <!-- ===== APP VERSION FOOTER ===== -->
-  <div class="app-version-footer">
-    v<span id="appVersion">1.0.42</span>
-  </div>
-
-</body>
-</html>
+<!DOCTYPE html><html lang="pt-BR"><head>  <meta charset="UTF-8" />  <meta name="viewport" content="width=device-width, initial-scale=1.0" />  <title>Jornada TCG Team — Dashboard Regional</title>  <meta name="description" content="Dashboard de análise de winrate, matchups e performance do Team Jornada TCG para regionais." />  <link rel="icon" type="image/png" href="logo.png" />  <link rel="apple-touch-icon" href="logo.png" />  <link rel="preconnect" href="https://fonts.googleapis.com" />  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>  <link rel="stylesheet" href="dist/style.min.css?v=1.0.42" />  <script>    (function() {      try {        var token = localStorage.getItem('jornada_auth_token');        var user = localStorage.getItem('jornada_user_profile');        if (token && user) {          document.documentElement.classList.add('auth-session-active');        }      } catch (e) {}    })();  </script></head><body>  <div id="authPageWall" class="auth-wall-container" style="display: flex;">    <div class="auth-wall-card">      <div class="auth-wall-brand">        <img src="logo.png" alt="Jornada TCG Team" class="auth-wall-logo" />        <h1 class="auth-wall-title">Jornada Dashboard</h1>        <p class="auth-wall-sub">TCG Team &middot; Análise Regional & Matchups</p>      </div>      <div style="display: flex; gap: 0.5rem; margin: 1.2rem 0; border-bottom: 1px solid var(--border);">        <button id="tabWallLogin" class="tab-btn active" style="flex: 1; text-align: center; padding: 0.6rem;" onclick="switchAuthTab('login')">🔑 Entrar</button>        <button id="tabWallRegister" class="tab-btn" style="flex: 1; text-align: center; padding: 0.6rem;" onclick="switchAuthTab('register')">📝 Cadastrar-se</button>      </div>      <div id="wallLoginForm" style="display: flex; flex-direction: column; gap: 0.9rem;">        <div class="form-group">          <label class="form-label">E-mail do Jogador *</label>          <input type="email" id="wallLoginEmail" class="form-input" placeholder="seu.email@jornada.com" />        </div>        <div class="form-group">          <label class="form-label">Senha *</label>          <div class="password-input-wrap">            <input type="password" id="wallLoginPassword" class="form-input" placeholder="••••••••" />            <button type="button" class="toggle-password-btn" onclick="togglePasswordVisibility('wallLoginPassword', this)" title="Mostrar / Ocultar Senha">👁️</button>          </div>        </div>        <div id="wallLoginFeedback" class="auth-feedback-msg" style="display:none;"></div>        <button id="btnWallLogin" class="save-btn" style="width: 100%; margin-top: 0.5rem; justify-content: center; height: 48px; font-size: 1rem;" onclick="submitWallLogin()">          ⚡ Entrar no Painel        </button>      </div>      <div id="wallRegisterForm" style="display: none; flex-direction: column; gap: 0.9rem;">        <div class="form-group">          <label class="form-label">Vincular Jogador do Time *</label>          <select id="wallRegName" class="form-select"></select>        </div>        <div class="form-group">          <label class="form-label">E-mail *</label>          <input type="email" id="wallRegEmail" class="form-input" placeholder="seu.email@jornada.com" />        </div>        <div class="form-group">          <label class="form-label">Senha *</label>          <div class="password-input-wrap">            <input type="password" id="wallRegPassword" class="form-input" placeholder="Mínimo 6 caracteres" oninput="checkPasswordMatch('wall')" />            <button type="button" class="toggle-password-btn" onclick="togglePasswordVisibility('wallRegPassword', this)" title="Mostrar / Ocultar Senha">👁️</button>          </div>        </div>        <div class="form-group">          <label class="form-label">Confirmar Senha *</label>          <div class="password-input-wrap">            <input type="password" id="wallRegConfirm" class="form-input" placeholder="Confirme sua senha" oninput="checkPasswordMatch('wall')" />            <button type="button" class="toggle-password-btn" onclick="togglePasswordVisibility('wallRegConfirm', this)" title="Mostrar / Ocultar Senha">👁️</button>          </div>          <div id="wallPasswordMatchHint" class="password-match-hint"></div>        </div>        <div id="wallRegFeedback" class="auth-feedback-msg" style="display:none;"></div>        <button id="btnWallRegister" class="save-btn" style="width: 100%; margin-top: 0.5rem; justify-content: center; height: 48px; font-size: 1rem;" onclick="submitWallRegister()">          📝 Finalizar Cadastro        </button>      </div>      <div style="text-align: center; margin-top: 1rem; border-top: 1px dashed var(--border); padding-top: 0.8rem;">        <div style="margin-top: 0.8rem; font-size: 0.7rem; color: var(--text2); opacity: 0.5; font-family: 'Outfit', sans-serif;">          v<span id="appVersionAuth">1.0.42</span>        </div>      </div>    </div>  </div>  <div id="appDashboardContainer" style="display: none;">  <header class="header">    <div class="header-inner">      <div class="logo">        <div class="logo-icon">          <img src="logo.png" alt="Jornada TCG Team" class="logo-img" />        </div>        <div>          <h1 class="logo-title">Jornada Dashboard</h1>          <p class="logo-sub">TCG Team &middot; Análise Regional</p>        </div>      </div>      <div class="header-actions">        <div id="userProfileBadge"></div>        <button class="manager-btn" id="btnOpenManager" style="display:none;">&#x1F4CB; Gerenciar</button>        <div class="last-update" id="lastUpdate">Aguardando dados…</div>      </div>    </div>  </header>  <section class="filters-bar">    <div class="filters-inner">      <div class="filter-group">        <label class="filter-label">Player (Multi-Seleção)</label>        <div class="multi-deck-wrap" id="multiPlayerWrap">          <button type="button" class="multi-deck-btn" id="btnMultiPlayerToggle">            <span id="multiPlayerBtnText">Todos os Players</span>            <span class="multi-deck-arrow">▾</span>          </button>          <div class="multi-deck-dropdown" id="multiPlayerDropdown">            <div class="multi-deck-header">              <input type="text" id="multiPlayerSearch" class="multi-deck-search" placeholder="🔍 Buscar player…" />              <div class="multi-deck-actions">                <button type="button" class="multi-deck-act-btn" id="btnMultiPlayerSelectAll">Marcar Todos</button>                <button type="button" class="multi-deck-act-btn" id="btnMultiPlayerClearAll">Desmarcar</button>              </div>            </div>            <div class="multi-deck-list" id="multiPlayerList"></div>          </div>        </div>      </div>      <div class="filter-group">        <label class="filter-label">Decks (Multi-Seleção)</label>        <div class="multi-deck-wrap" id="multiDeckWrap">          <button type="button" class="multi-deck-btn" id="btnMultiDeckToggle">            <span id="multiDeckBtnText">Todos os Decks</span>            <span class="multi-deck-arrow">▾</span>          </button>          <div class="multi-deck-dropdown" id="multiDeckDropdown">            <div class="multi-deck-header">              <input type="text" id="multiDeckSearch" class="multi-deck-search" placeholder="🔍 Buscar deck…" />              <div class="multi-deck-actions">                <button type="button" class="multi-deck-act-btn" id="btnMultiDeckSelectAll">Marcar Todos</button>                <button type="button" class="multi-deck-act-btn" id="btnMultiDeckClearAll">Desmarcar</button>              </div>            </div>            <div class="multi-deck-list" id="multiDeckList"></div>          </div>        </div>      </div>      <div class="filter-group">        <label class="filter-label">Formato</label>        <select id="filterFormato" class="filter-select">          <option value="">Todos</option>        </select>      </div>      <div class="filter-group">        <label class="filter-label">Local</label>        <select id="filterLocal" class="filter-select">          <option value="">Todos</option>        </select>      </div>      <div class="filter-group">        <label class="filter-label">Coleção</label>        <select id="filterColecao" class="filter-select"></select>      </div>      <div class="filter-group">        <label class="filter-label">Data Início</label>        <input type="date" id="filterDateStart" class="filter-select" style="min-width:135px;" />      </div>      <div class="filter-group">        <label class="filter-label">Data Fim</label>        <input type="date" id="filterDateEnd" class="filter-select" style="min-width:135px;" />      </div>      <div class="filter-group">        <label class="filter-label">Confiabilidade</label>        <div class="checkbox-group" style="display:flex;gap:0.6rem;align-items:center;padding:0.42rem 0.75rem;background:var(--bg3);border:1px solid var(--glass-bd);border-radius:var(--radius-sm);height:38px;box-sizing:border-box;">          <label style="font-size:0.8rem;color:var(--text);display:flex;align-items:center;gap:0.3rem;cursor:pointer;user-select:none;">            <input type="checkbox" id="filterConfAlta" value="Alta" checked onchange="applyFilters()" /> 🟢 Alta          </label>          <label style="font-size:0.8rem;color:var(--text);display:flex;align-items:center;gap:0.3rem;cursor:pointer;user-select:none;">            <input type="checkbox" id="filterConfBaixa" value="Baixa" checked onchange="applyFilters()" /> 🔴 Baixa          </label>        </div>      </div>      <div style="display:flex;gap:0.5rem;align-items:flex-end">        <button class="btn-apply-filters" id="btnApplyFilters" onclick="applyFilters()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg> APLICAR</button>        <button class="reset-btn" id="resetFilters" onclick="resetAllFilters()">↺ Limpar</button>      </div>    </div>  </section>  <main class="main">    <section class="quick-log-section">      <div class="quick-log-card">        <div class="quick-log-header">          <div style="display:flex;align-items:center;gap:.5rem">            <svg width="22" height="22" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0">              <circle cx="16" cy="16" r="15" stroke="var(--accent2)" stroke-width="2" fill="none"/>              <path d="M1 16 Q1 16 31 16" stroke="var(--accent2)" stroke-width="2"/>              <circle cx="16" cy="16" r="5" fill="var(--bg3)" stroke="var(--accent2)" stroke-width="2"/>              <circle cx="16" cy="16" r="2.5" fill="var(--accent2)"/>              <path d="M1 14 Q8 4 16 4" stroke="var(--accent)" stroke-width="1.5" fill="none" opacity="0.5"/>            </svg>            <div>              <h3 class="quick-log-title">Registrar Partida</h3>              <span class="quick-log-sub">Log rápido — 1 clique por resultado</span>            </div>          </div>          <button class="icon-btn sm" id="btnToggleQuickLog">▼ Recolher</button>        </div>        <div class="quick-log-body" id="quickLogBody">          <div class="quick-log-grid-top">            <div class="form-group">              <label class="form-label">👤 Meu Player *</label>              <select id="quickLogPlayer" class="form-input"></select>            </div>            <div class="form-group">              <div style="display:flex; justify-content:space-between; align-items:center;">                <label class="form-label">🃏 Meu Deck *</label>                <button type="button" class="btn-add-deck" id="btnQuickAddDeckOwn" title="Cadastrar novo deck">+</button>              </div>              <select id="quickLogDeck" class="form-input">                <option value="">Selecione…</option>              </select>            </div>            <div class="form-group">              <label class="form-label">⚔️ Oponente (ou Jogador do Time)</label>              <input list="playerOptionsAdv" id="quickLogAdvName" class="form-input" placeholder="Ex: GuiVaz ou Oponente" autocomplete="off" />            </div>            <div class="form-group">              <div style="display:flex; justify-content:space-between; align-items:center;">                <label class="form-label">🃏 Deck Oponente *</label>                <button type="button" class="btn-add-deck" id="btnQuickAddDeckAdv" title="Cadastrar novo deck">+</button>              </div>              <select id="quickLogDeckAdv" class="form-input">                <option value="">Selecione…</option>              </select>            </div>          </div>          <div class="quick-log-grid-bottom">            <div class="form-group">              <label class="form-label">🏆 Formato *</label>              <select id="quickLogFormato" class="form-input">                <option value="MD1" selected>MD1</option>                <option value="MD3">MD3</option>              </select>            </div>            <div class="form-group">              <label class="form-label">🎲 Start *</label>              <select id="quickLogStart" class="form-input">                <option value="1º">1º (Saiu Jogando)</option>                <option value="2º">2º (Foi Segundo)</option>              </select>            </div>            <div class="form-group">              <label class="form-label">📦 Coleção *</label>              <select id="quickLogColecao" class="form-input">                <option value="">Selecione…</option>              </select>            </div>            <div class="form-group">              <label class="form-label">📍 Local *</label>              <select id="quickLogLocal" class="form-input">                <option value="">Selecione…</option>              </select>            </div>            <div class="form-group">              <label class="form-label">🎯 Placar *</label>              <select id="quickLogPlacar" class="form-input">                <option value="1-0">1-0</option>                <option value="0-1">0-1</option>              </select>            </div>            <div class="form-group">              <label class="form-label">🟢 Confiabilidade</label>              <select id="quickLogConfiabilidade" class="form-input">                <option value="Alta">🟢 Alta</option>                <option value="Baixa">🔴 Baixa</option>              </select>            </div>          </div>          <div id="quickLogGamesStrip" class="quick-log-games-strip">            <div class="strip-header">              <span class="strip-title">🎮 Detalhes dos Games <span id="quickLogFormatoLabel" style="color:var(--text2); font-weight:normal;">(MD1)</span></span>              <span class="strip-subtitle" id="quickLogGamesHint">Toque nas pílulas para alternar</span>            </div>            <div id="quickLogGamesPillGrid" class="pill-grid-wrap">            </div>          </div>          <div class="quick-log-actions">            <button class="quick-log-btn win" id="btnQuickWin">🏆 VITÓRIA</button>            <button class="quick-log-btn draw" id="btnQuickDraw">🤝 EMPATE</button>            <button class="quick-log-btn loss" id="btnQuickLoss">❌ DERROTA</button>          </div>        </div>      </div>    </section>    <section class="kpi-grid" id="kpiGrid">      <div class="kpi-card">        <div class="kpi-icon">          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">            <circle cx="12" cy="12" r="9"/>            <path d="M3 12h18"/>            <circle cx="12" cy="12" r="3" fill="var(--bg2)"/>          </svg>        </div>        <div class="kpi-info">          <div class="kpi-value" id="kpiTotal">—</div>          <div class="kpi-label">Partidas Totais</div>        </div>      </div>      <div class="kpi-card">        <div class="kpi-icon" style="color:var(--green)">          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">            <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/>            <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/>            <path d="M4 22h16"/>            <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/>            <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/>            <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/>          </svg>        </div>        <div class="kpi-info">          <div class="kpi-value green" id="kpiWin">—</div>          <div class="kpi-label">Vitórias</div>        </div>      </div>      <div class="kpi-card">        <div class="kpi-icon" style="color:var(--yellow)">          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">            <path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/>            <path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/>            <path d="M7 21h10"/>            <path d="M12 3v18"/>            <path d="M3 7h18"/>          </svg>        </div>        <div class="kpi-info">          <div class="kpi-value yellow" id="kpiDraw">—</div>          <div class="kpi-label">Empates</div>        </div>      </div>      <div class="kpi-card">        <div class="kpi-icon" style="color:var(--red)">          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">            <circle cx="12" cy="12" r="10"/>            <path d="m15 9-6 6"/>            <path d="m9 9 6 6"/>          </svg>        </div>        <div class="kpi-info">          <div class="kpi-value red" id="kpiLoss">—</div>          <div class="kpi-label">Derrotas</div>        </div>      </div>      <div class="kpi-card">        <div class="kpi-icon" style="color:var(--cyan)">          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">            <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/>            <polyline points="16 7 22 7 22 13"/>          </svg>        </div>        <div class="kpi-info">          <div class="kpi-value cyan" id="kpiWR">—</div>          <div class="kpi-label">Win Rate</div>        </div>      </div>      <div class="kpi-card">        <div class="kpi-icon" style="color:var(--red)">          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">            <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>            <line x1="12" y1="9" x2="12" y2="13"/>            <line x1="12" y1="17" x2="12.01" y2="17"/>          </svg>        </div>        <div class="kpi-info">          <div class="kpi-value red" id="kpiBrick">—</div>          <div class="kpi-label">% Brick</div>        </div>      </div>    </section>    <section class="charts-grid two-col">      <div class="chart-card">        <div class="chart-header">          <h2 class="chart-title">🃏 Win Rate por Deck</h2>          <span class="chart-sub">Top 7 decks com maiores win rates da equipe</span>        </div>        <div class="chart-wrap"><canvas id="chartDeckWR"></canvas></div>      </div>      <div class="chart-card">        <div class="chart-header">          <h2 class="chart-title">🧢 Performance por Treinador</h2>          <span class="chart-sub">Treinadores ordenados por maior número de vitórias</span>        </div>        <div class="chart-wrap"><canvas id="chartPlayerPerf"></canvas></div>      </div>    </section>    <section class="charts-grid one-col" id="playerSubtypeSection" style="display:none; margin-top: 1.2rem;">      <div class="chart-card" style="border: 1px solid rgba(0,200,248,0.3); background: linear-gradient(135deg, var(--bg2) 0%, rgba(13,26,48,0.75) 100%);">        <div class="chart-header" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.5rem;">          <div>            <h2 class="chart-title" id="playerSubtypeTitle">📊 Variantes & Subtipos do Player</h2>            <span class="chart-sub" id="playerSubtypeSub">Desempenho individual detalhado por versão de deck de um único jogador</span>          </div>          <span class="badge" style="background:rgba(0,200,248,0.15); color:var(--accent2); font-weight:700;" id="playerSubtypeBadge">👤 Visão Individual de Player</span>        </div>        <div id="playerSubtypeBody" style="padding-top: 0.5rem;"></div>      </div>    </section>    <section class="charts-grid three-col">      <div class="chart-card">        <div class="chart-header">          <h2 class="chart-title">📊 Resultados Gerais</h2>          <span class="chart-sub">Distribuição total de vitórias, empates e derrotas</span>        </div>        <div class="chart-wrap chart-wrap-sm"><canvas id="chartResultPie"></canvas></div>      </div>      <div class="chart-card">        <div class="chart-header">          <h2 class="chart-title">🏟️ Torneios &amp; Locais</h2>          <span class="chart-sub">Frequência de jogos presenciais e online</span>        </div>        <div class="chart-wrap chart-wrap-sm"><canvas id="chartLocal"></canvas></div>      </div>      <div class="chart-card">        <div class="chart-header">          <h2 class="chart-title">⚔️ Formato das Partidas</h2>          <span class="chart-sub">Distribuição de jogos MD1 vs MD3</span>        </div>        <div class="chart-wrap chart-wrap-sm"><canvas id="chartFormato"></canvas></div>      </div>    </section>    <section class="charts-grid three-col">      <div class="chart-card">        <div class="chart-header">          <h2 class="chart-title">🃏 Volume de Jogos por Deck</h2>          <span class="chart-sub">Quantidade total de partidas registradas</span>        </div>        <div class="chart-wrap chart-wrap-sm"><canvas id="chartDeckCount"></canvas></div>      </div>      <div class="chart-card">        <div class="chart-header">          <h2 class="chart-title">🪙 1º vs 2º a Jogar (Moeda)</h2>          <span class="chart-sub">Impacto de começar jogando no resultado final</span>        </div>        <div class="chart-wrap chart-wrap-sm"><canvas id="chartStart"></canvas></div>      </div>      <div class="chart-card">        <div class="chart-header">          <h2 class="chart-title">🧱 Brick Analysis por Deck</h2>          <span class="chart-sub">Porcentagem de mãos ruins / zoadas por deck</span>        </div>        <div class="chart-wrap chart-wrap-sm"><canvas id="chartBrick"></canvas></div>      </div>    </section>    <section class="chart-card matchup-section">      <div class="matchup-header">        <div>          <h2 class="chart-title">⚔️ Matriz de Matchups (Deck vs Deck)</h2>          <span class="chart-sub">Taxa de vitória em confrontos diretos — clique em uma célula para ver o raio-x</span>        </div>        <div class="matchup-controls">          <div class="filter-group">            <label class="filter-label">Treinador</label>            <select id="matchupPlayer" class="filter-select">              <option value="">Todos os Treinadores</option>            </select>          </div>          <div class="filter-group">            <label class="filter-label">Meu Deck</label>            <select id="matchupSelectMyDeck" class="filter-select">              <option value="">Todos os Decks</option>            </select>          </div>          <div class="filter-group">            <label class="filter-label">vs Deck Oponente</label>            <select id="matchupSelectOppDeck" class="filter-select">              <option value="">Todos os Decks</option>            </select>          </div>          <div class="filter-group">            <label class="filter-label">Ordenação WR</label>            <button type="button" class="btn-sort-toggle" id="btnMatchupSortToggle" onclick="toggleMatchupSortOrder()" title="Alternar ordenação por Win Rate (Maior WR / Menor WR / Alfabética)">              <span id="matchupSortIcon">⬇️</span> <span id="matchupSortLabel">Maior WR</span>            </button>          </div>          <button class="btn-apply-matchup" id="btnApplyMatchup" onclick="applyMatchupFilter()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> APLICAR</button>          <button class="btn-reset-matchup" id="btnResetMatchupFilter" onclick="resetMatchupFilters()" title="Resetar todos os filtros de matchup"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> RESETAR</button>        </div>      </div>      <div id="matchupMatrixView" class="matchup-view">        <div class="matrix-legend">          <div class="legend-gradient"></div>          <div class="legend-labels"><span>0%</span><span>50%</span><span>100%</span></div>          <span class="legend-hint">* sem dados suficientes</span>        </div>        <div class="matrix-scroll">          <div id="matchupMatrix" class="matchup-matrix"></div>        </div>      </div>      <div id="matchupDetail" class="matchup-detail" style="display:none">        <div class="detail-header">          <strong id="detailTitle"></strong>          <button class="icon-btn" onclick="document.getElementById('matchupDetail').style.display='none'">✕</button>        </div>        <div id="detailBody" class="detail-body"></div>      </div>    </section>    <section class="table-section">      <div class="table-header">        <h2 class="chart-title">📋 Registro de Partidas</h2>        <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">          <div style="position: relative; display: flex; align-items: center;">            <input type="search" id="tableSearch" class="table-search" placeholder="🔍 Buscar player, deck, placar…" style="padding-right: 2rem;" onkeyup="if(event.key==='Enter') triggerTableSearch(); else triggerTableSearch();" onsearch="triggerTableSearch()" />            <button type="button" id="btnClearTableSearch" title="Limpar busca" onclick="clearTableSearch()" style="position: absolute; right: 0.6rem; background: none; border: none; color: var(--text2); cursor: pointer; display: none; font-size: 0.85rem; padding: 0;">✕</button>          </div>          <button type="button" class="btn-apply-filters" id="btnTableSearch" onclick="triggerTableSearch()" style="height: 35px; padding: 0 1rem; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 0.4rem;">            🔍 Buscar          </button>        </div>      </div>      <div class="table-wrap">        <table id="matchTable">          <thead>            <tr id="matchTableHeaderRow">              <th class="sortable-th" onclick="sortTableByColumn('seqID')" title="Ordenar por ID da Partida"># <span id="sort-icon-seqID"></span></th>              <th class="sortable-th" onclick="sortTableByColumn('Data')" title="Ordenar por data">Data <span id="sort-icon-Data"></span></th>              <th class="sortable-th" onclick="sortTableByColumn('Player')" title="Ordenar por player">Player <span id="sort-icon-Player"></span></th>              <th class="sortable-th" onclick="sortTableByColumn('Deck')" title="Ordenar por deck">Deck <span id="sort-icon-Deck"></span></th>              <th class="sortable-th" onclick="sortTableByColumn('DeckAdv')" title="Ordenar por deck oponente">Deck Adv. <span id="sort-icon-DeckAdv"></span></th>              <th class="sortable-th" onclick="sortTableByColumn('Formato')" title="Ordenar por formato">Formato <span id="sort-icon-Formato"></span></th>              <th class="sortable-th" onclick="sortTableByColumn('Colecao')" title="Ordenar por coleção">Coleção <span id="sort-icon-Colecao"></span></th>              <th class="sortable-th" onclick="sortTableByColumn('Confiabilidade')" title="Ordenar por confiabilidade">Conf. <span id="sort-icon-Confiabilidade"></span></th>              <th class="sortable-th" onclick="sortTableByColumn('Start')" title="Ordenar por quem começou">Start <span id="sort-icon-Start"></span></th>              <th class="sortable-th" onclick="sortTableByColumn('Placar')" title="Ordenar por placar">Placar <span id="sort-icon-Placar"></span></th>              <th class="sortable-th" onclick="sortTableByColumn('Resultado')" title="Ordenar por resultado">Resultado <span id="sort-icon-Resultado"></span></th>              <th class="sortable-th" onclick="sortTableByColumn('Brick')" title="Ordenar por brick">Brick <span id="sort-icon-Brick"></span></th>              <th class="sortable-th" onclick="sortTableByColumn('Local')" title="Ordenar por local">Local <span id="sort-icon-Local"></span></th>              <th style="cursor:default; text-align:center;" title="Lista de cartas (não ordenável)">Listas</th>              <th style="cursor:default; text-align:center;" title="Ações">Ações</th>            </tr>          </thead>          <tbody id="tableBody"></tbody>        </table>      </div>      <div class="table-pagination" id="tablePagination">        <div class="pagination-info" id="paginationInfo">Mostrando 0–0 de 0 partidas</div>        <div class="pagination-controls" id="paginationControls"></div>      </div>    </section>  </main>  <footer class="footer">    <p>&#x1F30A; Jornada TCG Team &middot; Dados sincronizados &middot; <span id="footerCount"></span></p>  </footer>  <button class="fab" id="fabBtn" title="Registrar Partida">    <svg width="22" height="22" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0">      <circle cx="16" cy="16" r="14" stroke="white" stroke-width="2" fill="none" opacity="0.7"/>      <path d="M2 16 H30" stroke="white" stroke-width="2" opacity="0.7"/>      <circle cx="16" cy="16" r="5" fill="rgba(0,0,0,0.3)" stroke="white" stroke-width="2"/>      <path d="M16 12 V20 M12 16 H20" stroke="white" stroke-width="2" stroke-linecap="round"/>    </svg>    <span class="fab-label">Registrar Partida</span>  </button>  <div class="manager-panel" id="managerPanel">    <div class="manager-header">      <h2>📋 Gerenciador de Dados</h2>      <div style="display:flex;align-items:center;gap:0.5rem;margin-left:auto;">        <button class="icon-btn sm" id="btnLockManager" title="Bloquear Acesso" style="font-size:0.75rem;padding:4px 9px;background:rgba(240,80,80,0.15);border:1px solid rgba(240,80,80,0.3);color:var(--red);border-radius:var(--radius-sm);cursor:pointer;display:flex;align-items:center;gap:4px;">          🔒 Bloquear        </button>        <button class="icon-btn close-panel-btn" id="btnCloseManager" title="Fechar Gerenciador" style="font-size:0.82rem;padding:4px 10px;background:var(--bg3);border:1px solid var(--glass-bd);color:var(--text);border-radius:var(--radius-sm);cursor:pointer;display:flex;align-items:center;gap:4px;font-weight:600;">          ✕ Fechar        </button>      </div>    </div>    <div class="tab-bar">      <button class="tab-btn active" data-tab="tabDecks">🃏 Arquétipos</button>      <button class="tab-btn" data-tab="tabVariantes">📜 Variantes & Listas</button>      <button class="tab-btn" data-tab="tabPlayers">Players</button>      <button class="tab-btn" data-tab="tabLocais">Locais</button>      <button class="tab-btn" data-tab="tabColecoes">Coleções</button>      <button class="tab-btn" data-tab="tabBackup">Backup</button>      <button class="tab-btn" data-tab="tabSeguranca">🔒 Segurança</button>    </div>    <div class="tab-pane active" id="tabDecks">      <div class="panel-toolbar" style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">        <div style="font-size:0.8rem; color:var(--text2); font-weight:600;">🃏 Arquétipos Principais da Equipe</div>        <button class="action-btn" onclick="openUnifyArchetypesModal()" style="margin-left:auto;background:rgba(0,200,248,0.15);border:1px solid rgba(0,200,248,0.3);color:var(--accent2);">🔗 Unificar Arquétipos</button>      </div>      <div id="archetypesList" class="decks-list"></div>    </div>    <div class="tab-pane" id="tabVariantes">      <div class="panel-toolbar" style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">        <button class="action-btn" onclick="openNewDeck()">+ Nova Variante / Deck</button>      </div>      <div id="decksList" class="decks-list"></div>    </div>    <div class="tab-pane" id="tabPlayers">      <div class="add-player-row">        <input type="text" id="newPlayerName" class="filter-select" placeholder="Nome do player…" />        <button class="action-btn" id="btnAddPlayer">+ Adicionar</button>      </div>      <div id="playersList" class="players-list"></div>    </div>    <div class="tab-pane" id="tabLocais">      <div class="add-player-row">        <input type="text" id="newLocalName" class="filter-select" placeholder="Nome do local (ex: Regional SP)…" />        <button class="action-btn" id="btnAddLocal">+ Adicionar</button>      </div>      <div id="locaisList" class="players-list"></div>    </div>    <div class="tab-pane" id="tabColecoes">      <div class="add-player-row">        <input type="text" id="newColecaoName" class="filter-select" placeholder="Nome da coleção (ex: SV8 Surging Sparks)…" />        <button class="action-btn" id="btnAddColecao">+ Adicionar</button>      </div>      <div id="colecoesList" class="players-list"></div>    </div>    <div class="tab-pane" id="tabBackup" style="padding: 1.25rem;">      <p style="font-size: .8rem; color: var(--text2); line-height: 1.5; margin-bottom: 1rem;">        O sistema gera um <strong>backup diário automático</strong> a cada novo dia de uso (mantendo os últimos 7 dias). Você também pode exportar/importar arquivos JSON manualmente a qualquer momento.      </p>      <div style="display: flex; flex-direction: column; gap: 1rem;">        <button class="action-btn" id="btnExportBackup" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: .5rem; padding: .65rem;">          📥 Exportar Backup Completo (.json)        </button>        <div style="border-top: 1px solid var(--border); padding-top: 1rem;">          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.6rem;">            <label class="form-label" style="margin: 0; font-weight: 700;">💾 Snapshots Diários Automáticos</label>            <button class="icon-btn sm" onclick="triggerManualSnapshot()" title="Criar Snapshot Manual Agora" style="font-size: 0.72rem; padding: 2px 8px;">+ Snapshot</button>          </div>          <div id="autoBackupsList" style="max-height: 180px; overflow-y: auto;">          </div>        </div>        <div style="border-top: 1px solid var(--border); padding-top: 1rem;">          <label class="form-label" style="margin-bottom: .5rem; display: block;">Importar Arquivo de Backup Manual</label>          <label class="file-btn" for="backupFileInput" style="width: 100%; justify-content: center; padding: .65rem; background: var(--bg3); border: 1px dashed var(--glass-bd); box-shadow: none; box-sizing: border-box; cursor: pointer;">            <span>📤 Selecionar Arquivo .json</span>            <input type="file" id="backupFileInput" accept=".json" style="display:none" />          </label>        </div>      </div>    </div>    <div class="tab-pane" id="tabSeguranca" style="padding: 1.25rem;">      <h4 style="font-family:'Rajdhani',sans-serif;font-size:1rem;color:var(--text);margin-bottom:0.5rem;display:flex;align-items:center;gap:0.4rem;">🔑 Proteção do Administrador</h4>      <p style="font-size:.78rem;color:var(--text2);line-height:1.4;margin-bottom:1rem;">        Altere ou remova o PIN/Senha de Administrador para controlar o acesso privado ao Gerenciador de Dados.      </p>    </div>    <div style="padding:0.75rem 1.25rem;border-top:1px solid var(--border);background:var(--bg3);display:flex;justify-content:flex-end;flex-shrink:0;">      <button class="reset-btn" id="btnCloseManagerFooter" style="font-size:0.8rem;padding:0.4rem 1rem;display:flex;align-items:center;gap:0.4rem;font-weight:600;">        ✕ Fechar Gerenciador      </button>    </div>  </div>  <div class="panel-overlay" id="panelOverlay"></div>  <div class="modal-overlay" id="modalDeckForm">    <div class="modal modal-wide">      <div class="modal-header">        <h3 id="deckFormTitle">+ Novo Deck</h3>      </div>      <div class="modal-body">        <div class="form-row three-col">          <div class="form-group">            <label class="form-label">Arquétipo do Deck *</label>            <input type="text" id="formDeckArquetipo" class="form-input" placeholder="Ex: Zoroark ex, Mega Excadrill" />          </div>          <div class="form-group">            <label class="form-label">Subtipo / Apelido (Opcional)</label>            <input type="text" id="formDeckSubtipo" class="form-input" placeholder="Ex: Versão Dusknoir, teste 1" />          </div>          <div class="form-group">            <label class="form-label">Player (Opcional)</label>            <select id="formDeckPlayer" class="form-input">              <option value="">Sem player atribuído</option>            </select>          </div>        </div>        <div class="form-group">          <div class="list-label-row">            <label class="form-label">Lista PTCGL (cole o export aqui)</label>            <span class="card-counter under" id="cardCounter">0/60 cartas</span>          </div>          <textarea            id="formDeckList"            class="form-textarea"            rows="18"            placeholder="Cole aqui a lista exportada do PTCGL:Pokémon: 124 Zoroark ex sv5 1592 Zorua sv5 103...Treinador: 364 Arven sv5 186...Energia: 124 Energia Psíquica básica SVE 5...Total de cartas: 60"          ></textarea>        </div>      </div>      <div class="modal-footer">        <button class="cancel-btn" data-close-modal="modalDeckForm">Cancelar</button>        <button class="save-btn" id="btnSaveDeck">💾 Salvar Deck</button>      </div>    </div>  </div>  <div class="modal-overlay" id="modalDeckList">    <div class="modal modal-wide">      <div class="modal-header">        <div>          <h3 id="deckListTitle">Lista do Deck</h3>          <span id="deckListPlayer" class="modal-sub"></span>        </div>        <div style="display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;">          <button class="action-btn sm" id="btnExportTCGLive" style="font-size: 0.75rem; padding: 5px 12px; background: linear-gradient(135deg, #1a7fff, #00c8f8); border: none; color: #fff; display: inline-flex; align-items: center; gap: 5px; font-weight: 600; box-shadow: 0 2px 10px rgba(0,200,248,0.3); border-radius: var(--radius-sm); cursor: pointer;" title="Copiar lista em formato Pokémon TCG Live">            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;">              <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>              <line x1="2" y1="12" x2="22" y2="12" stroke="currentColor" stroke-width="2"/>              <circle cx="12" cy="12" r="3" fill="currentColor"/>            </svg>            <span>Exportar TCG/LIVE</span>          </button>          <button class="action-btn sm" id="btnEditDeckListFromModal" style="font-size: .75rem; padding: 4px 10px;">✏️ Editar / Importar Lista</button>          <span id="deckListCount" class="deck-list-count"></span>        </div>      </div>      <div class="modal-body">        <input type="search" id="deckListSearch" class="table-search" placeholder="Buscar carta…" style="width:100%;margin-bottom:1rem" />        <div id="deckListBody" class="deck-list-body"></div>      </div>      <div class="modal-footer">        <button class="cancel-btn" data-close-modal="modalDeckList" style="width: 100%; text-align: center;">✕ Fechar Lista</button>      </div>    </div>  </div>  <div class="modal-overlay" id="modalMatchForm">    <div class="modal modal-wide">      <div class="modal-header">        <h3>⚔️ Registrar Partida</h3>      </div>      <div class="modal-body">        <div class="form-row three-col">          <div class="form-group">            <label class="form-label">Data *</label>            <input type="date" id="formMatchData" class="form-input" />          </div>          <div class="form-group">            <label class="form-label">Player *</label>            <select id="formMatchPlayer" class="form-input">              <option value="">Selecione…</option>            </select>          </div>          <div class="form-group">            <div style="display:flex; justify-content:space-between; align-items:center;">              <label class="form-label">Meu Deck (Arquétipo)</label>              <button type="button" class="btn-add-deck" id="btnFormAddDeckOwn" title="Cadastrar novo deck">+</button>            </div>            <select id="formMatchDeck" class="form-input">              <option value="">Sem deck cadastrado</option>            </select>            <input list="subtipoOptionsOwn" id="formMatchSubtipo" class="form-input" placeholder="Subtipo / Apelido (Selecione da lista ou digite um novo...)" style="margin-top:0.35rem; font-size:0.78rem;" autocomplete="off" />            <datalist id="subtipoOptionsOwn"></datalist>          </div>        </div>        <div class="form-row two-col">          <div class="form-group">            <label class="form-label">Adversário / Treinador Oponente</label>            <input list="playerOptionsAdv" id="formMatchAdv" class="form-input" placeholder="Digite o nome ou selecione um jogador do time..." autocomplete="off" />            <datalist id="playerOptionsAdv"></datalist>          </div>          <div class="form-group">            <div style="display:flex; justify-content:space-between; align-items:center;">              <label class="form-label">Deck do Adversário (Arquétipo)</label>              <button type="button" class="btn-add-deck" id="btnFormAddDeckAdv" title="Cadastrar novo deck">+</button>            </div>            <select id="formMatchDeckAdv" class="form-input">              <option value="">Selecione…</option>            </select>            <input list="subtipoOptionsAdv" id="formMatchSubtipoAdv" class="form-input" placeholder="Subtipo Oponente (Selecione da lista ou digite um novo...)" style="margin-top:0.35rem; font-size:0.78rem;" autocomplete="off" />            <datalist id="subtipoOptionsAdv"></datalist>          </div>        </div>        <div class="form-row four-col">          <div class="form-group">            <label class="form-label">Formato</label>            <select id="formMatchFormato" class="form-input">              <option value="MD1" selected>MD1</option>              <option value="MD3">MD3</option>            </select>          </div>          <div class="form-group">            <label class="form-label">Start</label>            <select id="formMatchStart" class="form-input">              <option value="1º">1º</option>              <option value="2º">2º</option>            </select>          </div>          <div class="form-group">            <label class="form-label">Resultado</label>            <select id="formMatchResultado" class="form-input">              <option value="Vitória">✅ Vitória</option>              <option value="Empate">🤝 Empate</option>              <option value="Derrota">❌ Derrota</option>            </select>          </div>          <div class="form-group">            <label class="form-label">Placar</label>            <select id="formMatchPlacar" class="form-input">              <option value="1-0">1-0</option>              <option value="0-1">0-1</option>            </select>          </div>        </div>        <div class="form-row three-col" id="singleMatchParametersRow">          <div class="form-group" id="singleMatchBrickGroup">            <label class="form-label">Brickei?</label>            <div class="brick-toggle-group" id="brickToggleGroup">              <button type="button" class="brick-toggle active" data-value="Não" id="brickNo">✅ Não</button>              <button type="button" class="brick-toggle" data-value="Sim" id="brickYes">💥 Sim</button>            </div>            <input type="hidden" id="formMatchBrick" value="Não" />          </div>          <div class="form-group" id="singleMatchBrickOpGroup">            <label class="form-label">Oponente brickou?</label>            <div class="brick-toggle-group" id="brickOpToggleGroup">              <button type="button" class="brick-toggle active" data-value="Não" id="brickOpNo">✅ Não</button>              <button type="button" class="brick-toggle" data-value="Sim" id="brickOpYes">💥 Sim</button>            </div>            <input type="hidden" id="formMatchBrickOp" value="Não" />          </div>          <div class="form-group">            <label class="form-label">Confiabilidade *</label>            <div class="brick-toggle-group" id="confiabilidadeToggleGroup">              <button type="button" class="brick-toggle active" data-value="Alta" id="confAltaBtn">🟢 Alta</button>              <button type="button" class="brick-toggle" data-value="Baixa" id="confBaixaBtn">🔴 Baixa</button>            </div>            <input type="hidden" id="formMatchConfiabilidade" value="Alta" />          </div>        </div>        <div id="md3GamesSection" style="display:none; margin: 0.85rem 0; padding: 0.85rem 1rem; border: 1px dashed var(--accent2); border-radius: 8px; background: rgba(0, 200, 248, 0.04);">          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 0.75rem;">            <h4 style="margin:0; font-size:0.9rem; color:var(--accent2); font-weight:600; display:flex; align-items:center; gap:0.4rem;">              🎮 Detalhamento dos Games da MD3            </h4>            <span style="font-size:0.75rem; color:var(--text2);" id="md3GamesCountHint">0 games conforme placar</span>          </div>          <div id="md3GamesGrid" style="display:flex; flex-direction:column; gap:0.75rem;">          </div>        </div>        <div class="form-row two-col">          <div class="form-group">            <label class="form-label">Coleção *</label>            <select id="formMatchColecao" class="form-input">              <option value="">Selecione…</option>            </select>          </div>          <div class="form-group">            <label class="form-label">Local</label>            <select id="formMatchLocal" class="form-input">              <option value="">Selecione…</option>              <option value="__outro__">Outro…</option>            </select>          </div>        </div>        <div class="form-group">          <label class="form-label">Local personalizado</label>          <input type="text" id="formMatchLocalCustom" class="form-input" placeholder="Digite o local…" style="display:none" />        </div>        <div class="form-row two-col">          <div class="form-group">            <div class="list-label-row">              <label class="form-label">📜 Lista do Meu Deck (Opcional)</label>              <span class="card-counter under" id="formMatchDeckOwnCounter">0/60</span>            </div>            <textarea id="formMatchDeckOwnList" class="form-textarea" rows="3" placeholder="Opcional: Cole o export PTCGL do seu deck…"></textarea>          </div>          <div class="form-group">            <div class="list-label-row">              <label class="form-label">📜 Lista do Deck Oponente (Opcional)</label>              <span class="card-counter under" id="formMatchDeckAdvCounter">0/60</span>            </div>            <textarea id="formMatchDeckAdvList" class="form-textarea" rows="3" placeholder="Opcional: Cole o export PTCGL do deck do oponente…"></textarea>          </div>        </div>        <div class="form-group">          <label class="form-label">Comentários</label>          <textarea id="formMatchComentarios" class="form-textarea" rows="3" placeholder="Observações sobre a partida…"></textarea>        </div>      </div>      <div class="modal-footer">        <button class="cancel-btn" data-close-modal="modalMatchForm">Cancelar</button>        <button class="save-btn" id="btnSaveMatch">⚔️ Salvar Partida</button>      </div>    </div>  </div>  <div class="modal-overlay" id="modalViewComment">    <div class="modal" style="max-width: 480px; max-height: 85vh; max-height: 85dvh;">      <div class="modal-header">        <h3>💬 Comentário da Partida</h3>      </div>      <div class="modal-body" style="padding: 1.25rem; overflow-y: auto;">        <div id="commentMatchInfo" style="font-size: 0.8rem; color: var(--text2); margin-bottom: 0.85rem; padding-bottom: 0.6rem; border-bottom: 1px solid var(--border);"></div>        <div id="commentTextBody" style="background: var(--bg3); padding: 1rem; border-radius: var(--radius-sm); border: 1px solid var(--glass-bd); font-size: 0.9rem; line-height: 1.6; color: var(--text); white-space: pre-wrap; word-break: break-word; max-height: 45vh; overflow-y: auto;"></div>      </div>      <div class="modal-footer">        <button class="cancel-btn" data-close-modal="modalViewComment" style="width: 100%; text-align: center; font-weight: 600;">✕ Fechar Comentário</button>      </div>    </div>  </div>  <div class="modal-overlay" id="modalUnifyArchetypes">    <div class="modal modal-wide">      <div class="modal-header">        <h3>🔗 Unificar Arquétipos em Lote</h3>      </div>      <div class="modal-body">        <p class="modal-sub" style="margin-bottom: 1rem;">          Selecione o deck/variante que deseja unificar e escolha o arquétipo principal para onde todas as estatísticas históricas devem ser associadas.        </p>        <div class="form-row two-col" style="margin-bottom: 1rem;">          <div class="form-group">            <label class="form-label">Deck / Variante Atual *</label>            <select id="unifyFromDeckSelect" class="form-input">              <option value="">Selecione o deck para unificar…</option>            </select>          </div>          <div class="form-group">            <label class="form-label">Arquétipo Principal Alvo *</label>            <input type="text" id="unifyTargetArchetypeInput" class="form-input" placeholder="Ex: Mega Excadrill" />          </div>        </div>        <div style="background: rgba(26,127,255,0.08); border: 1px solid var(--glass-bd); padding: 0.8rem; border-radius: var(--radius-sm); font-size: 0.78rem; color: var(--text2);">          💡 <strong>Como funciona:</strong> Todas as partidas registradas no histórico que usavam esse deck passarão a agrupar sob o arquétipo principal nos gráficos, matriz de matchups e estatísticas gerais.        </div>      </div>      <div class="modal-footer">        <button class="cancel-btn" data-close-modal="modalUnifyArchetypes">Cancelar</button>        <button class="save-btn" id="btnSubmitUnifyArchetypes" onclick="submitUnifyArchetypes()">🔗 Unificar em Lote</button>      </div>    </div>  </div>  </div>   <div class="modal-overlay" id="modalAuth" style="display:none;">    <div class="modal" style="max-width: 420px; border: 1px solid var(--accent); background: var(--bg2); backdrop-filter: blur(16px);">      <div class="modal-header" style="border-bottom: 1px solid var(--border); padding-bottom: 0.8rem;">        <h2 class="modal-title" style="font-size: 1.1rem; color: var(--accent2);">⚡ Acesso do Time</h2>        <button class="modal-close" data-close-modal="modalAuth">✕</button>      </div>      <div class="modal-body" style="padding: 1.2rem;">        <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border);">          <button id="tabAuthLogin" class="tab-btn active" style="flex: 1; text-align: center;" onclick="switchAuthTab('login')">🔑 Entrar</button>          <button id="tabAuthRegister" class="tab-btn" style="flex: 1; text-align: center;" onclick="switchAuthTab('register')">📝 Cadastrar-se</button>        </div>        <div id="authLoginForm" style="display: flex; flex-direction: column; gap: 0.85rem;">          <div class="form-group">            <label class="form-label">E-mail *</label>            <input type="email" id="authLoginEmail" class="form-input" placeholder="seu.email@jornada.com" />          </div>          <div class="form-group">            <label class="form-label">Senha *</label>            <div class="password-input-wrap">              <input type="password" id="authLoginPassword" class="form-input" placeholder="••••••••" />              <button type="button" class="toggle-password-btn" onclick="togglePasswordVisibility('authLoginPassword', this)" title="Mostrar / Ocultar Senha">👁️</button>            </div>          </div>          <button class="save-btn" style="width: 100%; margin-top: 0.5rem; justify-content: center;" onclick="submitUserLogin()">            ⚡ Entrar no Painel          </button>        </div>        <div id="authRegisterForm" style="display: none; flex-direction: column; gap: 0.85rem;">          <div class="form-group">            <label class="form-label">Vincular Jogador do Time *</label>            <select id="authRegName" class="form-select"></select>          </div>          <div class="form-group">            <label class="form-label">E-mail *</label>            <input type="email" id="authRegEmail" class="form-input" placeholder="seu.email@jornada.com" />          </div>          <div class="form-group">            <label class="form-label">Senha *</label>            <div class="password-input-wrap">              <input type="password" id="authRegPassword" class="form-input" placeholder="Mínimo 6 caracteres" oninput="checkPasswordMatch('auth')" />              <button type="button" class="toggle-password-btn" onclick="togglePasswordVisibility('authRegPassword', this)" title="Mostrar / Ocultar Senha">👁️</button>            </div>          </div>          <div class="form-group">            <label class="form-label">Confirmar Senha *</label>            <div class="password-input-wrap">              <input type="password" id="authRegConfirm" class="form-input" placeholder="Confirme sua senha" oninput="checkPasswordMatch('auth')" />              <button type="button" class="toggle-password-btn" onclick="togglePasswordVisibility('authRegConfirm', this)" title="Mostrar / Ocultar Senha">👁️</button>            </div>            <div id="authPasswordMatchHint" class="password-match-hint"></div>          </div>          <button class="save-btn" style="width: 100%; margin-top: 0.5rem; justify-content: center;" onclick="submitUserRegister()">            📝 Finalizar Cadastro          </button>        </div>      </div>    </div>  </div>  <script src="dist/app.min.js?v=1.0.42"></script>    <div class="app-version-footer">    v<span id="appVersion">1.0.42</span>  </div></body></html>

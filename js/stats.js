@@ -1,5 +1,4 @@
 // ── JS/STATS.JS ─────────────────────────────────────────────────────────────
-// Mathematical & Statistical Engine
 
 window.pct = function(n, d) {
   return d === 0 ? 0 : Math.round((n / d) * 100);

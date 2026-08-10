@@ -1,5 +1,4 @@
 // ── JS/TABLE.JS ─────────────────────────────────────────────────────────────
-// Match History Table Rendering, Sort & Pagination
 
 window.currentPage = 1;
 window.tableSortState = { column: 'seqID', dir: 'desc' };
@@ -66,7 +65,7 @@ window.renderTable = function(rows, resetPage = false) {
       const idB = Number(b.seqID || b.seqId || b._displayId || 0);
       res = idA - idB;
     } else if (column === 'Data') {
-      // Comparação estrita de data (YYYY-MM-DD)
+
       const dA = a.Data || '';
       const dB = b.Data || '';
       if (dA !== dB) {
@@ -80,7 +79,6 @@ window.renderTable = function(rows, resetPage = false) {
 
     if (res !== 0) return res * mult;
 
-    // Tie-breaker incondicional por seqID decrescente
     const idA = Number(a.seqID || a.seqId || a._displayId || 0);
     const idB = Number(b.seqID || b.seqId || b._displayId || 0);
     return idB - idA;

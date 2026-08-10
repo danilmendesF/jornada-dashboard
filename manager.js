@@ -57,9 +57,7 @@ function saveDeletedDecks(s)    { safeSetItem(KEY_DELETED_DECKS,    JSON.stringi
 function saveDeletedPlayers(s)  { safeSetItem(KEY_DELETED_PLAYERS,  JSON.stringify([...s])); triggerSyncPush(); }
 function saveDeletedLocais(s)   { safeSetItem(KEY_DELETED_LOCAIS,   JSON.stringify([...s])); triggerSyncPush(); }
 function saveDeletedColecoes(s) { safeSetItem(KEY_DELETED_COLECOES, JSON.stringify([...s])); triggerSyncPush(); }
-function saveEdits(e)          { safeSetItem(KEY_EDITS,            JSON.stringify(e));      triggerSyncPush(); }
-
-// Exposed state
+function saveEdits(e)          { safeSetItem(KEY_EDITS,            JSON.stringify(e));      triggerSyncPush(); }
 let decks    = loadDecks();
 let players  = loadPlayers();
 let locais   = loadLocais();
@@ -74,21 +72,15 @@ function parsePTCGL(raw) {
 
   for (let line of lines) {
     line = line.trim();
-    if (!line) continue;
-
-    // Section headers like "Pokémon: 12" or "Treinador: 36" or "Energia: 12"
+    if (!line) continue;
     const secMatch = line.match(/^(Pok[eé]mon|Treinador|Energia)\s*:/i);
     if (secMatch) {
       const key = secMatch[1].charAt(0).toUpperCase() + secMatch[1].slice(1).toLowerCase();
       currentSec = key === 'Pokémon' || key === 'Pokemon' ? 'Pokémon' :
                    key === 'Treinador' ? 'Treinador' : 'Energia';
       continue;
-    }
-
-    // "Total de cartas: 60" line — skip
-    if (/total/i.test(line)) continue;
-
-    // Card lines: "4 Charizard ex OBF 125"  or  "4 Charizard ex"
+    }
+    if (/total/i.test(line)) continue;
     const cardMatch = line.match(/^(\d+)\s+(.+)/);
     if (cardMatch && currentSec) {
       const qty  = parseInt(cardMatch[1], 10);
@@ -220,23 +212,17 @@ window.invertPlacar = function(placar) {
 window.buildMirrorMatch = function(primaryMatch) {
   if (!primaryMatch || !primaryMatch.Player || !primaryMatch.Adversario) return null;
   const teamPlayers = (typeof players !== 'undefined' && Array.isArray(players)) ? players : [];
-  const advName = primaryMatch.Adversario.trim();
-
-  // Check if opponent is a registered team player
+  const advName = primaryMatch.Adversario.trim();
   const isTeamPlayer = teamPlayers.some(p => p.toLowerCase() === advName.toLowerCase());
   if (!isTeamPlayer || advName.toLowerCase() === primaryMatch.Player.trim().toLowerCase()) {
     return null; // Not an internal team duel
   }
 
-  const teamPlayerName = teamPlayers.find(p => p.toLowerCase() === advName.toLowerCase()) || advName;
-
-  // Invert outcome & score
+  const teamPlayerName = teamPlayers.find(p => p.toLowerCase() === advName.toLowerCase()) || advName;
   const res = primaryMatch.Resultado;
   const mirrorRes = res === 'Vitória' ? 'Derrota' : res === 'Derrota' ? 'Vitória' : 'Empate';
   const mirrorPontos = mirrorRes === 'Vitória' ? 1 : mirrorRes === 'Empate' ? 0.5 : 0;
-  const mirrorPlacar = invertPlacar(primaryMatch.Placar);
-
-  // Invert MD3 GamesDetail if available
+  const mirrorPlacar = invertPlacar(primaryMatch.Placar);
   let mirrorGamesDetail = null;
   let mirrorStart = primaryMatch.Start === '1º' ? '2º' : primaryMatch.Start === '2º' ? '1º' : primaryMatch.Start;
   let mirrorBrick = primaryMatch.BrickOp || 'Não';
@@ -337,9 +323,7 @@ function populateDeckSelects() {
     const sel = document.getElementById(selInfo.id);
     if (!sel) return;
     const cur = sel.value;
-    sel.innerHTML = `<option value="">${selInfo.placeholder}</option>`;
-    
-    // Extract unique clean Archetype names from registered decks and matches
+    sel.innerHTML = `<option value="">${selInfo.placeholder}</option>`;
     const dataset = (typeof allData !== 'undefined' && Array.isArray(allData)) ? allData : [];
     const registeredArchetypes = decks.map(d => d.arquetipo || d.name).filter(Boolean);
     const matchArchetypes = dataset.map(m => m.Arquetipo || m.Deck).filter(Boolean);
@@ -350,9 +334,7 @@ function populateDeckSelects() {
       o.value = arq;
       o.textContent = arq;
       sel.appendChild(o);
-    });
-    
-    // Preserve current selection if valid, or append dynamic option if valid value
+    });
     if (cur && Array.from(sel.options).some(o => o.value === cur)) {
       sel.value = cur;
     } else if (cur) {
@@ -419,9 +401,7 @@ function renderDecksList() {
       <p class="empty-sub">Clique em "+ Nova Variante / Deck" para começar.</p>
     </div>`;
     return;
-  }
-
-  // Optimize performance: Pre-group matches by deck name and archetype in a single pass O(M)
+  }
   const matchesByDeck = new Map();
   const dataset = (typeof allData !== 'undefined' && Array.isArray(allData)) ? allData : [];
   dataset.forEach(m => {
@@ -449,9 +429,7 @@ function renderDecksList() {
     const valid   = total === 60;
     const pokCount = parsed.sections['Pokémon'].reduce((s, c) => s + c.qty, 0);
     const trnCount = parsed.sections['Treinador'].reduce((s, c) => s + c.qty, 0);
-    const engCount = parsed.sections['Energia'].reduce((s, c) => s + c.qty, 0);
-
-    // Fast O(1) lookup from pre-grouped Map
+    const engCount = parsed.sections['Energia'].reduce((s, c) => s + c.qty, 0);
     const deckMatches = matchesByDeck.get(deck.name) || [];
     const wins        = deckMatches.filter(m => m.Resultado === 'Vitória').length;
     const wr          = deckMatches.length ? Math.round((wins / deckMatches.length) * 100) : 0;
@@ -491,9 +469,7 @@ window.openMatchDeckList = function(matchId, type) {
 
   const isOwn = (type === 'own');
   const deckName = isOwn ? match.Deck : match.DeckAdv;
-  const playerName = isOwn ? match.Player : match.Adversario;
-  
-  // Direct per-match list first, fallback to global deck list if legacy
+  const playerName = isOwn ? match.Player : match.Adversario;
   let listStr = isOwn ? match.ListaMeuDeck : match.ListaDeckAdv;
   if (!listStr && deckName) {
     const dObj = decks.find(d => d.name === deckName);
@@ -559,8 +535,7 @@ window.openDeckListByName = function(deckName, playerName) {
   const deck = decks.find(d => d.name.toLowerCase() === deckName.toLowerCase());
   if (deck) {
     openDeckList(deck.id);
-  } else {
-    // Render transient deck view without mutating global decks state
+  } else {
     currentViewingDeckId = null;
     currentViewingMatchDeck = { matchId: null, type: 'transient', list: '', name: deckName, player: playerName || '' };
 
@@ -624,9 +599,7 @@ window.openDeckList = function(deckId) {
     body.title = "";
     body.style.cursor = "default";
     body.onclick = null;
-  }
-
-  // Search
+  }
   document.getElementById('deckListSearch').value = '';
   showModal('modalDeckList');
 };
@@ -683,9 +656,7 @@ function fallbackCopyList(text) {
   } catch(err) {
     alert('Não foi possível copiar a lista automaticamente.');
   }
-}
-
-// Deck list search filter
+}
 document.addEventListener('DOMContentLoaded', () => {
   const searchEl = document.getElementById('deckListSearch');
   if (searchEl) {
@@ -826,9 +797,7 @@ function saveDeckForm() {
       const finalPlayerName = activeUser || 'Jogador Desconhecido';
       fetch('/api/notifyDeck', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({playerName: finalPlayerName, deckName: name}) }); 
     } catch(e) {}
-  }
-
-  // Ensure deck is removed from deleted tracking sets if re-adding/editing
+  }
   const delDecks = loadDeletedDecks();
   let delChanged = false;
   if (delDecks.has(name)) { delDecks.delete(name); delChanged = true; }
@@ -848,9 +817,7 @@ function saveDeckForm() {
 
   saveDecks(decks);
   populateDeckSelects();
-  renderDecksList();
-
-  // Auto-select newly created deck in target dropdown
+  renderDecksList();
   if (deckSelectTargetId) {
     const targetSelect = document.getElementById(deckSelectTargetId);
     if (targetSelect) {
@@ -858,9 +825,7 @@ function saveDeckForm() {
       if (targetSelect.syncSearchableSelect) targetSelect.syncSearchableSelect();
     }
     deckSelectTargetId = null;
-  }
-
-  // Refresh app data if available
+  }
   if (typeof populateFilters === 'function') populateFilters();
   if (typeof applyFilters    === 'function') applyFilters();
 
@@ -868,8 +833,7 @@ function saveDeckForm() {
   showToast(`💾 Deck "${name}" salvo com sucesso!`);
 }
 
-// ── MATCH FORM ────────────────────────────────────────────────────────────────
-// current match being edited (null = new match)
+// ── MATCH FORM ────────────────────────────────────────────────────────────────
 let editingMatchId = null;
 
 function updateMatchDeckCounters() {
@@ -893,13 +857,9 @@ function updateMatchDeckCounters() {
 }
 
 function openMatchForm(matchData) {
-  editingMatchId = matchData?.id || null;
-
-  // Repopulate local and coleção selects to reflect any updated data
+  editingMatchId = matchData?.id || null;
   populateLocalSelects();
-  populateColecaoSelects();
-
-  // Header label
+  populateColecaoSelects();
   const h = document.querySelector('#modalMatchForm .modal-header h3');
   if (h) h.textContent = editingMatchId ? '✏️ Editar Partida' : '⚔️ Registrar Partida';
 
@@ -924,9 +884,7 @@ function openMatchForm(matchData) {
   if (colSel) {
     colSel.value = matchData?.Colecao || '';
     if (colSel.syncSearchableSelect) colSel.syncSearchableSelect();
-  }
-
-  // Local select logic
+  }
   const localSel = get('formMatchLocal');
   const localCustom = get('formMatchLocalCustom');
   const targetLocal = matchData?.Local || '';
@@ -947,13 +905,9 @@ function openMatchForm(matchData) {
     localCustom.value = '';
     localCustom.style.display = 'none';
   }
-  if (localSel.syncSearchableSelect) localSel.syncSearchableSelect();
-
-  // Deck select — match by archetype or deck name
+  if (localSel.syncSearchableSelect) localSel.syncSearchableSelect();
   get('formMatchDeck').value = matchData?.Arquetipo || matchData?.Deck || '';
-  if (get('formMatchSubtipo')) get('formMatchSubtipo').value = matchData?.Subtipo || '';
-
-  // Optional Deck lists textareas for Meu Deck and Deck Oponente
+  if (get('formMatchSubtipo')) get('formMatchSubtipo').value = matchData?.Subtipo || '';
   const ownDeckObj = matchData?.Deck ? decks.find(d => d.name === matchData.Deck) : null;
   const advDeckObj = matchData?.DeckAdv ? decks.find(d => d.name === matchData.DeckAdv) : null;
 
@@ -963,9 +917,7 @@ function openMatchForm(matchData) {
   const advListTA = get('formMatchDeckAdvList');
   if (advListTA) advListTA.value = matchData?.ListaDeckAdv || (advDeckObj?.list || '');
 
-  updateMatchDeckCounters();
-
-  // Brick & Confiabilidade toggles
+  updateMatchDeckCounters();
   const isOldBrick = v => v && v !== 'Nenhum' && v !== 'Não';
   const brickVal   = isOldBrick(matchData?.Brick) ? 'Sim' : 'Não';
   const brickOpVal = isOldBrick(matchData?.BrickOp) ? 'Sim' : 'Não';
@@ -985,9 +937,7 @@ function openMatchForm(matchData) {
   get('formMatchConfiabilidade').value = confVal;
   document.querySelectorAll('#confiabilidadeToggleGroup .brick-toggle').forEach(b => {
     b.classList.toggle('active', b.dataset.value.toLowerCase() === confVal.toLowerCase());
-  });
-
-  // Sync ALL custom searchable selects in the modal so visual display text matches actual element values
+  });
   [
     'formMatchPlayer',
     'formMatchDeck',
@@ -1023,9 +973,7 @@ window.getGameCountFromPlacar = function(formato, placar, userOverriddenCount = 
     if (cleanPlacar === '1-1' && (userOverriddenCount === 2 || userOverriddenCount === 3)) {
       return userOverriddenCount;
     }
-  }
-
-  // Exact Placar Rules
+  }
   if (cleanPlacar === '0-0') return 1;
   if (cleanPlacar === '1-0' || cleanPlacar === '0-1') return 1;
   if (cleanPlacar === '1-1') return 2;
@@ -1053,9 +1001,7 @@ window.renderMD3GamesUI = function(existingGamesDetail = null, userCountOverride
     if (singleBrickGroup) singleBrickGroup.style.display = 'block';
     if (singleBrickOpGroup) singleBrickOpGroup.style.display = 'block';
     return;
-  }
-
-  // MD3 Mode: Hide single start & single brick/brickOp toggles
+  }
   sec.style.display = 'block';
   if (singleStartGroup) singleStartGroup.style.display = 'none';
   if (singleBrickGroup) singleBrickGroup.style.display = 'none';
@@ -1196,28 +1142,21 @@ window.updateSubtipoOptions = function() {
 };
 
 window.findRegisteredDeck = function(player, arquetipo, subtipo) {
-  if (!arquetipo) return null;
-  // 1. Match on arquetipo + subtipo + player
+  if (!arquetipo) return null;
   let found = decks.find(d => 
     (d.arquetipo || d.name) === arquetipo && 
     (d.subtipo || '') === subtipo && 
     d.player === player
   );
-  if (found) return found;
-
-  // 2. Match on arquetipo + subtipo
+  if (found) return found;
   found = decks.find(d => 
     (d.arquetipo || d.name) === arquetipo && 
     (d.subtipo || '') === subtipo
   );
-  if (found) return found;
-
-  // 3. Match on full name format: `${arquetipo} (${subtipo})`
+  if (found) return found;
   const fullName = subtipo ? `${arquetipo} (${subtipo})` : arquetipo;
   found = decks.find(d => d.name === fullName);
-  if (found) return found;
-
-  // 4. Fallback to arquetipo
+  if (found) return found;
   if (!subtipo) {
     found = decks.find(d => (d.arquetipo || d.name) === arquetipo);
     if (found) return found;
@@ -1314,9 +1253,7 @@ function saveMatchForm() {
   const localSel = getVal('formMatchLocal');
   const localCustom = getVal('formMatchLocalCustom').trim();
   const local    = localSel === '__outro__' ? localCustom : localSel;
-  const pontos   = resultado === 'Vitória' ? 1 : resultado === 'Empate' ? 0.5 : 0;
-
-  // Save Optional per-match deck lists directly to matchData and sync to global decks catalog
+  const pontos   = resultado === 'Vitória' ? 1 : resultado === 'Empate' ? 0.5 : 0;
   const ownListRaw = getVal('formMatchDeckOwnList').trim();
   const advListRaw = getVal('formMatchDeckAdvList').trim();
 
@@ -1328,9 +1265,7 @@ function saveMatchForm() {
   const deckFullName    = subtipo ? `${arquetipo} (${subtipo})` : arquetipo;
   const deckAdvFullName = subtipoAdv ? `${arquetipoAdv} (${subtipoAdv})` : arquetipoAdv;
 
-  let decksChanged = false;
-
-  // 1. Sync or Create Own Deck in global decks catalog
+  let decksChanged = false;
   let ownDeck = findRegisteredDeck(player, arquetipo, subtipo);
   if (!ownDeck) {
     ownDeck = {
@@ -1347,9 +1282,7 @@ function saveMatchForm() {
   } else if (ownListRaw && ownDeck.list !== ownListRaw) {
     ownDeck.list = ownListRaw;
     decksChanged = true;
-  }
-
-  // 2. Sync or Create Opponent Deck in global decks catalog
+  }
   let advDeck = findRegisteredDeck(null, arquetipoAdv, subtipoAdv);
   if (!advDeck) {
     advDeck = {
@@ -1438,8 +1371,7 @@ function saveMatchForm() {
   }
 
   const manual = loadManual();
-  if (editingMatchId) {
-    // --- EDIT mode ---
+  if (editingMatchId) {
     const midx = manual.findIndex(m => m.id === editingMatchId);
     if (midx >= 0) {
       const s = manual[midx].seqID || manual[midx].seqId;
@@ -1454,17 +1386,14 @@ function saveMatchForm() {
       edits[editingMatchId] = matchData;
       saveEdits(edits);
     }
-  } else {
-    // --- NEW match ---
+  } else {
     if (!matchData.seqID && !matchData.seqId) {
       matchData.seqID = typeof getNextSeqID === 'function' ? getNextSeqID(manual) : (manual.length + 1);
       matchData.seqId = matchData.seqID;
       matchData._displayId = matchData.seqID;
     }
     manual.push(matchData);
-  }
-
-  // Sync Mirror Match in manual store
+  }
   if (mirrorMatch) {
     if (!mirrorMatch.seqID && !mirrorMatch.seqId) {
       mirrorMatch.seqID = typeof getNextSeqID === 'function' ? getNextSeqID(manual) : (matchData.seqID + 1);
@@ -1478,9 +1407,7 @@ function saveMatchForm() {
     const mIdx = manual.findIndex(m => m._mirroredFrom === matchData.id);
     if (mIdx >= 0) manual.splice(mIdx, 1);
   }
-  saveManual(manual);
-
-  // Sync in-memory allData
+  saveManual(manual);
   if (typeof allData !== 'undefined' && Array.isArray(allData)) {
     const aidx = allData.findIndex(m => m.id === matchData.id);
     if (aidx >= 0) allData[aidx] = matchData;
@@ -1502,9 +1429,7 @@ function saveMatchForm() {
     showToast(`⚔️ Partida registrada para ${matchData.Player} e espelho para ${mirrorMatch.Player}!`);
   } else {
     showToast('✅ Partida registrada com sucesso!');
-  }
-
-  // Reset editing ID
+  }
   editingMatchId = null;
 
   if (typeof populateFilters === 'function') populateFilters();
@@ -1637,14 +1562,12 @@ window.resetPlayerAccount = async function(playerName) {
     });
     const data = await res.json();
     if (res.ok) {
-      showToast?.(`✅ Conta de ${playerName} resetada com sucesso!`);
-      // Remove from local cache immediately
+      showToast?.(`✅ Conta de ${playerName} resetada com sucesso!`);
       try {
         const claimed = JSON.parse(localStorage.getItem('jornada_claimed_players') || '[]');
         const updated = claimed.filter(n => n.trim() !== playerName.trim());
         localStorage.setItem('jornada_claimed_players', JSON.stringify(updated));
-      } catch(e) {}
-      // Refresh from cloud and update dropdowns
+      } catch(e) {}
       if (typeof fetchClaimedPlayers === 'function') await fetchClaimedPlayers();
       if (typeof populatePlayerRegisterDropdowns === 'function') populatePlayerRegisterDropdowns();
     } else {
@@ -1702,9 +1625,7 @@ function renderLocaisList() {
 function populateLocalSelects() {
   const customLocais = (typeof loadLocais === 'function') ? loadLocais() : [];
   const dataLocais   = (typeof allData !== 'undefined' && Array.isArray(allData)) ? allData.map(d => d.Local).filter(Boolean) : [];
-  const allLocais    = [...new Set([...customLocais, ...dataLocais])].sort((a, b) => a.localeCompare(b));
-
-  // 1. Modal Local Select (#formMatchLocal)
+  const allLocais    = [...new Set([...customLocais, ...dataLocais])].sort((a, b) => a.localeCompare(b));
   const modalSel = document.getElementById('formMatchLocal');
   if (modalSel) {
     const cur = modalSel.value;
@@ -1720,9 +1641,7 @@ function populateLocalSelects() {
     modalSel.appendChild(outroOpt);
     if (cur && (allLocais.includes(cur) || cur === '__outro__')) modalSel.value = cur;
     if (modalSel.syncSearchableSelect) modalSel.syncSearchableSelect();
-  }
-
-  // 2. Quick Log Local Select (#quickLogLocal)
+  }
   const quickSel = document.getElementById('quickLogLocal');
   if (quickSel) {
     const cur = quickSel.value;
@@ -1734,9 +1653,7 @@ function populateLocalSelects() {
     });
     if (cur && allLocais.includes(cur)) quickSel.value = cur;
     if (quickSel.syncSearchableSelect) quickSel.syncSearchableSelect();
-  }
-
-  // 3. Main Filter Local Select (#filterLocal)
+  }
   const filterSel = document.getElementById('filterLocal');
   if (filterSel) {
     const cur = filterSel.value;
@@ -1798,9 +1715,7 @@ function renderColecoesList() {
 function populateColecaoSelects() {
   const customColecoes = (typeof loadColecoes === 'function') ? loadColecoes() : [];
   const dataColecoes   = (typeof allData !== 'undefined' && Array.isArray(allData)) ? allData.map(d => d.Colecao).filter(Boolean) : [];
-  const allColecoes    = [...new Set([...customColecoes, ...dataColecoes])].sort((a, b) => a.localeCompare(b));
-
-  // 1. Modal Match Form (#formMatchColecao)
+  const allColecoes    = [...new Set([...customColecoes, ...dataColecoes])].sort((a, b) => a.localeCompare(b));
   const modalSel = document.getElementById('formMatchColecao');
   if (modalSel) {
     const cur = modalSel.value;
@@ -1812,9 +1727,7 @@ function populateColecaoSelects() {
     });
     if (cur && allColecoes.includes(cur)) modalSel.value = cur;
     if (modalSel.syncSearchableSelect) modalSel.syncSearchableSelect();
-  }
-
-  // 2. Quick Log Coleção Select (#quickLogColecao)
+  }
   const quickSel = document.getElementById('quickLogColecao');
   if (quickSel) {
     const cur = quickSel.value;
@@ -1826,9 +1739,7 @@ function populateColecaoSelects() {
     });
     if (cur && allColecoes.includes(cur)) quickSel.value = cur;
     if (quickSel.syncSearchableSelect) quickSel.syncSearchableSelect();
-  }
-
-  // 3. Main Filter Coleção Select (#filterColecao)
+  }
   const filterSel = document.getElementById('filterColecao');
   if (filterSel) {
     const cur = filterSel.value;
@@ -1915,20 +1826,16 @@ window.updatePlacarDropdown = function(formatoId, placarId, currentVal = null, o
   if (!formatoEl || !placarEl) return;
 
   const fmt = formatoEl.value || 'MD1';
-  const fmtRules = PLACAR_RULES[fmt] || PLACAR_RULES.MD1;
-
-  // Determine active outcome
+  const fmtRules = PLACAR_RULES[fmt] || PLACAR_RULES.MD1;
   let activeOutcome = outcome;
   if (!activeOutcome && resultadoId) {
     activeOutcome = document.getElementById(resultadoId)?.value;
   }
 
   let options;
-  if (formatoId === 'quickLogFormato' && !outcome) {
-    // Quick Log: show all valid scores for that format so user can choose score before clicking Vit/Emp/Der
+  if (formatoId === 'quickLogFormato' && !outcome) {
     options = fmtRules['ALL'];
-  } else {
-    // Modal or explicit outcome: filter by exact outcome
+  } else {
     if (!activeOutcome) activeOutcome = 'Vitória';
     if (activeOutcome.includes('Vitória')) activeOutcome = 'Vitória';
     else if (activeOutcome.includes('Empate')) activeOutcome = 'Empate';
@@ -2026,9 +1933,7 @@ window.quickLogMatch = function(resultado) {
   const deckAdv  = document.getElementById('quickLogDeckAdv')?.value;
   const formato  = document.getElementById('quickLogFormato')?.value || 'MD1';
   const colecao  = document.getElementById('quickLogColecao')?.value;
-  const local    = document.getElementById('quickLogLocal')?.value;
-
-  // Auto-select smart placar based on resultado and formato
+  const local    = document.getElementById('quickLogLocal')?.value;
   updatePlacarDropdown('quickLogFormato', 'quickLogPlacar', null, resultado);
   const placarInput = document.getElementById('quickLogPlacar')?.value || (formato === 'MD1' ? '1-0' : '2-0');
 
@@ -2171,9 +2076,7 @@ let pushDebounceTimer = null; // debounce timer for triggerSyncPush
 function getSyncUrl(token) {
   const isLocalFile = window.location.protocol === 'file:';
   const cleanToken = token.replace(/[^a-zA-Z0-9_-]/g, '');
-  const ts = Date.now();
-  // Ensure both local file and Vercel proxy hit the exact same key name: jornada_sync_<token>
-  // Added timestamp parameter to completely bypass browser caching
+  const ts = Date.now();
   return isLocalFile 
     ? `https://keyvalue.xyz/v1/jornada_sync_${cleanToken}?_t=${ts}` 
     : `/api/sync?token=${cleanToken}&_t=${ts}`;
@@ -2196,10 +2099,7 @@ async function pullFromCloud(quiet = false) {
     } catch (e) {}
 
   const token = localStorage.getItem('jornada_sync_token');
-  if (!token) return;
-
-  // Skip pull if we are actively pushing or if a local write occurred recently (< 6 seconds ago)
-  // This prevents race conditions where old cloud data overwrites new local changes
+  if (!token) return;
   if (isSyncing) {
     if (!quiet) console.log('⏳ Sync [Pull]: Pulado pois uma gravação (Push) está ativa.');
     return;
@@ -2264,38 +2164,26 @@ async function pullFromCloud(quiet = false) {
       const localDeletedLocais   = [...loadDeletedLocais()];
       const localDeletedColecoes = [...loadDeletedColecoes()];
 
-      const localEdits = loadEdits();
-
-      // 1. Combine deleted tracking sets from both local and cloud
+      const localEdits = loadEdits();
       const combinedDeleted         = new Set([...localDeleted, ...cloudDeleted]);
       const combinedDeletedDecks    = new Set([...localDeletedDecks, ...cloudDeletedDecks]);
       const combinedDeletedPlayers  = new Set([...localDeletedPlayers, ...cloudDeletedPlayers]);
       const combinedDeletedLocais   = new Set([...localDeletedLocais, ...cloudDeletedLocais]);
       const combinedDeletedColecoes = new Set([...localDeletedColecoes, ...cloudDeletedColecoes]);
 
-      // ── CRITICAL FIX: Local live decks override cloud deletion markers ───────
-      // If a deck exists in localDecks (user just created/saved it), it must
-      // NEVER be treated as deleted — even if the cloud still has its name/id in
-      // deletedDecks (e.g. race condition between push and pull, or previous
-      // deletion that hasn't been propagated yet from the cloud side).
+      // ── CRITICAL FIX: Local live decks override cloud deletion markers ───────
       localDecks.forEach(d => {
         if (d?.id)   combinedDeletedDecks.delete(d.id);
         if (d?.name) combinedDeletedDecks.delete(d.name);
-      });
-
-      // 2. Combine edit overrides from both
-      const combinedEdits = { ...localEdits, ...cloudEdits };
-
-      // 3. Merge matches list (excluding deleted matches)
+      });
+      const combinedEdits = { ...localEdits, ...cloudEdits };
       const matchesMap = new Map();
       [...localMatches, ...cloudMatches].forEach(m => {
         if (combinedDeleted.has(m.id)) return;
         const finalMatch = combinedEdits[m.id] || m;
         matchesMap.set(m.id, finalMatch);
       });
-      const finalMatches = Array.from(matchesMap.values());
-
-      // 4. Merge Decks (excluding deleted decks by ID or Name; local decks take precedence over cloud and deduplicate by name)
+      const finalMatches = Array.from(matchesMap.values());
       const decksMap = new Map();
       const getDeckKey = d => (typeof d === 'string' ? d : d?.name || d?.id || '').toLowerCase().trim();
 
@@ -2307,24 +2195,15 @@ async function pullFromCloud(quiet = false) {
         if (key) decksMap.set(key, typeof d === 'string' ? { id: Date.now().toString(), name: d, list: '' } : d);
       });
 
-      localDecks.forEach(d => {
-        // Local decks are always kept — they were already cleared from combinedDeletedDecks above
+      localDecks.forEach(d => {
         const key = getDeckKey(d);
         if (key) decksMap.set(key, typeof d === 'string' ? { id: Date.now().toString(), name: d, list: '' } : d);
       });
 
-      const finalDecks = Array.from(decksMap.values());
-
-      // 5. Merge Players (excluding deleted players)
-      const finalPlayers = [...new Set([...localPlayers, ...cloudPlayers])].filter(p => !combinedDeletedPlayers.has(p));
-
-      // 6. Merge Locais (excluding deleted locais)
-      const finalLocais = [...new Set([...localLocais, ...cloudLocais])].filter(l => !combinedDeletedLocais.has(l));
-
-      // 7. Merge Colecoes (excluding deleted colecoes)
-      const finalColecoes = [...new Set([...localColecoes, ...cloudColecoes])].filter(c => !combinedDeletedColecoes.has(c));
-
-      // Helper for deterministic JSON comparisons (sorted keys prevent false-positive sync loops)
+      const finalDecks = Array.from(decksMap.values());
+      const finalPlayers = [...new Set([...localPlayers, ...cloudPlayers])].filter(p => !combinedDeletedPlayers.has(p));
+      const finalLocais = [...new Set([...localLocais, ...cloudLocais])].filter(l => !combinedDeletedLocais.has(l));
+      const finalColecoes = [...new Set([...localColecoes, ...cloudColecoes])].filter(c => !combinedDeletedColecoes.has(c));
       const canonicalStringify = (obj) => JSON.stringify(obj, (key, value) => {
         if (value && typeof value === 'object' && !Array.isArray(value)) {
           return Object.keys(value).sort().reduce((acc, k) => {
@@ -2333,9 +2212,7 @@ async function pullFromCloud(quiet = false) {
           }, {});
         }
         return value;
-      });
-
-      // Convert to deterministic strings for comparison
+      });
       const localDecksStr    = canonicalStringify(localDecks);
       const localMatchesStr  = canonicalStringify(localMatches);
       const localPlayersStr  = canonicalStringify(localPlayers);
@@ -2483,10 +2360,7 @@ async function pushToCloud() {
       pushToCloud();
     }
   }
-}
-
-// Debounced push: coalesces rapid consecutive saves (e.g. batch import)
-// into a single HTTP request after 800ms of inactivity.
+}
 function triggerSyncPush() {
   lastWriteTime = Date.now();
   if (pushDebounceTimer) clearTimeout(pushDebounceTimer);
@@ -2529,9 +2403,7 @@ function stopSyncInterval() {
     clearInterval(syncInterval);
     syncInterval = null;
   }
-}
-
-// Smart Polling: Pause sync requests when tab is inactive (in background or device locked)
+}
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) {
     console.log('💤 Sync: Aba em segundo plano. Pausando consultas automáticas para economizar requisições no banco...');
@@ -2566,33 +2438,25 @@ window.addEventListener('DOMContentLoaded', () => {
   renderColecoesList();
   populateQuickLogDropdowns();
   initSyncUI();
-  initQuickLogToggle();
-
-  // Event: deck list textarea counter
+  initQuickLogToggle();
   const listTA = document.getElementById('formDeckList');
   if (listTA) listTA.addEventListener('input', updateCardCounter);
 
   document.getElementById('formMatchDeckOwnList')?.addEventListener('input', updateMatchDeckCounters);
-  document.getElementById('formMatchDeckAdvList')?.addEventListener('input', updateMatchDeckCounters);
-
-  // Event: luck slider display
+  document.getElementById('formMatchDeckAdvList')?.addEventListener('input', updateMatchDeckCounters);
   const luckSlider = document.getElementById('formMatchLuck');
   if (luckSlider) {
     luckSlider.addEventListener('input', () => {
       document.getElementById('luckDisplay').textContent = luckSlider.value;
     });
-  }
-
-  // Event: local select → show custom input
+  }
   const localSel = document.getElementById('formMatchLocal');
   if (localSel) {
     localSel.addEventListener('change', () => {
       const customWrap = document.getElementById('formMatchLocalCustom');
       customWrap.style.display = localSel.value === '__outro__' ? 'block' : 'none';
     });
-  }
-
-  // Event: Brick toggle buttons
+  }
   document.querySelectorAll('#brickToggleGroup .brick-toggle').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.preventDefault();
@@ -2621,38 +2485,24 @@ window.addEventListener('DOMContentLoaded', () => {
       const input = document.getElementById('formMatchConfiabilidade');
       if (input) input.value = btn.dataset.value;
     });
-  });
-
-  // Event: deck form save
-  document.getElementById('btnSaveDeck')?.addEventListener('click', saveDeckForm);
-
-  // Event: match form save
-  document.getElementById('btnSaveMatch')?.addEventListener('click', saveMatchForm);
-
-  // Event: add player
+  });
+  document.getElementById('btnSaveDeck')?.addEventListener('click', saveDeckForm);
+  document.getElementById('btnSaveMatch')?.addEventListener('click', saveMatchForm);
   document.getElementById('btnAddPlayer')?.addEventListener('click', addPlayer);
   document.getElementById('newPlayerName')?.addEventListener('keydown', e => {
     if (e.key === 'Enter') addPlayer();
-  });
-
-  // Event: add local
+  });
   document.getElementById('btnAddLocal')?.addEventListener('click', addLocal);
   document.getElementById('newLocalName')?.addEventListener('keydown', e => {
     if (e.key === 'Enter') addLocal();
-  });
-
-  // Event: add coleção
+  });
   document.getElementById('btnAddColecao')?.addEventListener('click', addColecao);
   document.getElementById('newColecaoName')?.addEventListener('keydown', e => {
     if (e.key === 'Enter') addColecao();
-  });
-
-  // Event: quick log buttons
+  });
   document.getElementById('btnQuickWin')?.addEventListener('click', () => quickLogMatch('Vitória'));
   document.getElementById('btnQuickDraw')?.addEventListener('click', () => quickLogMatch('Empate'));
-  document.getElementById('btnQuickLoss')?.addEventListener('click', () => quickLogMatch('Derrota'));
-
-  // Event: Formato & Placar dropdown sync
+  document.getElementById('btnQuickLoss')?.addEventListener('click', () => quickLogMatch('Derrota'));
   document.getElementById('quickLogFormato')?.addEventListener('change', () => {
     updatePlacarDropdown('quickLogFormato', 'quickLogPlacar');
   });
@@ -2663,34 +2513,22 @@ window.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('formMatchResultado')?.addEventListener('change', () => {
     updatePlacarDropdown('formMatchFormato', 'formMatchPlacar', null, null, 'formMatchResultado');
-  });
-
-  // Initial placar sync
+  });
   updatePlacarDropdown('quickLogFormato', 'quickLogPlacar');
-  updatePlacarDropdown('formMatchFormato', 'formMatchPlacar', null, null, 'formMatchResultado');
-
-  // Event: quick add deck from dropdowns
+  updatePlacarDropdown('formMatchFormato', 'formMatchPlacar', null, null, 'formMatchResultado');
   document.getElementById('btnQuickAddDeckOwn')?.addEventListener('click', () => openDeckFormForTarget('quickLogDeck'));
   document.getElementById('btnQuickAddDeckAdv')?.addEventListener('click', () => openDeckFormForTarget('quickLogDeckAdv'));
   document.getElementById('btnFormAddDeckOwn')?.addEventListener('click', () => openDeckFormForTarget('formMatchDeck'));
-  document.getElementById('btnFormAddDeckAdv')?.addEventListener('click', () => openDeckFormForTarget('formMatchDeckAdv'));
-
-  // Modal close buttons
+  document.getElementById('btnFormAddDeckAdv')?.addEventListener('click', () => openDeckFormForTarget('formMatchDeckAdv'));
   document.querySelectorAll('[data-close-modal]').forEach(btn => {
     btn.addEventListener('click', () => closeModal(btn.dataset.closeModal));
-  });
-
-  // Click outside modal to close
+  });
   document.querySelectorAll('.modal-overlay').forEach(overlay => {
     overlay.addEventListener('click', e => {
       if (e.target === overlay) closeModal(overlay.id);
     });
-  });
-
-  // FAB
-  document.getElementById('fabBtn')?.addEventListener('click', () => openMatchForm());
-
-  // Tab switching in manager panel
+  });
+  document.getElementById('fabBtn')?.addEventListener('click', () => openMatchForm());
   document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -2698,9 +2536,7 @@ window.addEventListener('DOMContentLoaded', () => {
       btn.classList.add('active');
       document.getElementById(btn.dataset.tab)?.classList.add('active');
     });
-  });
-
-  // Manager panel toggle — protected by Admin PIN/Password
+  });
   const closeManager = () => document.getElementById('managerPanel')?.classList.remove('open');
 
   document.getElementById('btnOpenManager')?.addEventListener('click', () => {
@@ -2712,18 +2548,14 @@ window.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('btnLockManager')?.addEventListener('click', () => {
     lockAdminAccess();
-  });
-
-  // Admin Auth Modal handlers
+  });
   document.getElementById('btnSubmitAdminAuth')?.addEventListener('click', submitAdminAuth);
   document.getElementById('adminPinInput')?.addEventListener('keydown', e => {
     if (e.key === 'Enter') submitAdminAuth();
   });
   document.getElementById('adminPinConfirmInput')?.addEventListener('keydown', e => {
     if (e.key === 'Enter') submitAdminAuth();
-  });
-
-  // Password visibility toggle
+  });
   document.getElementById('btnToggleAdminPinVisibility')?.addEventListener('click', () => {
     const pinIn = document.getElementById('adminPinInput');
     const confIn = document.getElementById('adminPinConfirmInput');
@@ -2732,9 +2564,7 @@ window.addEventListener('DOMContentLoaded', () => {
       pinIn.type = isPass ? 'text' : 'password';
       if (confIn) confIn.type = isPass ? 'text' : 'password';
     }
-  });
-
-  // Admin security settings handlers inside tabSeguranca
+  });
   document.getElementById('btnSaveNewAdminPin')?.addEventListener('click', () => {
     const p1 = document.getElementById('changeAdminPinNew')?.value.trim();
     const p2 = document.getElementById('changeAdminPinConfirm')?.value.trim();
@@ -2754,15 +2584,11 @@ window.addEventListener('DOMContentLoaded', () => {
       triggerSyncPush();
       showToast('🔓 Proteção por senha desativada.');
     }
-  });
-
-  // Backup events
+  });
   document.getElementById('btnExportBackup')?.addEventListener('click', () => window.exportBackup());
   document.getElementById('backupFileInput')?.addEventListener('change', e => {
     if (e.target.files[0]) window.importBackup(e.target.files[0]);
-  });
-
-  // Merge manual matches into allData
+  });
   const manual = loadManual();
   if (manual.length && typeof allData !== 'undefined') {
     const existingIds = new Set(allData.map(m => m.id).filter(Boolean));
@@ -2909,9 +2735,7 @@ function checkAndRunDailyAutoBackup(force = false) {
       backupsList = JSON.parse(localStorage.getItem(KEY_AUTO_BACKUPS)) || [];
     } catch (e) {
       backupsList = [];
-    }
-
-    // Keep unique daily snapshots for last 7 days
+    }
     backupsList = backupsList.filter(b => b.date !== todayStr || force);
     backupsList.unshift(snapshot);
     if (backupsList.length > 7) backupsList = backupsList.slice(0, 7);
@@ -3074,16 +2898,12 @@ window.submitUnifyArchetypes = function() {
     return;
   }
 
-  lastWriteTime = Date.now();
-
-  // 0. Register persistent unification rule
+  lastWriteTime = Date.now();
   const unifications = typeof loadArchetypeUnifications === 'function' ? loadArchetypeUnifications() : [];
   if (!unifications.some(u => u.fromDeck === fromDeck && u.targetArchetype === targetArchetype)) {
     unifications.push({ fromDeck, targetArchetype, timestamp: Date.now() });
     if (typeof saveArchetypeUnifications === 'function') saveArchetypeUnifications(unifications);
-  }
-
-  // 1. Update manual matches
+  }
   let updatedCount = 0;
   const manual = loadManual();
   manual.forEach(m => {
@@ -3100,9 +2920,7 @@ window.submitUnifyArchetypes = function() {
     }
     if (touched) updatedCount++;
   });
-  saveManual(manual);
-
-  // 2. Update edits overrides if any
+  saveManual(manual);
   const edits = loadEdits();
   Object.values(edits).forEach(m => {
     if (m.Deck === fromDeck || m.Arquetipo === fromDeck || (typeof getMatchDeck === 'function' && getMatchDeck(m) === fromDeck)) {
@@ -3114,18 +2932,14 @@ window.submitUnifyArchetypes = function() {
       m.DeckAdv = m.SubtipoAdv ? `${targetArchetype} (${m.SubtipoAdv})` : targetArchetype;
     }
   });
-  saveEdits(edits);
-
-  // 3. Update decks in manager
+  saveEdits(edits);
   decks.forEach(d => {
     if (d.name === fromDeck || d.arquetipo === fromDeck) {
       d.arquetipo = targetArchetype;
       d.name = d.subtipo ? `${targetArchetype} (${d.subtipo})` : targetArchetype;
     }
   });
-  saveDecks(decks);
-
-  // 4. Update in-memory allData
+  saveDecks(decks);
   if (typeof allData !== 'undefined' && Array.isArray(allData)) {
     allData.forEach(m => {
       if (m.Deck === fromDeck || m.Arquetipo === fromDeck || (typeof getMatchDeck === 'function' && getMatchDeck(m) === fromDeck)) {
@@ -3148,9 +2962,7 @@ window.submitUnifyArchetypes = function() {
 
   closeModal('modalUnifyArchetypes');
   showToast(`🔗 Arquétipo "${fromDeck}" unificado em "${targetArchetype}" com sucesso! (${updatedCount} registros atualizados)`);
-};
-
-// Check and trigger daily auto-backup on app load
+};
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => setTimeout(checkAndRunDailyAutoBackup, 1500));
 } else {
