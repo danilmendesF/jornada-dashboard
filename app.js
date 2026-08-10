@@ -1458,8 +1458,8 @@ function updateTableHeaderSortUI() {
 
     switch(column) {
       case 'id':
-        valA = Number(a.id) || 0;
-        valB = Number(b.id) || 0;
+        valA = parseInt(String(a.id).replace(/\D/g, ''), 10) || 0;
+        valB = parseInt(String(b.id).replace(/\D/g, ''), 10) || 0;
         break;
       case 'Data':
         valA = a.Data || '';
@@ -1515,17 +1515,20 @@ function updateTableHeaderSortUI() {
         valB = b.Local || '';
         break;
       default:
-        valA = Number(a.id) || 0;
-        valB = Number(b.id) || 0;
+        valA = parseInt(String(a.id).replace(/\D/g, ''), 10) || 0;
+        valB = parseInt(String(b.id).replace(/\D/g, ''), 10) || 0;
     }
 
     if (typeof valA === 'string') {
-      return valA.localeCompare(valB, 'pt-BR', { numeric: true }) * multiplier;
-    }
-    if (valA !== valB) {
+      const cmp = valA.localeCompare(valB, 'pt-BR', { numeric: true });
+      if (cmp !== 0) return cmp * multiplier;
+    } else if (valA !== valB) {
       return (valA < valB ? -1 : 1) * multiplier;
     }
-    return (Number(b.id) || 0) - (Number(a.id) || 0);
+    
+    const idA = parseInt(String(a.id).replace(/\D/g, ''), 10) || 0;
+    const idB = parseInt(String(b.id).replace(/\D/g, ''), 10) || 0;
+    return idB - idA;
   });
 
   updateTableHeaderSortUI();
@@ -1544,7 +1547,7 @@ function updateTableHeaderSortUI() {
     tbody.innerHTML = `<tr><td colspan="16" style="text-align:center;padding:2rem;color:var(--text2)">Nenhuma partida encontrada</td></tr>`;
   } else {
     tbody.innerHTML = pagedRows.map((r, i) => {
-      const globalRowNumber = totalItems - (startIdx + i);
+      const globalRowNumber = r._displayId || r.seqID || r.seqId || (totalItems - (startIdx + i));
       const badgeClass = r.Resultado === 'Vitória' ? 'badge-win' :
                          r.Resultado === 'Empate'  ? 'badge-draw' : 'badge-loss';
       const emoji = r.Resultado === 'Vitória' ? '✅' : r.Resultado === 'Empate' ? '🤝' : '❌';
