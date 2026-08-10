@@ -1345,7 +1345,7 @@ function renderTable(rows, resetPage = false) {
   const searchRaw = (searchInput?.value || '').trim();
   const searchNorm = normalizeStr(searchRaw);
 
-  window.tableSortState = window.tableSortState || { column: 'id', dir: 'desc' };
+  window.tableSortState = window.tableSortState || { column: 'seqID', dir: 'desc' };
 
 window.sortTableByColumn = function(colKey) {
   if (colKey === 'listas' || colKey === 'acoes') return;
@@ -1354,7 +1354,7 @@ window.sortTableByColumn = function(colKey) {
     window.tableSortState.dir = (window.tableSortState.dir === 'asc') ? 'desc' : 'asc';
   } else {
     window.tableSortState.column = colKey;
-    if (colKey === 'id' || colKey === 'Data' || colKey === 'Placar') {
+    if (colKey === 'seqID' || colKey === 'Data' || colKey === 'Placar') {
       window.tableSortState.dir = 'desc';
     } else {
       window.tableSortState.dir = 'asc';
@@ -1365,8 +1365,8 @@ window.sortTableByColumn = function(colKey) {
 };
 
 function updateTableHeaderSortUI() {
-  const allSortCols = ['id','Data','Player','Deck','Adversario','DeckAdv','Formato','Colecao','Confiabilidade','Start','Placar','Resultado','Brick','Local'];
-  const { column, dir } = window.tableSortState || { column: 'id', dir: 'desc' };
+  const allSortCols = ['seqID','Data','Player','Deck','Adversario','DeckAdv','Formato','Colecao','Confiabilidade','Start','Placar','Resultado','Brick','Local'];
+  const { column, dir } = window.tableSortState || { column: 'seqID', dir: 'desc' };
 
   allSortCols.forEach(col => {
     const el = document.getElementById(`sort-icon-${col}`);
@@ -1457,9 +1457,10 @@ function updateTableHeaderSortUI() {
     let valA, valB;
 
     switch(column) {
+      case 'seqID':
       case 'id':
-        valA = parseInt(String(a.id).replace(/\D/g, ''), 10) || 0;
-        valB = parseInt(String(b.id).replace(/\D/g, ''), 10) || 0;
+        valA = Number(a.seqID || a.seqId || a._displayId) || parseInt(String(a.id).replace(/\D/g, ''), 10) || 0;
+        valB = Number(b.seqID || b.seqId || b._displayId) || parseInt(String(b.id).replace(/\D/g, ''), 10) || 0;
         break;
       case 'Data':
         valA = a.Data || '';
@@ -1515,8 +1516,8 @@ function updateTableHeaderSortUI() {
         valB = b.Local || '';
         break;
       default:
-        valA = parseInt(String(a.id).replace(/\D/g, ''), 10) || 0;
-        valB = parseInt(String(b.id).replace(/\D/g, ''), 10) || 0;
+        valA = Number(a.seqID || a.seqId || a._displayId) || parseInt(String(a.id).replace(/\D/g, ''), 10) || 0;
+        valB = Number(b.seqID || b.seqId || b._displayId) || parseInt(String(b.id).replace(/\D/g, ''), 10) || 0;
     }
 
     if (typeof valA === 'string') {
@@ -1526,9 +1527,9 @@ function updateTableHeaderSortUI() {
       return (valA < valB ? -1 : 1) * multiplier;
     }
     
-    const idA = parseInt(String(a.id).replace(/\D/g, ''), 10) || 0;
-    const idB = parseInt(String(b.id).replace(/\D/g, ''), 10) || 0;
-    return idB - idA;
+    const seqA = Number(a.seqID || a.seqId || a._displayId) || parseInt(String(a.id).replace(/\D/g, ''), 10) || 0;
+    const seqB = Number(b.seqID || b.seqId || b._displayId) || parseInt(String(b.id).replace(/\D/g, ''), 10) || 0;
+    return seqB - seqA;
   });
 
   updateTableHeaderSortUI();
