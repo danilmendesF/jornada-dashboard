@@ -17,7 +17,7 @@
       rel="stylesheet"
     />
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <link rel="stylesheet" href="dist/style.min.css?v=1.0.44" />
+    <link rel="stylesheet" href="dist/style.min.css?v=1.0.45" />
     <script>
       (function () {
         try {
@@ -212,7 +212,7 @@
               font-family: &quot;Outfit&quot;, sans-serif;
             "
           >
-            v<span id="appVersionAuth">1.0.44</span>
+            v<span id="appVersionAuth">1.0.45</span>
           </div>
         </div>
       </div>
@@ -229,6 +229,12 @@
               <p class="logo-sub">TCG Team &middot; Análise Regional</p>
             </div>
           </div>
+          
+          <nav class="top-nav">
+            <a href="#" class="nav-link active">📊 Analytics</a>
+            <a href="#kpiGrid" class="nav-link">🏆 Meta & KPIs</a>
+            <a href="#newsSection" class="nav-link">📰 Notícias</a>
+          </nav>
           <div class="header-actions">
             <div id="userProfileBadge"></div>
             <button
@@ -446,9 +452,29 @@
             </button>
           </div>
         </div>
+    </section>
+    
+    <main class="main">
+      <section id="newsSection" class="news-section" style="margin-bottom: 2rem;">
+        <div class="news-card" style="background: var(--glass-bg); border: 1px solid var(--glass-bd); border-radius: var(--radius); padding: 1.5rem; position: relative; overflow: hidden; box-shadow: var(--shadow);">
+          <div style="position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--accent2), var(--accent));"></div>
+          <h2 class="chart-title" style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">📰 Atualizações do Metagame</h2>
+          <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+            <div class="news-item" style="flex: 1; min-width: 250px; background: rgba(0,0,0,0.2); padding: 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+              <span style="font-size: 0.7rem; color: var(--accent2); font-weight: bold; text-transform: uppercase;">11 de Agosto, 2026</span>
+              <h4 style="margin: 0.4rem 0; font-family: 'Rajdhani', sans-serif; font-size: 1.1rem; color: var(--text);">Surging Sparks domina o online!</h4>
+              <p style="font-size: 0.85rem; color: var(--text2); margin: 0;">O arquétipo de Pikachu ex disparou no ranking geral. Preparem seus tech cards contra dano elétrico para o próximo regional.</p>
+            </div>
+            <div class="news-item" style="flex: 1; min-width: 250px; background: rgba(0,0,0,0.2); padding: 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+              <span style="font-size: 0.7rem; color: var(--accent2); font-weight: bold; text-transform: uppercase;">05 de Agosto, 2026</span>
+              <h4 style="margin: 0.4rem 0; font-family: 'Rajdhani', sans-serif; font-size: 1.1rem; color: var(--text);">Novo Sistema de Tracking Ativo</h4>
+              <p style="font-size: 0.85rem; color: var(--text2); margin: 0;">Agora nosso dashboard filtra winrate isolado por subtipo, ajudando a refinar as 60 cartas perfeitamente.</p>
+            </div>
+          </div>
+        </div>
       </section>
-      <main class="main">
-        <section class="quick-log-section">
+
+      <section class="quick-log-section">
           <div class="quick-log-card">
             <div class="quick-log-header">
               <div style="display: flex; align-items: center; gap: 0.5rem">
@@ -649,9 +675,11 @@
                 stroke-linecap="round"
                 stroke-linejoin="round"
               >
-                <circle cx="12" cy="12" r="9" />
-                <path d="M3 12h18" />
-                <circle cx="12" cy="12" r="3" fill="var(--bg2)" />
+                <!-- Pokeball Icon -->
+                <circle cx="12" cy="12" r="10" />
+                <path d="M2 12h7" />
+                <path d="M15 12h7" />
+                <circle cx="12" cy="12" r="3" />
               </svg>
             </div>
             <div class="kpi-info">
@@ -671,16 +699,14 @@
                 stroke-linecap="round"
                 stroke-linejoin="round"
               >
+                <!-- Great Ball / Trophy Icon -->
                 <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
                 <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
                 <path d="M4 22h16" />
-                <path
-                  d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"
-                />
-                <path
-                  d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"
-                />
+                <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
+                <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
                 <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
+                <circle cx="12" cy="7" r="2" fill="currentColor"/>
               </svg>
             </div>
             <div class="kpi-info">
@@ -724,9 +750,9 @@
                 stroke-linecap="round"
                 stroke-linejoin="round"
               >
-                <circle cx="12" cy="12" r="10" />
-                <path d="m15 9-6 6" />
-                <path d="m9 9 6 6" />
+                <!-- Broken Heart / Defeat -->
+                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                <path d="M12 21.35l-2-6 4-3-4-3 2-6" stroke="var(--bg)" stroke-width="3" />
               </svg>
             </div>
             <div class="kpi-info">
@@ -2304,7 +2330,7 @@
         </div>
       </div>
     </div>
-    <script src="dist/app.min.js?v=1.0.44"></script>
-    <div class="app-version-footer">v<span id="appVersion">1.0.44</span></div>
+    <script src="dist/app.min.js?v=1.0.45"></script>
+    <div class="app-version-footer">v<span id="appVersion">1.0.45</span></div>
   </body>
 </html>

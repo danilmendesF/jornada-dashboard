@@ -1,6 +1,6 @@
 {
   "name": "jornada-dashboard",
-  "version": "1.0.44",
+  "version": "1.0.45",
   "type": "module",
   "dependencies": {
     "redis": "^4.6.10"
@@ -12,6 +12,7 @@
   "devDependencies": {
     "@vitest/coverage-v8": "^4.1.10",
     "jsdom": "^29.1.1",
+    "terser": "^5.50.0",
     "vitest": "^4.1.10"
   }
 }

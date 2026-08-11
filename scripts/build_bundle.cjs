@@ -6,6 +6,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { minify } = require('terser');
 
 const rootDir = path.resolve(__dirname, '..');
 const distDir = path.join(rootDir, 'dist');
@@ -33,70 +34,67 @@ const jsOrder = [
   'manager.js'
 ];
 
-function minifyJSCode(code) {
-  // 1. Remove multi-line comments /* ... */
-  let clean = code.replace(/\/\*[\s\S]*?\*\//g, '');
-  
-  // 2. Process line by line to safely strip // comments without touching http:// or strings
-  const lines = clean.split('\n');
-  const processedLines = lines.map(line => {
-    const trimmed = line.trim();
-    if (trimmed.startsWith('//')) return '';
-    // Strip trailing inline comment if not inside URL
-    const inlineIdx = line.indexOf('//');
-    if (inlineIdx > -1) {
-      const before = line.substring(0, inlineIdx);
-      if (!before.includes('http:') && !before.includes('https:') && !before.includes('"') && !before.includes("'")) {
-        return before.trimEnd();
-      }
+async function build() {
+  console.log('📦 Compilando Bundle Único Minificado para Produção com Terser...');
+
+  let bundledJS = '/* Jornada Dashboard Production Bundle */\n(function(){\n"use strict";\n';
+
+  jsOrder.forEach(file => {
+    const filePath = path.join(rootDir, file);
+    if (fs.existsSync(filePath)) {
+      const raw = fs.readFileSync(filePath, 'utf8');
+      bundledJS += `\n/* --- ${path.basename(file)} --- */\n` + raw + '\n';
+    } else {
+      console.error(`⚠️ Arquivo não encontrado: ${file}`);
     }
-    return line;
   });
 
-  return processedLines.filter(l => l.trim().length > 0).join('\n');
-}
+  bundledJS += '\n})();\n';
 
-console.log('📦 Compilando Bundle Único Minificado para Produção...');
+  // Obfuscate and minify using Terser
+  const minifyResult = await minify(bundledJS, {
+    compress: {
+      drop_console: true, // Remove all console.log, console.error, etc.
+      passes: 2
+    },
+    mangle: {
+      toplevel: true
+    },
+    format: {
+      comments: false // Remove comments
+    }
+  });
 
-let bundledJS = '/* Jornada Dashboard Production Bundle */\n(function(){\n"use strict";\n';
+  const jsDistPath = path.join(distDir, 'app.min.js');
+  fs.writeFileSync(jsDistPath, minifyResult.code, 'utf8');
+  console.log(`✅ JS Bundle gerado com sucesso: dist/app.min.js (${(minifyResult.code.length / 1024).toFixed(1)} KB)`);
 
-jsOrder.forEach(file => {
-  const filePath = path.join(rootDir, file);
-  if (fs.existsSync(filePath)) {
-    const raw = fs.readFileSync(filePath, 'utf8');
-    const minified = minifyJSCode(raw);
-    bundledJS += `\n;/* ${path.basename(file)} */\n` + minified + '\n';
-  } else {
-    console.error(`⚠️ Arquivo não encontrado: ${file}`);
+  // Minify CSS
+  const cssPath = path.join(rootDir, 'style.css');
+  if (fs.existsSync(cssPath)) {
+    const rawCSS = fs.readFileSync(cssPath, 'utf8');
+    let cleanCSS = rawCSS.replace(/\/\*[\s\S]*?\*\//g, '');
+    cleanCSS = cleanCSS.replace(/\s+/g, ' ').replace(/\s*([{}:;,])\s*/g, '$1');
+    const cssDistPath = path.join(distDir, 'style.min.css');
+    fs.writeFileSync(cssDistPath, cleanCSS, 'utf8');
+    console.log(`✅ CSS Minificado gerado com sucesso: dist/style.min.css (${(cleanCSS.length / 1024).toFixed(1)} KB)`);
   }
+
+  // Copy assets
+  const assetsDir = path.join(rootDir, 'assets');
+  const distAssetsDir = path.join(distDir, 'assets');
+  if (fs.existsSync(assetsDir)) {
+    if (!fs.existsSync(distAssetsDir)) fs.mkdirSync(distAssetsDir, { recursive: true });
+    fs.readdirSync(assetsDir).forEach(file => {
+      fs.copyFileSync(path.join(assetsDir, file), path.join(distAssetsDir, file));
+    });
+    console.log('✅ Assets copiados para dist/assets com sucesso!');
+  }
+
+  console.log('🎉 Build de Produção Concluído!');
+}
+
+build().catch(err => {
+  console.error('❌ Erro no build:', err);
+  process.exit(1);
 });
-
-bundledJS += '\n})();\n';
-
-const jsDistPath = path.join(distDir, 'app.min.js');
-fs.writeFileSync(jsDistPath, bundledJS, 'utf8');
-console.log(`✅ JS Bundle gerado com sucesso: dist/app.min.js (${(bundledJS.length / 1024).toFixed(1)} KB)`);
-
-// Minify CSS
-const cssPath = path.join(rootDir, 'style.css');
-if (fs.existsSync(cssPath)) {
-  const rawCSS = fs.readFileSync(cssPath, 'utf8');
-  let cleanCSS = rawCSS.replace(/\/\*[\s\S]*?\*\//g, '');
-  cleanCSS = cleanCSS.replace(/\s+/g, ' ').replace(/\s*([{}:;,])\s*/g, '$1');
-  const cssDistPath = path.join(distDir, 'style.min.css');
-  fs.writeFileSync(cssDistPath, cleanCSS, 'utf8');
-  console.log(`✅ CSS Minificado gerado com sucesso: dist/style.min.css (${(cleanCSS.length / 1024).toFixed(1)} KB)`);
-}
-
-// Copy assets to dist/assets
-const assetsDir = path.join(rootDir, 'assets');
-const distAssetsDir = path.join(distDir, 'assets');
-if (fs.existsSync(assetsDir)) {
-  if (!fs.existsSync(distAssetsDir)) fs.mkdirSync(distAssetsDir, { recursive: true });
-  fs.readdirSync(assetsDir).forEach(file => {
-    fs.copyFileSync(path.join(assetsDir, file), path.join(distAssetsDir, file));
-  });
-  console.log('✅ Assets copiados para dist/assets com sucesso!');
-}
-
-console.log('🎉 Build de Produção Concluído!');
