@@ -1,5 +1,5 @@
-/* ============================================================
-   JORNADA TCG TEAM — Dashboard Theme
+﻿/* ============================================================
+   JORNADA TCG TEAM â€” Dashboard Theme
    Inspired by Kyogre: Deep Ocean Black + Royal Blue + Cyan
    Fonts: Rajdhani (headings/competitive) + Outfit (body/data)
    ============================================================ */
@@ -8,7 +8,7 @@
 
 /* ---------- Design Tokens ---------- */
 :root {
-  /* Backgrounds — deep ocean */
+  /* Backgrounds â€” deep ocean */
   --bg:        #05080f;
   --bg2:       #080c18;
   --bg3:       #0d1225;
@@ -20,7 +20,7 @@
   --text:      #dce8ff;
   --text2:     #6a85b5;
 
-  /* Brand accents — Kyogre palette */
+  /* Brand accents â€” Kyogre palette */
   --accent:    #1a7fff;   /* royal blue */
   --accent2:   #00c8f8;   /* bright cyan */
   --gold:      #c9a44a;   /* logo gold/bronze */
@@ -74,7 +74,7 @@ html, body {
   box-sizing: border-box;
 }
 
-/* ── Animated ocean-wave background ── */
+/* â”€â”€ Animated ocean-wave background â”€â”€ */
 body::before {
   content: '';
   position: fixed;
@@ -89,7 +89,7 @@ body::before {
   z-index: 0;
 }
 
-/* ── Shimmer wave at top of page ── */
+/* â”€â”€ Shimmer wave at top of page â”€â”€ */
 body::after {
   content: '';
   position: fixed;
@@ -176,7 +176,7 @@ body::after {
 
 .logo { display: flex; align-items: center; gap: 0.9rem; }
 
-/* Logo icon: shield/Pokéball inspired */
+/* Logo icon: shield/PokÃ©ball inspired */
 .logo-icon {
   width: 48px;
   height: 48px;
@@ -830,7 +830,7 @@ tbody tr:last-child td { border-bottom: none; }
   box-shadow: 0 0 0 2px rgba(26,127,255,0.20);
 }
 .searchable-select-wrap::after {
-  content: '▾';
+  content: 'â–¾';
   position: absolute;
   right: 0.75rem;
   top: 50%;
@@ -1181,7 +1181,7 @@ tbody tr:last-child td { border-bottom: none; }
   }
 }
 
-/* ── MOBILE TOUCH TARGETS ─────────────────────────────────────────────────── */
+/* â”€â”€ MOBILE TOUCH TARGETS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 @media (max-width: 768px) {
   .pill-btn {
     min-height: 40px;
@@ -1248,7 +1248,7 @@ tbody tr:last-child td { border-bottom: none; }
 }
 
 /* ============================================================
-   FAB — Floating Action Button
+   FAB â€” Floating Action Button
    ============================================================ */
 .fab {
   position: fixed;
@@ -1288,7 +1288,7 @@ tbody tr:last-child td { border-bottom: none; }
 .fab:hover::before { animation: none; opacity: 0; }
 
 /* ============================================================
-   MANAGER PANEL — Side Drawer
+   MANAGER PANEL â€” Side Drawer
    ============================================================ */
 .manager-panel {
   position: fixed;
@@ -1766,7 +1766,7 @@ select.form-input option {
 .list-peek-btn.opp-btn:hover { background: rgba(0,200,248, 0.22); }
 
 /* ============================================================
-   RESPONSIVE — new elements
+   RESPONSIVE â€” new elements
    ============================================================ */
 @media (max-width: 900px) {
   .form-row.four-col  { grid-template-columns: 1fr 1fr; }
@@ -1816,13 +1816,13 @@ select.form-input option {
 
 .matchup-view { width: 100%; }
 
-/* ── Matrix Legend ── */
+/* â”€â”€ Matrix Legend â”€â”€ */
 .matrix-legend { display: flex; align-items: center; gap: .75rem; margin-bottom: .85rem; flex-wrap: wrap; }
 .legend-gradient { width: 160px; height: 10px; border-radius: 5px; background: linear-gradient(to right, #f05050, #f5c842, #2ee8a0); flex-shrink: 0; }
 .legend-labels { display: flex; justify-content: space-between; font-size: .68rem; color: var(--text2); width: 160px; }
 .legend-hint { font-size: .68rem; color: var(--text2); opacity: .6; margin-left: auto; }
 
-/* ── Matrix Scroll Container ── */
+/* â”€â”€ Matrix Scroll Container â”€â”€ */
 .matrix-scroll {
   overflow: auto;
   max-height: 550px;
@@ -1830,7 +1830,7 @@ select.form-input option {
   border: 1px solid var(--border);
 }
 
-/* ── Matrix Table ── */
+/* â”€â”€ Matrix Table â”€â”€ */
 .matrix-table { border-collapse: separate; border-spacing: 0; min-width: 100%; font-size: .78rem; }
 
 .matrix-corner {
@@ -1943,7 +1943,7 @@ select.form-input option {
 .cell-pct   { display: block; font-size: .82rem; font-weight: 800; line-height: 1.2; }
 .cell-record { display: block; font-size: .63rem; opacity: .8; margin-top: 2px; font-weight: 500; }
 
-/* ── Matchup Detail Panel ── */
+/* â”€â”€ Matchup Detail Panel â”€â”€ */
 .matchup-detail {
   background: var(--bg3);
   border: 1px solid var(--glass-bd);
@@ -1962,7 +1962,7 @@ select.form-input option {
 .detail-header strong { font-family: 'Rajdhani', sans-serif; font-size: 1rem; letter-spacing: 0.03em; }
 .detail-body { padding: 1rem 1.1rem; display: flex; flex-direction: column; gap: .75rem; }
 
-/* ── Brick Toggle ── */
+/* â”€â”€ Brick Toggle â”€â”€ */
 .brick-toggle-group { display: flex; gap: .5rem; margin-top: .3rem; }
 .brick-toggle {
   flex: 1;
@@ -2422,21 +2422,21 @@ html.auth-session-active #appDashboardContainer {
   user-select: none;
   font-family: 'Outfit', sans-serif;
 }
- 
- . p a g e - t a b   {   d i s p l a y :   n o n e ;   a n i m a t i o n :   f a d e I n   0 . 4 s   e a s e - o u t ;   }  
- . p a g e - t a b . a c t i v e   {   d i s p l a y :   b l o c k ;   }  
- . u s e r - d r o p d o w n - c o n t a i n e r   {   p o s i t i o n :   r e l a t i v e ;   d i s p l a y :   i n l i n e - b l o c k ;   } 
- . u s e r - d r o p d o w n - t r i g g e r   {   d i s p l a y :   f l e x ;   a l i g n - i t e m s :   c e n t e r ;   g a p :   0 . 5 r e m ;   b a c k g r o u n d :   r g b a ( 1 2 4 , 1 0 6 , 2 4 7 , 0 . 1 8 ) ;   b o r d e r :   1 p x   s o l i d   v a r ( - - a c c e n t ) ;   p a d d i n g :   0 . 3 5 r e m   0 . 8 5 r e m ;   b o r d e r - r a d i u s :   5 0 p x ;   c u r s o r :   p o i n t e r ;   c o l o r :   v a r ( - - a c c e n t 2 ) ;   f o n t - w e i g h t :   7 0 0 ;   f o n t - s i z e :   0 . 8 r e m ;   t r a n s i t i o n :   v a r ( - - t r a n s i t i o n - s m o o t h ) ;   } 
- . u s e r - d r o p d o w n - t r i g g e r : h o v e r   {   b a c k g r o u n d :   r g b a ( 1 2 4 , 1 0 6 , 2 4 7 , 0 . 3 ) ;   } 
- . u s e r - a v a t a r   {   w i d t h :   2 4 p x ;   h e i g h t :   2 4 p x ;   b o r d e r - r a d i u s :   5 0 % ;   o b j e c t - f i t :   c o v e r ;   } 
- . d r o p d o w n - a r r o w   {   f o n t - s i z e :   0 . 7 r e m ;   o p a c i t y :   0 . 7 ;   } 
- . u s e r - d r o p d o w n - m e n u   {   d i s p l a y :   n o n e ;   p o s i t i o n :   a b s o l u t e ;   t o p :   1 1 0 % ;   r i g h t :   0 ;   m i n - w i d t h :   2 0 0 p x ;   b a c k g r o u n d :   r g b a ( 5 ,   8 ,   1 5 ,   0 . 9 5 ) ;   b a c k d r o p - f i l t e r :   b l u r ( 2 0 p x ) ;   b o r d e r :   1 p x   s o l i d   v a r ( - - g l a s s - b d ) ;   b o r d e r - r a d i u s :   v a r ( - - r a d i u s - s m ) ;   b o x - s h a d o w :   v a r ( - - s h a d o w - g l o w ) ;   z - i n d e x :   1 0 0 0 ;   p a d d i n g :   0 . 5 r e m   0 ;   f l e x - d i r e c t i o n :   c o l u m n ;   } 
- . u s e r - d r o p d o w n - c o n t a i n e r : h o v e r   . u s e r - d r o p d o w n - m e n u ,   . u s e r - d r o p d o w n - c o n t a i n e r : f o c u s - w i t h i n   . u s e r - d r o p d o w n - m e n u   {   d i s p l a y :   f l e x ;   } 
- . d r o p d o w n - h e a d e r   {   p a d d i n g :   0 . 7 5 r e m   1 r e m ;   b o r d e r - b o t t o m :   1 p x   d a s h e d   v a r ( - - b o r d e r ) ;   m a r g i n - b o t t o m :   0 . 2 5 r e m ;   } 
- . d r o p d o w n - i t e m   {   p a d d i n g :   0 . 6 r e m   1 r e m ;   c o l o r :   v a r ( - - t e x t 2 ) ;   t e x t - d e c o r a t i o n :   n o n e ;   f o n t - s i z e :   0 . 8 5 r e m ;   f o n t - w e i g h t :   6 0 0 ;   d i s p l a y :   f l e x ;   a l i g n - i t e m s :   c e n t e r ;   g a p :   0 . 5 r e m ;   t r a n s i t i o n :   v a r ( - - t r a n s i t i o n - s m o o t h ) ;   } 
- . d r o p d o w n - i t e m : h o v e r   {   b a c k g r o u n d :   r g b a ( 2 5 5 , 2 5 5 , 2 5 5 , 0 . 0 5 ) ;   c o l o r :   v a r ( - - t e x t ) ;   } 
- . d r o p d o w n - i t e m . t e x t - r e d   {   c o l o r :   v a r ( - - r e d ) ;   } 
- . d r o p d o w n - i t e m . t e x t - r e d : h o v e r   {   b a c k g r o u n d :   r g b a ( 2 5 5 , 7 7 , 7 7 , 0 . 1 ) ;   } 
- . d r o p d o w n - d i v i d e r   {   h e i g h t :   1 p x ;   b a c k g r o u n d :   v a r ( - - b o r d e r ) ;   m a r g i n :   0 . 2 5 r e m   0 ;   } 
-  
- 
+
+.page-tab { display: none; animation: fadeIn 0.4s ease-out; }
+.page-tab.active { display: block; }
+.user-dropdown-container { position: relative; display: inline-block; }
+.user-dropdown-trigger { display: flex; align-items: center; gap: 0.5rem; background: rgba(124,106,247,0.18); border: 1px solid var(--accent); padding: 0.35rem 0.85rem; border-radius: 50px; cursor: pointer; color: var(--accent2); font-weight: 700; font-size: 0.8rem; transition: var(--transition-smooth); }
+.user-dropdown-trigger:hover { background: rgba(124,106,247,0.3); }
+.user-avatar { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; }
+.dropdown-arrow { font-size: 0.7rem; opacity: 0.7; }
+.user-dropdown-menu { display: none; position: absolute; top: 110%; right: 0; min-width: 200px; background: rgba(5, 8, 15, 0.95); backdrop-filter: blur(20px); border: 1px solid var(--glass-bd); border-radius: var(--radius-sm); box-shadow: var(--shadow-glow); z-index: 1000; padding: 0.5rem 0; flex-direction: column; }
+.user-dropdown-container:hover .user-dropdown-menu, .user-dropdown-container:focus-within .user-dropdown-menu { display: flex; }
+.dropdown-header { padding: 0.75rem 1rem; border-bottom: 1px dashed var(--border); margin-bottom: 0.25rem; }
+.dropdown-item { padding: 0.6rem 1rem; color: var(--text2); text-decoration: none; font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; transition: var(--transition-smooth); }
+.dropdown-item:hover { background: rgba(255,255,255,0.05); color: var(--text); }
+.dropdown-item.text-red { color: var(--red); }
+.dropdown-item.text-red:hover { background: rgba(255,77,77,0.1); }
+.dropdown-divider { height: 1px; background: var(--border); margin: 0.25rem 0; }
+
+
