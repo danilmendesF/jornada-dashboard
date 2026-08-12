@@ -127,15 +127,24 @@ window.updateAuthUI = function() {
     if (dashboard) dashboard.style.display = 'block';
 
     if (badge && window.currentUser) {
+      const isDanil = window.currentUser.email === 'danilmendes@gmail.com';
       badge.innerHTML = `
-        <div style="display:flex; align-items:center; gap:0.6rem;">
-          <div style="display:flex; align-items:center; gap:0.4rem; background:rgba(124,106,247,0.18); border:1px solid var(--accent); padding:0.35rem 0.85rem; border-radius:50px; font-size:0.8rem; font-weight:700; color:var(--accent2); cursor:default;">
-            <span style="font-size:0.9rem;">⚡</span>
-            <span>${window.currentUser.name}</span>
+        <div class="user-dropdown-container">
+          <div class="user-dropdown-trigger">
+            <img src="assets/trainer-avatar.png" alt="Treinador" class="user-avatar" />
+            <span class="user-name">${window.currentUser.name}</span>
+            <span class="dropdown-arrow">▼</span>
           </div>
-          <button class="manager-btn btn-logout" onclick="logoutUser()" title="Sair do sistema">
-            ✕ Sair
-          </button>
+          <div class="user-dropdown-menu">
+            <div class="dropdown-header">
+              <strong style="display:block;color:var(--text);">${window.currentUser.name}</strong>
+              <small style="color:var(--text2);font-size:0.75rem;">${window.currentUser.email}</small>
+            </div>
+            <a href="#" class="dropdown-item">👤 Meu Perfil</a>
+            ${isDanil ? '<a href="#" class="dropdown-item" onclick="document.getElementById(\'btnOpenManager\').click()">📋 Gerenciar</a>' : ''}
+            <div class="dropdown-divider"></div>
+            <a href="#" class="dropdown-item text-red" onclick="logoutUser()">🚪 Sair</a>
+          </div>
         </div>
       `;
     }
@@ -146,11 +155,7 @@ window.updateAuthUI = function() {
 
     const btnManager = document.getElementById('btnOpenManager');
     if (btnManager) {
-      if (window.currentUser && window.currentUser.email === 'danilmendes@gmail.com') {
-        btnManager.style.display = 'inline-flex';
-      } else {
-        btnManager.style.display = 'none';
-      }
+      btnManager.style.display = 'none'; // Agora o botão gerenciar vive dentro do dropdown
     }
   } else {
     document.documentElement.classList.remove('auth-session-active');

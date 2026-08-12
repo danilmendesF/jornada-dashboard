@@ -8,7 +8,8 @@
 // ── 2. STATE ─────────────────────────────────────────────────────────────────
 let allData    = [];
 let filtered   = [];
-let charts     = {};
+let charts     = {};
+
 function applyDataOverrides(rawData) {
   let baseData = [...rawData];
 
@@ -17,7 +18,8 @@ function applyDataOverrides(rawData) {
     const edits = loadEdits();
     baseData = baseData.filter(d => !deleted.has(d.id));
     baseData = baseData.map(d => edits[d.id] ? edits[d.id] : d);
-  }
+  }
+
   if (typeof loadArchetypeUnifications === 'function') {
     const unifications = loadArchetypeUnifications();
     if (Array.isArray(unifications) && unifications.length > 0) {
@@ -38,7 +40,8 @@ function applyDataOverrides(rawData) {
         });
       });
     }
-  }
+  }
+
   if (typeof ensureMatchSequence === 'function') {
     ensureMatchSequence(baseData);
   }
@@ -47,16 +50,19 @@ function applyDataOverrides(rawData) {
 }
 
 window.getMatchTimestamp = function(match) {
-  if (!match) return 0;
+  if (!match) return 0;
+
   if (match.createdAt) {
     const t = Date.parse(match.createdAt);
     if (!isNaN(t) && t > 1000000000000) return t;
-  }
+  }
+
   if (match.id) {
     const idStr = String(match.id).substring(0, 13);
     const idNum = parseInt(idStr, 10);
     if (!isNaN(idNum) && idNum > 1000000000000) return idNum;
-  }
+  }
+
   if (match.Data) {
     const dateParsed = Date.parse(match.Data + 'T12:00:00Z');
     if (!isNaN(dateParsed) && dateParsed > 1000000000000) {
@@ -111,7 +117,8 @@ function initializeData() {
 
 // ── MULTI-TAB SYNC ───────────────────────────────────────────────────────────
 window.addEventListener('storage', (e) => {
-  if (!e.key || !e.key.startsWith('jornada_')) return;
+  if (!e.key || !e.key.startsWith('jornada_')) return;
+
   if (typeof loadPlayers === 'function') players = loadPlayers();
   if (typeof loadDecks === 'function') decks = loadDecks();
   if (typeof loadColecoes === 'function') colecoes = loadColecoes();
@@ -353,7 +360,8 @@ function makeSearchableSelect(selectEl) {
         o.classList.remove("focused");
       }
     });
-  }
+  }
+
   if (!window._searchableSelectGlobalClickSet) {
     window._searchableSelectGlobalClickSet = true;
     document.addEventListener("click", (e) => {
@@ -663,7 +671,8 @@ function populateFilters() {
   populateMultiPlayerFilter();
   populateMultiDeckFilter();
   populateMatchupDeckSelects();
-  initAllSearchableSelects();
+  initAllSearchableSelects();
+
   ['filterFormato', 'filterLocal', 'filterColecao', 'filterDateStart', 'filterDateEnd'].forEach(id => {
     const el = document.getElementById(id);
     if (el && !el.dataset.filterHandler) {
@@ -753,12 +762,15 @@ function animCount(id, target) {
 // ── 8. CHART: DECK WIN RATE ──────────────────────────────────────────────────
 function renderDeckWR() {
   destroyChart('deckWR');
-  const byDeck = groupBy(filtered, getMatchDeck);
+  const byDeck = groupBy(filtered, getMatchDeck);
+
   const deckStats = Object.keys(byDeck).map(d => {
     const s = calculateStats(byDeck[d]);
     return { deck: d, wr: s.wr, wins: s.wins, tot: s.total };
-  });
-  deckStats.sort((a, b) => b.wr - a.wr || b.tot - a.tot);
+  });
+
+  deckStats.sort((a, b) => b.wr - a.wr || b.tot - a.tot);
+
   const top7 = deckStats.slice(0, 7);
 
   const labels = top7.map(d => d.deck);
@@ -808,7 +820,8 @@ function renderDeckWR() {
 // ── 9. CHART: PLAYER PERFORMANCE ────────────────────────────────────────────
 function renderPlayerPerf() {
   destroyChart('playerPerf');
-  const byPlayer = groupBy(filtered, 'Player');
+  const byPlayer = groupBy(filtered, 'Player');
+
   const registeredPlayers = (typeof players !== 'undefined') ? players : [];
   const allPlayerNames = [...new Set([...Object.keys(byPlayer), ...registeredPlayers])];
 
@@ -820,7 +833,8 @@ function renderPlayerPerf() {
     const total  = pMatches.length;
     const wr     = total > 0 ? pct(wins, total) : 0;
     return { player: p, wins, draws, losses, total, wr };
-  });
+  });
+
   playerStats.sort((a, b) => b.wins - a.wins || b.wr - a.wr || b.total - a.total);
 
   const labels = playerStats.map(s => s.player);
@@ -875,7 +889,8 @@ function renderPlayerSubtypeBreakdown() {
   const sectionEl = document.getElementById('playerSubtypeSection');
   const titleEl   = document.getElementById('playerSubtypeTitle');
   const bodyEl    = document.getElementById('playerSubtypeBody');
-  if (!sectionEl || !bodyEl) return;
+  if (!sectionEl || !bodyEl) return;
+
   const isSinglePlayer = typeof selectedPlayers !== 'undefined' && selectedPlayers.size === 1;
 
   if (!isSinglePlayer) {
@@ -888,13 +903,15 @@ function renderPlayerSubtypeBreakdown() {
 
   if (titleEl) {
     titleEl.textContent = `📊 Desempenho por Variante & Subtipo (${playerName})`;
-  }
+  }
+
   const playerMatches = filtered.filter(m => (m.Player || '').trim() === playerName);
 
   if (playerMatches.length === 0) {
     bodyEl.innerHTML = '<div class="empty-state" style="padding:1.5rem;"><p>Nenhuma partida encontrada para este jogador com os filtros atuais.</p></div>';
     return;
-  }
+  }
+
   const byArchetype = groupBy(playerMatches, getMatchDeck);
   const sortedArchetypes = Object.keys(byArchetype).sort((a, b) => byArchetype[b].length - byArchetype[a].length);
 
@@ -903,7 +920,8 @@ function renderPlayerSubtypeBreakdown() {
   sortedArchetypes.forEach(arq => {
     const arqMatches = byArchetype[arq];
     const arqStats   = calculateStats(arqMatches);
-    const wrColorStyle = arqStats.wr >= 60 ? 'color:var(--green)' : arqStats.wr >= 50 ? 'color:var(--yellow)' : 'color:var(--red)';
+    const wrColorStyle = arqStats.wr >= 60 ? 'color:var(--green)' : arqStats.wr >= 50 ? 'color:var(--yellow)' : 'color:var(--red)';
+
     const byVariant = groupBy(arqMatches, 'Deck');
     const variantKeys = Object.keys(byVariant).sort((a, b) => byVariant[b].length - byVariant[a].length);
 
@@ -928,7 +946,8 @@ function renderPlayerSubtypeBreakdown() {
     variantKeys.forEach(vName => {
       const vMatches = byVariant[vName];
       const vStats   = calculateStats(vMatches);
-      const vLabel   = (vName === arq) ? `${vName} (Versão Padrão)` : vName;
+      const vLabel   = (vName === arq) ? `${vName} (Versão Padrão)` : vName;
+
       const byOpp = groupBy(vMatches, getMatchOppDeck);
       const oppKeys = Object.keys(byOpp).sort((a, b) => byOpp[b].length - byOpp[a].length);
 
@@ -937,7 +956,8 @@ function renderPlayerSubtypeBreakdown() {
       oppKeys.forEach(oppName => {
         const oppM = byOpp[oppName];
         const oppStats = calculateStats(oppM);
-        const oppWrColor = oppStats.wr >= 60 ? 'var(--green)' : oppStats.wr >= 50 ? 'var(--yellow)' : 'var(--red)';
+        const oppWrColor = oppStats.wr >= 60 ? 'var(--green)' : oppStats.wr >= 50 ? 'var(--yellow)' : 'var(--red)';
+
         const oppDetails = oppM.map(m => {
           const icon = m.Resultado === 'Vitória' ? '✅' : m.Resultado === 'Empate' ? '🤝' : '❌';
           return `${icon} vs ${m.Adversario} (${m.Placar || m.Resultado})`;
@@ -1108,7 +1128,8 @@ function renderDeckCount() {
 // ── 15. CHART: START ────────────────────────────────────────────────────────
 function renderStart() {
   destroyChart('start');
-  const positions = ['1º', '2º'];
+  const positions = ['1º', '2º'];
+
   const expandedStarts = [];
   filtered.forEach(m => {
     if (m.GamesDetail && Array.isArray(m.GamesDetail) && m.GamesDetail.length > 0) {
@@ -1161,7 +1182,8 @@ function renderBrick() {
   destroyChart('brick');
 
   const byDeck     = groupBy(filtered, 'Deck');
-  const deckLabels = Object.keys(byDeck).sort();
+  const deckLabels = Object.keys(byDeck).sort();
+
   const bricked    = deckLabels.map(deck => {
     const rows = byDeck[deck];
     let totalGames = 0, brickedGames = 0;
@@ -1340,7 +1362,8 @@ function updateTableHeaderSortUI() {
   if (clearBtn) clearBtn.style.display = searchNorm ? 'block' : 'none';
 
   const toRender = targetRows.filter(r => {
-    if (!searchNorm) return true;
+    if (!searchNorm) return true;
+
     if (searchNorm.includes(':')) {
       const parts = searchNorm.split(':');
       const key = parts[0].trim();
@@ -1376,7 +1399,8 @@ function updateTableHeaderSortUI() {
       if (key === 'brick') {
         return normalizeStr(r.Brick).includes(val);
       }
-    }
+    }
+
     const visibleValues = [
       r.Data,
       r.Player,
@@ -1395,7 +1419,8 @@ function updateTableHeaderSortUI() {
     ].filter(Boolean).map(v => normalizeStr(v));
 
     return visibleValues.some(v => v.includes(searchNorm));
-  });
+  });
+
   let sorted = [...toRender];
   const { column, dir } = window.tableSortState || { column: 'Data', dir: 'desc' };
   const multiplier = (dir === 'asc') ? 1 : -1;
@@ -1546,8 +1571,10 @@ function updateTableHeaderSortUI() {
         <td style="text-align:center;">${actionsCol}</td>
       </tr>`;
     }).join('');
-  }
-  renderPaginationControls(totalItems, startIdx, endIdx, totalPages);
+  }
+
+  renderPaginationControls(totalItems, startIdx, endIdx, totalPages);
+
   const fc = document.getElementById('footerCount');
   if (fc) fc.textContent = `${allData.length} partidas registradas`;
 }
@@ -1565,8 +1592,10 @@ function renderPaginationControls(totalItems, startIdx, endIdx, totalPages) {
 
   info.textContent = `Mostrando ${startIdx + 1}–${endIdx} de ${totalItems} partidas`;
 
-  let btns = [];
-  btns.push(`<button class="page-btn" ${currentPage === 1 ? 'disabled' : ''} onclick="changePage(${currentPage - 1})">‹ Ant</button>`);
+  let btns = [];
+
+  btns.push(`<button class="page-btn" ${currentPage === 1 ? 'disabled' : ''} onclick="changePage(${currentPage - 1})">‹ Ant</button>`);
+
   let startP = Math.max(1, currentPage - 2);
   let endP = Math.min(totalPages, startP + 4);
   if (endP - startP < 4) {
@@ -1586,14 +1615,16 @@ function renderPaginationControls(totalItems, startIdx, endIdx, totalPages) {
   if (endP < totalPages) {
     if (endP < totalPages - 1) btns.push(`<span style="color:var(--text2);font-size:.8rem">…</span>`);
     btns.push(`<button class="page-btn" onclick="changePage(${totalPages})">${totalPages}</button>`);
-  }
+  }
+
   btns.push(`<button class="page-btn" ${currentPage === totalPages ? 'disabled' : ''} onclick="changePage(${currentPage + 1})">Próx ›</button>`);
 
   ctrl.innerHTML = btns.join('');
 }
 
 // ── 18. MATCHUP WIN RATE ─────────────────────────────────────────────────────
-let matchupCurrentView = 'matrix';
+let matchupCurrentView = 'matrix';
+
 function buildMatchupData(data) {
   const map = {};
   data.forEach(r => {
@@ -1610,7 +1641,8 @@ function buildMatchupData(data) {
     entry.matches.push(r);
   });
   return map;
-}
+}
+
 function wrColor(wr, alpha = 1) {
   if (wr === null) return `rgba(255,255,255,0.05)`;
   if (wr < 50) {
@@ -1649,7 +1681,8 @@ function getMatchupBaseDataset() {
 
     let matchDate = true;
     if (dateStart && mDate < dateStart) matchDate = false;
-    if (dateEnd   && mDate > dateEnd)   matchDate = false;
+    if (dateEnd   && mDate > dateEnd)   matchDate = false;
+
     return matchPlayer && matchFormato && matchLocal && matchColecao && matchDate && matchConf;
   });
 }
@@ -1825,7 +1858,8 @@ window.showDeckMatchupOverview = function(myDeck, mode = 'desc') {
     const losses = mList.filter(m => m.Resultado === 'Derrota').length;
     const wr = Math.round((wins / total) * 100);
     return { opp, total, wins, draws, losses, wr, matches: mList };
-  });
+  });
+
   oppSummaries.sort((a, b) => {
     if (mode === 'desc') {
       if (b.wr !== a.wr) return b.wr - a.wr;
@@ -1935,7 +1969,8 @@ function renderMatchupMatrix(matchupData, myDecks, oppDecks) {
   if (myDecks.length === 0) {
     container.innerHTML = '<div class="empty-state"><div class="empty-icon">⚔️</div><p>Sem dados de matchup suficientes.</p></div>';
     return;
-  }
+  }
+
   const rowStats = myDecks.map(myDeck => {
     let rowWins = 0, rowTotal = 0;
     oppDecks.forEach(opp => {
@@ -1947,7 +1982,8 @@ function renderMatchupMatrix(matchupData, myDecks, oppDecks) {
     });
     const wr = rowTotal > 0 ? (rowWins / rowTotal) * 100 : -1;
     return { myDeck, rowWins, rowTotal, wr };
-  });
+  });
+
   rowStats.sort((a, b) => {
     if (sortOrder === 'desc') {
       if (b.wr !== a.wr) return b.wr - a.wr;
@@ -1962,14 +1998,17 @@ function renderMatchupMatrix(matchupData, myDecks, oppDecks) {
     } else {
       return a.myDeck.localeCompare(b.myDeck);
     }
-  });
-  let html = '<table class="matrix-table">';
+  });
+
+  let html = '<table class="matrix-table">';
+
   html += '<thead><tr><th class="matrix-corner">Meu Deck \\ Oponente</th>';
   oppDecks.forEach(opp => {
     const isColActive = selOpp === opp;
     html += `<th class="matrix-col-header ${isColActive ? 'active-header' : ''}"><div class="col-label">${opp}</div></th>`;
   });
-  html += '<th class="matrix-col-header total-col">Total</th></tr></thead>';
+  html += '<th class="matrix-col-header total-col">Total</th></tr></thead>';
+
   html += '<tbody>';
   rowStats.forEach(({ myDeck, rowWins, rowTotal, wr }) => {
     const isRowActive = selMy === myDeck;
@@ -2006,7 +2045,8 @@ function renderMatchupMatrix(matchupData, myDecks, oppDecks) {
           <span class="cell-record">${entry.wins}-${entry.draws}-${entry.losses}</span>
         </td>`;
       }
-    });
+    });
+
     const rowWR = wr >= 0 ? Math.round(wr) : null;
     const rowBg = wrColor(rowWR, 0.5);
     html += `<td class="matrix-cell total-col" style="background:${rowBg}">${rowWR !== null ? rowWR + '%' : '—'}<br><span class="cell-record">${rowTotal}j</span></td>`;
@@ -2195,10 +2235,12 @@ async function handleFile(file) {
   try {
     await loadSheetJS();
     const buf  = await file.arrayBuffer();
-    const wb   = XLSX.read(buf, { type:'array', cellDates:true });
+    const wb   = XLSX.read(buf, { type:'array', cellDates:true });
+
     const sheetName = wb.SheetNames.find(n => n.toLowerCase().includes('banco')) || wb.SheetNames[0];
     const ws   = wb.Sheets[sheetName];
-    const rows = XLSX.utils.sheet_to_json(ws, { header:1, defval: null });
+    const rows = XLSX.utils.sheet_to_json(ws, { header:1, defval: null });
+
     let headerIdx = rows.findIndex(r => r && r.some(c => String(c).toLowerCase().includes('resultado')));
     if (headerIdx < 0) headerIdx = 1;
 
@@ -2232,10 +2274,12 @@ async function handleFile(file) {
 
       let data = r[idxData];
       if (data instanceof Date) data = data.toISOString().slice(0,10);
-      else if (typeof data === 'number') {
+      else if (typeof data === 'number') {
+
         const d = new Date(Math.round((data - 25569) * 86400 * 1000));
         data = d.toISOString().slice(0,10);
-      }
+      }
+
       let resultado = String(res).trim();
       if (!resultado.match(/^(Vitória|Empate|Derrota)$/)) {
         resultado = resultado.toLowerCase().includes('vit') ? 'Vitória' :
@@ -2243,7 +2287,8 @@ async function handleFile(file) {
       }
 
       const pData = String(data || '').slice(0,10);
-      const pPlayer = String(player).trim();
+      const pPlayer = String(player).trim();
+
       const rowId = `ex_${i}_${pPlayer.replace(/\s+/g, '_')}_${pData}`;
 
       parsed.push({
@@ -2265,18 +2310,22 @@ async function handleFile(file) {
       });
     }
 
-    if (parsed.length === 0) throw new Error('Nenhum dado válido encontrado na planilha.');
-    localStorage.setItem('jornada_excel_matches', JSON.stringify(parsed));
+    if (parsed.length === 0) throw new Error('Nenhum dado válido encontrado na planilha.');
+
+    localStorage.setItem('jornada_excel_matches', JSON.stringify(parsed));
+
     allData  = applyDataOverrides(parsed);
     filtered = [...allData];
     populateFilters();
-    applyFilters();
+    applyFilters();
+
     if (typeof triggerSyncPush === 'function') {
       triggerSyncPush();
     }
 
     const now = new Date().toLocaleString('pt-BR');
-    document.getElementById('lastUpdate').textContent = `📊 ${parsed.length} registros • ${now}`;
+    const lu = document.getElementById('lastUpdate');
+    if (lu) lu.textContent = `⏱️ ${parsed.length} registros • ${now}`;
   } catch(err) {
     alert('Erro ao ler o Excel: ' + err.message);
     console.error(err);
@@ -2284,7 +2333,8 @@ async function handleFile(file) {
 }
 
 // ── 20. GLOBAL RESET FUNCTION ────────────────────────────────────────────────
-window.resetAllFilters = function() {
+window.resetAllFilters = function() {
+
   ['filterFormato','filterLocal','filterDateStart','filterDateEnd'].forEach(id => {
     const el = document.getElementById(id);
     if (el) {
@@ -2292,21 +2342,25 @@ window.resetAllFilters = function() {
       if (el.selectedIndex !== undefined) el.selectedIndex = 0;
       if (el.syncSearchableSelect) el.syncSearchableSelect();
     }
-  });
+  });
+
   const colEl = document.getElementById('filterColecao');
   if (colEl) {
     colEl.value = '';
     if (colEl.syncSearchableSelect) colEl.syncSearchableSelect();
-  }
+  }
+
   if (document.getElementById('filterConfAlta'))  document.getElementById('filterConfAlta').checked = true;
-  if (document.getElementById('filterConfBaixa')) document.getElementById('filterConfBaixa').checked = true;
+  if (document.getElementById('filterConfBaixa')) document.getElementById('filterConfBaixa').checked = true;
+
   isExplicitPlayerSelection = false;
   const dataPlayers    = allData.map(d => d.Player).filter(Boolean);
   const managerPlayers = (typeof players !== 'undefined') ? players : [];
   allAvailablePlayers = [...new Set([...dataPlayers, ...managerPlayers])].sort((a, b) => a.localeCompare(b));
   selectedPlayers = new Set(allAvailablePlayers);
   renderMultiPlayerItems(allAvailablePlayers);
-  updateMultiPlayerBtnText();
+  updateMultiPlayerBtnText();
+
   isExplicitSelection = false;
   const dataDecks    = allData.map(d => d.Deck).filter(Boolean);
   const oppDecks     = allData.map(d => d.DeckAdv).filter(Boolean);
@@ -2314,20 +2368,24 @@ window.resetAllFilters = function() {
   allAvailableDecks = [...new Set([...dataDecks, ...oppDecks, ...managerDecks])].sort((a, b) => a.localeCompare(b));
   selectedDecks = new Set(allAvailableDecks);
   renderMultiDeckItems(allAvailableDecks);
-  updateMultiDeckBtnText();
+  updateMultiDeckBtnText();
+
   const searchInput = document.getElementById('tableSearch');
-  if (searchInput) searchInput.value = '';
+  if (searchInput) searchInput.value = '';
+
   applyFilters();
 };
 
 // ── 21. INIT ──────────────────────────────────────────────────────────────────
-window.addEventListener('DOMContentLoaded', () => {
+window.addEventListener('DOMContentLoaded', () => {
+
   const fileInput = document.getElementById('fileInput');
   if (fileInput) {
     fileInput.addEventListener('change', e => {
       if (e.target.files[0]) handleFile(e.target.files[0]);
     });
-  }
+  }
+
   const tableSearchEl = document.getElementById('tableSearch');
   const btnTableSearch = document.getElementById('btnTableSearch');
   const btnClearTableSearch = document.getElementById('btnClearTableSearch');
@@ -2353,13 +2411,15 @@ window.addEventListener('DOMContentLoaded', () => {
     ['input', 'keyup', 'change', 'search'].forEach(evt => {
       tableSearchEl.addEventListener(evt, triggerSearch);
     });
-  }
+  }
+
   document.body.addEventListener('dragover', e => e.preventDefault());
   document.body.addEventListener('drop', e => {
     e.preventDefault();
     const file = e.dataTransfer?.files?.[0];
     if (file && file.name.match(/\.xlsx?$|\.xlsm$/i)) handleFile(file);
-  });
+  });
+
   initializeData();
   populateFilters();
   initMatchupToggle();
