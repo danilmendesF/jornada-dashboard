@@ -167,6 +167,14 @@ window.updateAuthUI = function() {
           e.preventDefault();
           e.stopPropagation();
           menu.classList.toggle('show-dropdown');
+          
+          // Fecha o menu hamburguer se estiver aberto
+          const mobileBtn = document.getElementById('mobileMenuBtn');
+          const topNav = document.getElementById('topNavRouter');
+          if (mobileBtn && topNav) {
+            mobileBtn.classList.remove('is-active');
+            topNav.classList.remove('menu-open');
+          }
         });
         document.addEventListener('click', (e) => {
           if (!profileContainer.contains(e.target)) {

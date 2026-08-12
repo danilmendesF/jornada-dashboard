@@ -2498,9 +2498,6 @@ html.auth-session-active #appDashboardContainer {
 .user-dropdown-trigger:hover { background: rgba(124,106,247,0.3); }
 .user-avatar { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; }
 .dropdown-arrow { font-size: 0.7rem; opacity: 0.7; }
-.user-dropdown-menu { display: none; position: absolute; top: 110%; right: 0; min-width: 200px; background: rgba(5, 8, 15, 0.95); backdrop-filter: blur(20px); border: 1px solid var(--glass-bd); border-radius: var(--radius-sm); box-shadow: var(--shadow-glow); z-index: 1000; padding: 0.5rem 0; flex-direction: column; }
-.user-dropdown-container:hover .user-dropdown-menu,
-.user-dropdown-container:focus-within .user-dropdown-menu,
 .user-dropdown-menu.show-dropdown {
   display: flex;
 }
@@ -2512,3 +2509,4 @@ html.auth-session-active #appDashboardContainer {
 
 
 .dropdown-divider { height: 1px; background: var(--border); margin: 0.25rem 0; }
+.user-dropdown-menu { display: none; position: absolute; top: 110%; right: 0; min-width: 200px; background: rgba(5, 8, 15, 0.95); backdrop-filter: blur(20px); border: 1px solid var(--glass-bd); border-radius: var(--radius-sm); box-shadow: var(--shadow-glow); z-index: 1000; padding: 0.5rem 0; flex-direction: column; }
