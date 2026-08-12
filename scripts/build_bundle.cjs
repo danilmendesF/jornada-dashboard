@@ -30,6 +30,7 @@ const jsOrder = [
   'js/manager_forms.js',
   'js/sync_cloud.js',
   'js/auth.js',
+  'js/router.js',
   'app.js',
   'manager.js'
 ];

@@ -2422,3 +2422,7 @@ html.auth-session-active #appDashboardContainer {
   user-select: none;
   font-family: 'Outfit', sans-serif;
 }
+ 
+ . p a g e - t a b   {   d i s p l a y :   n o n e ;   a n i m a t i o n :   f a d e I n   0 . 4 s   e a s e - o u t ;   }  
+ . p a g e - t a b . a c t i v e   {   d i s p l a y :   b l o c k ;   }  
+ 
