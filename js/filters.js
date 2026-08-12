@@ -62,6 +62,13 @@ window.initMultiPlayerEvents = function() {
 
   btn.addEventListener('click', (e) => {
     e.stopPropagation();
+    
+    // Fechar outros dropdowns
+    document.getElementById('multiDeckWrap')?.classList.remove('open');
+    document.querySelector('.user-dropdown-menu')?.classList.remove('show-dropdown');
+    document.getElementById('mobileMenuBtn')?.classList.remove('is-active');
+    document.getElementById('topNavRouter')?.classList.remove('menu-open');
+
     wrap.classList.toggle('open');
     if (wrap.classList.contains('open') && searchInput) {
       searchInput.focus();
@@ -176,6 +183,13 @@ window.initMultiDeckEvents = function() {
 
   btn.addEventListener('click', (e) => {
     e.stopPropagation();
+    
+    // Fechar outros dropdowns
+    document.getElementById('multiPlayerWrap')?.classList.remove('open');
+    document.querySelector('.user-dropdown-menu')?.classList.remove('show-dropdown');
+    document.getElementById('mobileMenuBtn')?.classList.remove('is-active');
+    document.getElementById('topNavRouter')?.classList.remove('menu-open');
+
     wrap.classList.toggle('open');
     if (wrap.classList.contains('open') && searchInput) searchInput.focus();
   });

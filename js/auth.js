@@ -168,13 +168,15 @@ window.updateAuthUI = function() {
           e.stopPropagation();
           menu.classList.toggle('show-dropdown');
           
-          // Fecha o menu hamburguer se estiver aberto
+          // Fecha o menu hamburguer e filtros se estiverem abertos
           const mobileBtn = document.getElementById('mobileMenuBtn');
           const topNav = document.getElementById('topNavRouter');
           if (mobileBtn && topNav) {
             mobileBtn.classList.remove('is-active');
             topNav.classList.remove('menu-open');
           }
+          document.getElementById('multiPlayerWrap')?.classList.remove('open');
+          document.getElementById('multiDeckWrap')?.classList.remove('open');
         });
         document.addEventListener('click', (e) => {
           if (!profileContainer.contains(e.target)) {
