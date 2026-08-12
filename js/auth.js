@@ -132,8 +132,8 @@ window.updateAuthUI = function() {
         <div class="user-dropdown-container">
           <div class="user-dropdown-trigger">
             <img src="assets/trainer-avatar.svg" alt="Treinador" class="user-avatar" />
-            <span class="user-name">${window.currentUser.name}</span>
-            <span class="dropdown-arrow">▼</span>
+            <span class="user-name hide-on-mobile">${window.currentUser.name}</span>
+            <span class="dropdown-arrow hide-on-mobile">▼</span>
           </div>
           <div class="user-dropdown-menu">
             <div class="dropdown-header">
