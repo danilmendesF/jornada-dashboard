@@ -129,7 +129,7 @@ window.updateAuthUI = function() {
     if (badge && window.currentUser) {
       const isDanil = window.currentUser.email === 'danilmendes@gmail.com';
       badge.innerHTML = `
-        <div class="user-dropdown-container">
+        <div class="user-dropdown-container" id="profileDropdownContainer">
           <div class="user-dropdown-trigger">
             <img src="assets/trainer-avatar.svg" alt="Treinador" class="user-avatar" />
             <span class="user-name hide-on-mobile">${window.currentUser.name}</span>
@@ -155,7 +155,25 @@ window.updateAuthUI = function() {
 
     const btnManager = document.getElementById('btnOpenManager');
     if (btnManager) {
-      btnManager.style.display = 'none'; // Agora o botão gerenciar vive dentro do dropdown
+      btnManager.style.display = 'none';
+    }
+
+    const profileContainer = document.getElementById('profileDropdownContainer');
+    if (profileContainer) {
+      const trigger = profileContainer.querySelector('.user-dropdown-trigger');
+      const menu = profileContainer.querySelector('.user-dropdown-menu');
+      if (trigger && menu) {
+        trigger.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          menu.classList.toggle('show-dropdown');
+        });
+        document.addEventListener('click', (e) => {
+          if (!profileContainer.contains(e.target)) {
+            menu.classList.remove('show-dropdown');
+          }
+        });
+      }
     }
   } else {
     document.documentElement.classList.remove('auth-session-active');
