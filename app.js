@@ -304,6 +304,13 @@ function makeSearchableSelect(selectEl) {
     document.querySelectorAll(".searchable-select-wrap.open").forEach((el) => {
       if (el !== wrap) el.classList.remove("open");
     });
+    // Fechar todos os outros menus customizados
+    document.getElementById('multiPlayerWrap')?.classList.remove('open');
+    document.getElementById('multiDeckWrap')?.classList.remove('open');
+    document.querySelector('.user-dropdown-menu')?.classList.remove('show-dropdown');
+    document.getElementById('mobileMenuBtn')?.classList.remove('is-active');
+    document.getElementById('topNavRouter')?.classList.remove('menu-open');
+    
     wrap.classList.add("open");
     renderOptions(input.value === (selectEl.options[selectEl.selectedIndex]?.text || "") ? "" : input.value);
   }
@@ -488,6 +495,7 @@ function initMultiPlayerEvents() {
       document.querySelector('.user-dropdown-menu')?.classList.remove('show-dropdown');
       document.getElementById('mobileMenuBtn')?.classList.remove('is-active');
       document.getElementById('topNavRouter')?.classList.remove('menu-open');
+      document.querySelectorAll(".searchable-select-wrap.open").forEach(w => w.classList.remove("open"));
 
       wrap.classList.toggle('open');
       if (wrap.classList.contains('open') && searchInput) {
@@ -632,6 +640,7 @@ function initMultiDeckEvents() {
       document.querySelector('.user-dropdown-menu')?.classList.remove('show-dropdown');
       document.getElementById('mobileMenuBtn')?.classList.remove('is-active');
       document.getElementById('topNavRouter')?.classList.remove('menu-open');
+      document.querySelectorAll(".searchable-select-wrap.open").forEach(w => w.classList.remove("open"));
 
       wrap.classList.toggle('open');
       if (wrap.classList.contains('open') && searchInput) {

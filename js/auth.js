@@ -177,6 +177,7 @@ window.updateAuthUI = function() {
           }
           document.getElementById('multiPlayerWrap')?.classList.remove('open');
           document.getElementById('multiDeckWrap')?.classList.remove('open');
+          document.querySelectorAll('.searchable-select-wrap.open').forEach(w => w.classList.remove('open'));
         });
         document.addEventListener('click', (e) => {
           if (!profileContainer.contains(e.target)) {
