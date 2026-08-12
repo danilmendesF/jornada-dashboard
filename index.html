@@ -17,7 +17,7 @@
       rel="stylesheet"
     />
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <link rel="stylesheet" href="dist/style.min.css?v=1.0.53" />
+    <link rel="stylesheet" href="dist/style.min.css?v=1.0.54" />
     <script>
       (function () {
         try {
@@ -212,7 +212,7 @@
               font-family: &quot;Outfit&quot;, sans-serif;
             "
           >
-            v<span id="appVersionAuth">1.0.53</span>
+            v<span id="appVersionAuth">1.0.54</span>
           </div>
         </div>
       </div>
@@ -221,7 +221,11 @@
       <header class="header">
         <div class="header-inner">
           <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Abrir Menu">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+            <svg class="hamburger-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line class="line-2" x1="3" y1="6" x2="21" y2="6"></line>
+              <line class="line-1" x1="3" y1="12" x2="21" y2="12"></line>
+              <line class="line-3" x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
           </button>
           <div class="logo">
             <div class="logo-icon">
@@ -2351,7 +2355,7 @@
         </div>
       </div>
     </div>
-    <script src="dist/app.min.js?v=1.0.53"></script>
+    <script src="dist/app.min.js?v=1.0.54"></script>
     <script>
       // Mobile Hamburger Menu Toggle
       const mobileBtn = document.getElementById('mobileMenuBtn');
@@ -2359,16 +2363,18 @@
       if (mobileBtn && topNav) {
         mobileBtn.addEventListener('click', () => {
           topNav.classList.toggle('menu-open');
+          mobileBtn.classList.toggle('is-active');
         });
         
         // Fechar menu ao clicar num link
         topNav.querySelectorAll('.nav-link').forEach(link => {
           link.addEventListener('click', () => {
             topNav.classList.remove('menu-open');
+            mobileBtn.classList.remove('is-active');
           });
         });
       }
     </script>
-    <div class="app-version-footer">v<span id="appVersion">1.0.53</span></div>
+    <div class="app-version-footer">v<span id="appVersion">1.0.54</span></div>
   </body>
 </html>

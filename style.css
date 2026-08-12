@@ -154,6 +154,13 @@ body::after {
 .mobile-menu-btn:hover {
   background: rgba(255,255,255,0.05);
 }
+.hamburger-icon line {
+  transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1), opacity 0.3s ease;
+  transform-origin: center;
+}
+.mobile-menu-btn.is-active .line-1 { opacity: 0; }
+.mobile-menu-btn.is-active .line-2 { transform: translateY(6px) rotate(45deg); stroke: var(--primary); }
+.mobile-menu-btn.is-active .line-3 { transform: translateY(-6px) rotate(-45deg); stroke: var(--primary); }
 
 .nav-link {
   font-family: 'Rajdhani', sans-serif;
@@ -1158,7 +1165,7 @@ tbody tr:last-child td { border-bottom: none; }
   .user-avatar { margin-right: 0; }
 
   .top-nav {
-    display: none;
+    display: flex;
     position: absolute;
     top: 100%;
     left: 0;
@@ -1167,12 +1174,21 @@ tbody tr:last-child td { border-bottom: none; }
     backdrop-filter: blur(24px);
     border-bottom: 1px solid rgba(26,127,255,0.25);
     flex-direction: column;
-    padding: 1rem;
-    gap: 1rem;
+    padding: 1.5rem 1rem;
+    gap: 1.25rem;
     z-index: 100;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    
+    /* Animation setup */
+    visibility: hidden;
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), visibility 0.3s;
   }
   .top-nav.menu-open {
-    display: flex;
+    visibility: visible;
+    opacity: 1;
+    transform: translateY(0);
   }
   .last-update { width: 100%; text-align: left; margin-top: 0.2rem; }
 
