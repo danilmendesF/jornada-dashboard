@@ -2084,7 +2084,7 @@ function getSyncUrl(token) {
 
 async function pullFromCloud(quiet = false) {
   try {
-      const vRes = await fetch(`/version.json?t=${Date.now()}`);
+      const vRes = await fetch(`./version.json?t=${Date.now()}`);
       if (vRes.ok) {
         const vData = await vRes.json();
         const el = document.getElementById('appVersion') || document.getElementById('appVersionAuth');
