@@ -2778,3 +2778,63 @@ function initCustomDatePicker() {
 document.addEventListener('DOMContentLoaded', () => {
   initCustomDatePicker();
 });
+// =========================================================================
+// CONFIABILIDADE MULTI-SELECT
+// =========================================================================
+function initMultiConfFilter() {
+  const wrap = document.getElementById('multiConfWrap');
+  if (!wrap) return;
+
+  const trigger = document.getElementById('btnMultiConfToggle');
+  const dropdown = document.getElementById('multiConfDropdown');
+  const btnText = document.getElementById('multiConfBtnText');
+  const cbs = wrap.querySelectorAll('.multi-conf-cb');
+  
+  trigger.addEventListener('mousedown', (e) => {
+    e.preventDefault();
+    const isShowing = dropdown.style.display === 'flex';
+    
+    // Close others
+    document.querySelectorAll('.searchable-select-wrap.open').forEach(el => {
+      el.classList.remove('open');
+      const drop = el.querySelector('.searchable-select-dropdown');
+      if (drop) drop.style.display = 'none';
+    });
+    document.getElementById('userDropdownMenu')?.classList.remove('show-dropdown');
+    document.getElementById('mobileMenu')?.classList.remove('active');
+    
+    if (!isShowing) {
+      dropdown.style.display = 'flex';
+      wrap.classList.add('open');
+    } else {
+      dropdown.style.display = 'none';
+      wrap.classList.remove('open');
+    }
+  });
+
+  document.addEventListener('mousedown', (e) => {
+    if (!wrap.contains(e.target)) {
+      dropdown.style.display = 'none';
+      wrap.classList.remove('open');
+    }
+  });
+
+  dropdown.addEventListener('mousedown', (e) => {
+    e.stopPropagation();
+  });
+
+  cbs.forEach(cb => {
+    cb.addEventListener('change', () => {
+      const checkedVals = Array.from(cbs).filter(c => c.checked).map(c => c.value);
+      if (checkedVals.length === 2) {
+        btnText.textContent = 'Todas';
+      } else if (checkedVals.length === 1) {
+        btnText.textContent = checkedVals[0];
+      } else {
+        btnText.textContent = 'Nenhuma';
+      }
+      if (typeof applyFilters === 'function') applyFilters();
+    });
+  });
+}
+document.addEventListener('DOMContentLoaded', initMultiConfFilter);

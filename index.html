@@ -17,7 +17,7 @@
       rel="stylesheet"
     />
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <link rel="stylesheet" href="dist/style.min.css?v=1.0.63" />
+    <link rel="stylesheet" href="dist/style.min.css?v=1.0.64" />
     <script>
       (function () {
         try {
@@ -212,7 +212,7 @@
               font-family: &quot;Outfit&quot;, sans-serif;
             "
           >
-            v<span id="appVersionAuth">1.0.63</span>
+            v<span id="appVersionAuth">1.0.64</span>
           </div>
         </div>
       </div>
@@ -266,7 +266,7 @@
                 id="btnMultiPlayerToggle"
               >
                 <span id="multiPlayerBtnText">Todos os Players</span>
-                <span class="multi-deck-arrow">▾</span>
+                <span class="multi-deck-arrow">&#9660;</span>
               </button>
               <div class="multi-deck-dropdown" id="multiPlayerDropdown">
                 <div class="multi-deck-header">
@@ -306,7 +306,7 @@
                 id="btnMultiDeckToggle"
               >
                 <span id="multiDeckBtnText">Todos os Decks</span>
-                <span class="multi-deck-arrow">▾</span>
+                <span class="multi-deck-arrow">&#9660;</span>
               </button>
               <div class="multi-deck-dropdown" id="multiDeckDropdown">
                 <div class="multi-deck-header">
@@ -422,64 +422,25 @@
               </div>
             </div>
           </div>
-          <div class="filter-group">
-            <label class="filter-label">Confiabilidade</label>
-            <div
-              class="checkbox-group"
-              style="
-                display: flex;
-                gap: 0.6rem;
-                align-items: center;
-                padding: 0.42rem 0.75rem;
-                background: var(--bg3);
-                border: 1px solid var(--glass-bd);
-                border-radius: var(--radius-sm);
-                height: 38px;
-                box-sizing: border-box;
-              "
-            >
-              <label
-                style="
-                  font-size: 0.8rem;
-                  color: var(--text);
-                  display: flex;
-                  align-items: center;
-                  gap: 0.3rem;
-                  cursor: pointer;
-                  user-select: none;
-                "
-              >
-                <input
-                  type="checkbox"
-                  id="filterConfAlta"
-                  value="Alta"
-                  checked
-                  onchange="applyFilters()"
-                />
-                🟢 Alta
-              </label>
-              <label
-                style="
-                  font-size: 0.8rem;
-                  color: var(--text);
-                  display: flex;
-                  align-items: center;
-                  gap: 0.3rem;
-                  cursor: pointer;
-                  user-select: none;
-                "
-              >
-                <input
-                  type="checkbox"
-                  id="filterConfBaixa"
-                  value="Baixa"
-                  checked
-                  onchange="applyFilters()"
-                />
-                🔴 Baixa
-              </label>
+                      <div class="filter-group">
+              <label class="filter-label">Confiabilidade</label>
+              <div class="searchable-select-wrap" id="multiConfWrap">
+                <div class="searchable-select-trigger" id="btnMultiConfToggle">
+                  <span id="multiConfBtnText">Todas</span>
+                  <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="searchable-select-dropdown" id="multiConfDropdown" style="display: none; flex-direction: column;">
+                  <label class="date-preset-option" style="justify-content: flex-start; gap: 0.5rem; padding-left: 1rem;">
+                    <input type="checkbox" id="filterConfAlta" class="multi-conf-cb" checked style="cursor:pointer;" /> 
+                    <span>Alta</span>
+                  </label>
+                  <label class="date-preset-option" style="justify-content: flex-start; gap: 0.5rem; padding-left: 1rem;">
+                    <input type="checkbox" id="filterConfBaixa" class="multi-conf-cb" checked style="cursor:pointer;" /> 
+                    <span>Baixa</span>
+                  </label>
+                </div>
+              </div>
             </div>
-          </div>
           <div style="display: flex; gap: 0.5rem; align-items: flex-end">
             <button
               class="btn-apply-filters"
@@ -2406,7 +2367,7 @@
         </div>
       </div>
     </div>
-    <script src="dist/app.min.js?v=1.0.63"></script>
+    <script src="dist/app.min.js?v=1.0.64"></script>
     <script>
       // Mobile Hamburger Menu Toggle
       const mobileBtn = document.getElementById('mobileMenuBtn');
@@ -2432,6 +2393,8 @@
         });
       }
     </script>
-    <div class="app-version-footer">v<span id="appVersion">1.0.63</span></div>
+    <div class="app-version-footer">v<span id="appVersion">1.0.64</span></div>
   </body>
 </html>
+
+
