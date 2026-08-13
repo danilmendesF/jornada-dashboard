@@ -2798,3 +2798,58 @@ html.auth-session-active #appDashboardContainer {
   background: rgba(26,127,255,0.15) !important;
   color: #fff !important;
 }
+
+/* ========================================= */
+/* ACTIVE FILTERS PILLS                      */
+/* ========================================= */
+.active-filters-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  padding: 0 1.5rem 1rem 1.5rem; /* Match padding of filters-bar */
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.active-filter-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: var(--bg3);
+  border: 1px solid var(--glass-bd);
+  border-radius: 4px;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.75rem;
+  color: var(--text);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  transition: all 0.2s;
+  animation: fadeIn 0.2s ease;
+}
+
+.active-filter-pill span {
+  white-space: nowrap;
+}
+
+.active-filter-pill b {
+  color: var(--accent2);
+  font-weight: 500;
+}
+
+.active-filter-close {
+  cursor: pointer;
+  color: var(--text2);
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  transition: all 0.2s;
+}
+
+.active-filter-close:hover {
+  background: rgba(240, 80, 80, 0.2);
+  color: var(--red);
+}
+
