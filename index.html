@@ -17,7 +17,7 @@
       rel="stylesheet"
     />
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <link rel="stylesheet" href="dist/style.min.css?v=1.0.64" />
+    <link rel="stylesheet" href="dist/style.min.css?v=1.0.65" />
     <script>
       (function () {
         try {
@@ -212,7 +212,7 @@
               font-family: &quot;Outfit&quot;, sans-serif;
             "
           >
-            v<span id="appVersionAuth">1.0.64</span>
+            v<span id="appVersionAuth">1.0.65</span>
           </div>
         </div>
       </div>
@@ -422,20 +422,20 @@
               </div>
             </div>
           </div>
-                      <div class="filter-group">
+                                  <div class="filter-group">
               <label class="filter-label">Confiabilidade</label>
-              <div class="searchable-select-wrap" id="multiConfWrap">
-                <div class="searchable-select-trigger" id="btnMultiConfToggle">
+              <div class="multi-deck-wrap" id="multiConfWrap">
+                <button type="button" class="multi-deck-btn" id="btnMultiConfToggle">
                   <span id="multiConfBtnText">Todas</span>
-                  <i class="fas fa-chevron-down"></i>
-                </div>
-                <div class="searchable-select-dropdown" id="multiConfDropdown" style="display: none; flex-direction: column;">
-                  <label class="date-preset-option" style="justify-content: flex-start; gap: 0.5rem; padding-left: 1rem;">
-                    <input type="checkbox" id="filterConfAlta" class="multi-conf-cb" checked style="cursor:pointer;" /> 
+                  <span class="multi-deck-arrow">&#9660;</span>
+                </button>
+                <div class="multi-deck-dropdown" id="multiConfDropdown" style="display: none; flex-direction: column;">
+                  <label class="multi-deck-option">
+                    <input type="checkbox" id="filterConfAlta" class="multi-conf-cb" checked /> 
                     <span>Alta</span>
                   </label>
-                  <label class="date-preset-option" style="justify-content: flex-start; gap: 0.5rem; padding-left: 1rem;">
-                    <input type="checkbox" id="filterConfBaixa" class="multi-conf-cb" checked style="cursor:pointer;" /> 
+                  <label class="multi-deck-option">
+                    <input type="checkbox" id="filterConfBaixa" class="multi-conf-cb" checked /> 
                     <span>Baixa</span>
                   </label>
                 </div>
@@ -2367,7 +2367,7 @@
         </div>
       </div>
     </div>
-    <script src="dist/app.min.js?v=1.0.64"></script>
+    <script src="dist/app.min.js?v=1.0.65"></script>
     <script>
       // Mobile Hamburger Menu Toggle
       const mobileBtn = document.getElementById('mobileMenuBtn');
@@ -2393,8 +2393,9 @@
         });
       }
     </script>
-    <div class="app-version-footer">v<span id="appVersion">1.0.64</span></div>
+    <div class="app-version-footer">v<span id="appVersion">1.0.65</span></div>
   </body>
 </html>
+
 
 

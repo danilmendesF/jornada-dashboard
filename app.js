@@ -2795,10 +2795,16 @@ function initMultiConfFilter() {
     const isShowing = dropdown.style.display === 'flex';
     
     // Close others
-    document.querySelectorAll('.searchable-select-wrap.open').forEach(el => {
-      el.classList.remove('open');
-      const drop = el.querySelector('.searchable-select-dropdown');
-      if (drop) drop.style.display = 'none';
+    document.querySelectorAll('.searchable-select-wrap.open, .multi-deck-wrap.open, .custom-date-picker-wrap.open').forEach(el => {
+      if (el !== wrap) {
+        el.classList.remove('open');
+        const drop1 = el.querySelector('.searchable-select-dropdown');
+        const drop2 = el.querySelector('.multi-deck-dropdown');
+        const drop3 = el.querySelector('.custom-date-dropdown');
+        if (drop1) drop1.style.display = 'none';
+        if (drop2) drop2.style.display = 'none';
+        if (drop3) drop3.style.display = 'none';
+      }
     });
     document.getElementById('userDropdownMenu')?.classList.remove('show-dropdown');
     document.getElementById('mobileMenu')?.classList.remove('active');
@@ -2838,3 +2844,4 @@ function initMultiConfFilter() {
   });
 }
 document.addEventListener('DOMContentLoaded', initMultiConfFilter);
+

@@ -2755,3 +2755,24 @@ html.auth-session-active #appDashboardContainer {
   border-color: var(--accent);
   box-shadow: 0 0 0 2px rgba(26,127,255,0.20);
 }
+
+
+/* ========================================= */
+/* FIX ALIGNMENT AND SIZES FOR ALL FILTERS   */
+/* ========================================= */
+.searchable-select-input,
+.multi-deck-btn,
+.custom-date-trigger {
+  height: 38px !important;
+  box-sizing: border-box !important;
+  line-height: normal !important;
+  display: flex;
+  align-items: center;
+}
+.searchable-select-input { 
+  display: block !important; 
+  padding: 0 2rem 0 0.8rem !important; 
+  line-height: 36px !important;
+}
+.multi-deck-btn { padding: 0 0.8rem !important; justify-content: space-between; }
+.custom-date-trigger { padding: 0 0.8rem !important; justify-content: space-between; }
