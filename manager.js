@@ -1,11 +1,11 @@
-/* ============================================================
-   JORNADA DASHBOARD — manager.js
+﻿/* ============================================================
+   JORNADA DASHBOARD â€” manager.js
    CRUD: Decks (com lista PTCGL), Partidas manuais, Players
    ============================================================ */
 
 'use strict';
 
-// ── STORAGE KEYS ─────────────────────────────────────────────────────────────
+// â”€â”€ STORAGE KEYS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const KEY_DECKS   = 'jornada_decks';
 const KEY_MATCHES = 'jornada_manual_matches';
 const KEY_PLAYERS = 'jornada_players';
@@ -19,7 +19,7 @@ const KEY_DELETED_COLECOES = 'jornada_deleted_colecoes';
 const KEY_EDITS   = 'jornada_edited_matches';
 const KEY_ADMIN_PIN = 'jornada_admin_pin';
 
-// ── LOAD / SAVE ───────────────────────────────────────────────────────────────
+// â”€â”€ LOAD / SAVE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function loadDecks()   { try { return JSON.parse(localStorage.getItem(KEY_DECKS))   || []; } catch { return []; } }
 function loadManual()  { try { return JSON.parse(localStorage.getItem(KEY_MATCHES)) || []; } catch { return []; } }
 function loadPlayers() { try { return JSON.parse(localStorage.getItem(KEY_PLAYERS)) || ['Danilo', 'GuiVaz', 'Victor', 'Lipe']; } catch { return ['Danilo', 'GuiVaz', 'Victor', 'Lipe']; } }
@@ -31,9 +31,9 @@ function safeSetItem(key, val) {
     localStorage.setItem(key, val);
     return true;
   } catch (err) {
-    console.error(`❌ Erro ao salvar "${key}" no localStorage:`, err);
+    console.error(`âŒ Erro ao salvar "${key}" no localStorage:`, err);
     if (typeof showToast === 'function') {
-      showToast('⚠️ Erro ao salvar dados no navegador (armazenamento cheio)');
+      showToast('âš ï¸ Erro ao salvar dados no navegador (armazenamento cheio)');
     }
     return false;
   }
@@ -64,9 +64,9 @@ let players  = loadPlayers();
 let locais   = loadLocais();
 let colecoes = loadColecoes();
 
-// ── PTCGL PARSER ─────────────────────────────────────────────────────────────
+// â”€â”€ PTCGL PARSER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function parsePTCGL(raw) {
-  const sections  = { 'Pokémon': [], 'Treinador': [], 'Energia': [] };
+  const sections  = { 'PokÃ©mon': [], 'Treinador': [], 'Energia': [] };
   let currentSec  = null;
   let total       = 0;
   const lines     = raw.split('\n');
@@ -74,10 +74,10 @@ function parsePTCGL(raw) {
   for (let line of lines) {
     line = line.trim();
     if (!line) continue;
-    const secMatch = line.match(/^(Pok[eé]mon|Treinador|Energia)\s*:/i);
+    const secMatch = line.match(/^(Pok[eÃ©]mon|Treinador|Energia)\s*:/i);
     if (secMatch) {
       const key = secMatch[1].charAt(0).toUpperCase() + secMatch[1].slice(1).toLowerCase();
-      currentSec = key === 'Pokémon' || key === 'Pokemon' ? 'Pokémon' :
+      currentSec = key === 'PokÃ©mon' || key === 'Pokemon' ? 'PokÃ©mon' :
                    key === 'Treinador' ? 'Treinador' : 'Energia';
       continue;
     }
@@ -94,7 +94,7 @@ function parsePTCGL(raw) {
   return { sections, total };
 }
 
-// ── DECK CARD COUNT ──────────────────────────────────────────────────────────
+// â”€â”€ DECK CARD COUNT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function countCards(raw) { return parsePTCGL(raw).total; }
 
 function showModal(id) {
@@ -143,7 +143,7 @@ function closeModal(id, force = false) {
   if (!el) return false;
 
   if (id === 'modalMatchForm' && !force && isMatchFormDirty()) {
-    if (!confirm('⚠️ Você possui dados/alterações não salvas no registro da partida.\n\nDeseja realmente cancelar e fechar sem salvar?')) {
+    if (!confirm('âš ï¸ VocÃª possui dados/alteraÃ§Ãµes nÃ£o salvas no registro da partida.\n\nDeseja realmente cancelar e fechar sem salvar?')) {
       return false;
     }
   }
@@ -156,7 +156,7 @@ function closeModal(id, force = false) {
   return true;
 }
 
-// ── POPULATE PLAYER SELECTS ──────────────────────────────────────────────────
+// â”€â”€ POPULATE PLAYER SELECTS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function populatePlayerSelects() {
   const activeName = typeof getActivePlayerName === 'function' ? getActivePlayerName() : null;
 
@@ -170,7 +170,7 @@ function populatePlayerSelects() {
     if (id === 'formMatchPlayer' && activeName) {
       const o = document.createElement('option');
       o.value = activeName;
-      o.textContent = `👤 ${activeName}`;
+      o.textContent = `ðŸ‘¤ ${activeName}`;
       sel.appendChild(o);
       sel.value = activeName;
     } else {
@@ -200,7 +200,7 @@ function populatePlayerSelects() {
   if (typeof populateQuickLogDropdowns === 'function') populateQuickLogDropdowns();
 }
 
-// ── MIRROR MATCH AUTOMATION ───────────────────────────────────────────────────
+// â”€â”€ MIRROR MATCH AUTOMATION â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 window.invertPlacar = function(placar) {
   if (!placar || typeof placar !== 'string') return placar || '';
   const parts = placar.split(/[-:]/);
@@ -221,24 +221,24 @@ window.buildMirrorMatch = function(primaryMatch) {
 
   const teamPlayerName = teamPlayers.find(p => p.toLowerCase() === advName.toLowerCase()) || advName;
   const res = primaryMatch.Resultado;
-  const mirrorRes = res === 'Vitória' ? 'Derrota' : res === 'Derrota' ? 'Vitória' : 'Empate';
-  const mirrorPontos = mirrorRes === 'Vitória' ? 1 : mirrorRes === 'Empate' ? 0.5 : 0;
+  const mirrorRes = res === 'VitÃ³ria' ? 'Derrota' : res === 'Derrota' ? 'VitÃ³ria' : 'Empate';
+  const mirrorPontos = mirrorRes === 'VitÃ³ria' ? 1 : mirrorRes === 'Empate' ? 0.5 : 0;
   const mirrorPlacar = invertPlacar(primaryMatch.Placar);
   let mirrorGamesDetail = null;
-  let mirrorStart = primaryMatch.Start === '1º' ? '2º' : primaryMatch.Start === '2º' ? '1º' : primaryMatch.Start;
-  let mirrorBrick = primaryMatch.BrickOp || 'Não';
-  let mirrorBrickOp = primaryMatch.Brick || 'Não';
+  let mirrorStart = primaryMatch.Start === '1Âº' ? '2Âº' : primaryMatch.Start === '2Âº' ? '1Âº' : primaryMatch.Start;
+  let mirrorBrick = primaryMatch.BrickOp || 'NÃ£o';
+  let mirrorBrickOp = primaryMatch.Brick || 'NÃ£o';
 
   if (primaryMatch.GamesDetail && Array.isArray(primaryMatch.GamesDetail) && primaryMatch.GamesDetail.length > 0) {
     mirrorGamesDetail = primaryMatch.GamesDetail.map(g => ({
       game: g.game,
-      start: g.start === '1º' ? '2º' : '1º',
-      brick: g.brickOp || 'Não',
-      brickOp: g.brick || 'Não'
+      start: g.start === '1Âº' ? '2Âº' : '1Âº',
+      brick: g.brickOp || 'NÃ£o',
+      brickOp: g.brick || 'NÃ£o'
     }));
     mirrorStart = mirrorGamesDetail.map(g => g.start).join(', ');
-    mirrorBrick = mirrorGamesDetail.some(g => g.brick === 'Sim') ? 'Sim' : 'Não';
-    mirrorBrickOp = mirrorGamesDetail.some(g => g.brickOp === 'Sim') ? 'Sim' : 'Não';
+    mirrorBrick = mirrorGamesDetail.some(g => g.brick === 'Sim') ? 'Sim' : 'NÃ£o';
+    mirrorBrickOp = mirrorGamesDetail.some(g => g.brickOp === 'Sim') ? 'Sim' : 'NÃ£o';
   }
 
   let mirrorId = primaryMatch._mirrorId;
@@ -265,8 +265,8 @@ window.buildMirrorMatch = function(primaryMatch) {
     Resultado:        mirrorRes,
     Pontos:           mirrorPontos,
     Placar:           mirrorPlacar,
-    Local:            primaryMatch.Local || '—',
-    Colecao:          primaryMatch.Colecao || '—',
+    Local:            primaryMatch.Local || 'â€”',
+    Colecao:          primaryMatch.Colecao || 'â€”',
     Brick:            mirrorBrick,
     BrickOp:          mirrorBrickOp,
     Confiabilidade:   primaryMatch.Confiabilidade || 'Alta',
@@ -307,17 +307,17 @@ window.syncAllTeamMirrorMatches = function() {
 
   if (addedCount > 0) {
     saveManual(manual);
-    console.log(`⚔️ Sync retroativo criou ${addedCount} partidas espelho para o time!`);
+    console.log(`âš”ï¸ Sync retroativo criou ${addedCount} partidas espelho para o time!`);
   }
 };
 
-// ── POPULATE DECK SELECTS ────────────────────────────────────────────────────
+// â”€â”€ POPULATE DECK SELECTS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function populateDeckSelects() {
   const selects = [
     { id: 'formMatchDeck', placeholder: 'Sem deck cadastrado' },
-    { id: 'formMatchDeckAdv', placeholder: 'Selecione…' },
-    { id: 'quickLogDeck', placeholder: 'Selecione seu deck…' },
-    { id: 'quickLogDeckAdv', placeholder: 'Selecione o deck oponente…' }
+    { id: 'formMatchDeckAdv', placeholder: 'Selecioneâ€¦' },
+    { id: 'quickLogDeck', placeholder: 'Selecione seu deckâ€¦' },
+    { id: 'quickLogDeckAdv', placeholder: 'Selecione o deck oponenteâ€¦' }
   ];
 
   selects.forEach(selInfo => {
@@ -349,7 +349,7 @@ function populateDeckSelects() {
   });
 }
 
-// ── RENDER DECKS & ARCHETYPES LISTS ──────────────────────────────────────────
+// â”€â”€ RENDER DECKS & ARCHETYPES LISTS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function renderArchetypesList() {
   const container = document.getElementById('archetypesList');
   if (!container) return;
@@ -360,14 +360,14 @@ function renderArchetypesList() {
   const uniqueArchetypes = [...new Set([...registeredArchetypes, ...matchArchetypes])].sort((a, b) => a.localeCompare(b));
 
   if (uniqueArchetypes.length === 0) {
-    container.innerHTML = `<div class="empty-state"><div class="empty-icon">🃏</div><p>Nenhum arquétipo cadastrado ainda.</p></div>`;
+    container.innerHTML = `<div class="empty-state"><div class="empty-icon">ðŸƒ</div><p>Nenhum arquÃ©tipo cadastrado ainda.</p></div>`;
     return;
   }
 
   container.innerHTML = uniqueArchetypes.map(arq => {
     const variantDecks = decks.filter(d => (d.arquetipo || d.name) === arq);
     const arqMatches   = dataset.filter(m => (m.Arquetipo || m.Deck) === arq);
-    const wins         = arqMatches.filter(m => m.Resultado === 'Vitória').length;
+    const wins         = arqMatches.filter(m => m.Resultado === 'VitÃ³ria').length;
     const wr           = arqMatches.length ? Math.round((wins / arqMatches.length) * 100) : 0;
 
     return `<div class="deck-card" style="border-left: 4px solid var(--accent2);">
@@ -378,12 +378,12 @@ function renderArchetypesList() {
           <span class="deck-player-tag" style="background:rgba(0,200,248,0.12); color:var(--accent2); font-weight:700;">${variantDecks.length} variante(s) / lista(s)</span>
         </div>
         <div class="deck-card-actions">
-          <button class="icon-btn" onclick="openUnifyArchetypesModal()" title="Unificar com outro arquétipo">🔗 Unificar</button>
+          <button class="icon-btn" onclick="openUnifyArchetypesModal()" title="Unificar com outro arquÃ©tipo">ðŸ”— Unificar</button>
         </div>
       </div>
       <div class="deck-card-stats">
-        <span class="deck-stat">📊 ${arqMatches.length} partidas no total</span>
-        ${arqMatches.length ? `<span class="deck-stat wr-stat">📈 ${wr}% WR (${wins}V)</span>` : ''}
+        <span class="deck-stat">ðŸ“Š ${arqMatches.length} partidas no total</span>
+        ${arqMatches.length ? `<span class="deck-stat wr-stat">ðŸ“ˆ ${wr}% WR (${wins}V)</span>` : ''}
       </div>
     </div>`;
   }).join('');
@@ -397,9 +397,9 @@ function renderDecksList() {
 
   if (decks.length === 0) {
     container.innerHTML = `<div class="empty-state">
-      <div class="empty-icon">📜</div>
+      <div class="empty-icon">ðŸ“œ</div>
       <p>Nenhuma variante / lista cadastrada ainda.</p>
-      <p class="empty-sub">Clique em "+ Nova Variante / Deck" para começar.</p>
+      <p class="empty-sub">Clique em "+ Nova Variante / Deck" para comeÃ§ar.</p>
     </div>`;
     return;
   }
@@ -428,11 +428,11 @@ function renderDecksList() {
     const parsed  = parsePTCGL(deck.list || '');
     const total   = parsed.total;
     const valid   = total === 60;
-    const pokCount = parsed.sections['Pokémon'].reduce((s, c) => s + c.qty, 0);
+    const pokCount = parsed.sections['PokÃ©mon'].reduce((s, c) => s + c.qty, 0);
     const trnCount = parsed.sections['Treinador'].reduce((s, c) => s + c.qty, 0);
     const engCount = parsed.sections['Energia'].reduce((s, c) => s + c.qty, 0);
     const deckMatches = matchesByDeck.get(deck.name) || [];
-    const wins        = deckMatches.filter(m => m.Resultado === 'Vitória').length;
+    const wins        = deckMatches.filter(m => m.Resultado === 'VitÃ³ria').length;
     const wr          = deckMatches.length ? Math.round((wins / deckMatches.length) * 100) : 0;
     const arqTag      = (deck.arquetipo && deck.arquetipo !== deck.name) ? ` [${deck.arquetipo}]` : '';
 
@@ -444,23 +444,23 @@ function renderDecksList() {
           <span class="deck-player-tag">${deck.player || ''}</span>
         </div>
         <div class="deck-card-actions">
-          <button class="icon-btn" onclick="openDeckList('${deck.id}')" title="Ver lista">📋</button>
-          <button class="icon-btn" onclick="openEditDeck('${deck.id}')" title="Editar">✏️</button>
-          <button class="icon-btn danger" onclick="deleteDeck('${deck.id}')" title="Excluir">🗑️</button>
+          <button class="icon-btn" onclick="openDeckList('${deck.id}')" title="Ver lista">ðŸ“‹</button>
+          <button class="icon-btn" onclick="openEditDeck('${deck.id}')" title="Editar">âœï¸</button>
+          <button class="icon-btn danger" onclick="deleteDeck('${deck.id}')" title="Excluir">ðŸ—‘ï¸</button>
         </div>
       </div>
       <div class="deck-card-stats">
-        <span class="deck-stat"><span class="stat-dot poke"></span>${pokCount} Pokémon</span>
+        <span class="deck-stat"><span class="stat-dot poke"></span>${pokCount} PokÃ©mon</span>
         <span class="deck-stat"><span class="stat-dot train"></span>${trnCount} Treinador</span>
         <span class="deck-stat"><span class="stat-dot energy"></span>${engCount} Energia</span>
-        <span class="deck-stat ${valid ? 'valid' : 'invalid'}">${valid ? '✅' : '⚠️'} ${total}/60 cartas</span>
-        ${deckMatches.length ? `<span class="deck-stat wr-stat">📈 ${wr}% WR (${deckMatches.length}j)</span>` : ''}
+        <span class="deck-stat ${valid ? 'valid' : 'invalid'}">${valid ? 'âœ…' : 'âš ï¸'} ${total}/60 cartas</span>
+        ${deckMatches.length ? `<span class="deck-stat wr-stat">ðŸ“ˆ ${wr}% WR (${deckMatches.length}j)</span>` : ''}
       </div>
     </div>`;
   }).join('');
 }
 
-// ── OPEN DECK LIST MODAL ─────────────────────────────────────────────────────
+// â”€â”€ OPEN DECK LIST MODAL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 let currentViewingDeckId = null;
 let currentViewingMatchDeck = null; // { matchId, type, list, name, player }
 
@@ -492,12 +492,12 @@ window.openMatchDeckList = function(matchId, type) {
   const valid = total === 60;
 
   document.getElementById('deckListTitle').textContent = deckName ? `${deckName} (Partida ${match.Data || ''})` : 'Lista da Partida';
-  document.getElementById('deckListPlayer').textContent = playerName ? `👤 ${playerName}` : '';
+  document.getElementById('deckListPlayer').textContent = playerName ? `ðŸ‘¤ ${playerName}` : '';
   document.getElementById('deckListCount').textContent = `${total}/60 cartas`;
   document.getElementById('deckListCount').className = 'deck-list-count ' + (valid ? 'valid' : 'invalid');
 
   const body = document.getElementById('deckListBody');
-  const secIcons = { 'Pokémon': '🐾', 'Treinador': '🎓', 'Energia': '⚡' };
+  const secIcons = { 'PokÃ©mon': 'ðŸ¾', 'Treinador': 'ðŸŽ“', 'Energia': 'âš¡' };
 
   let html = '';
   for (const [secName, cards] of Object.entries(parsed.sections)) {
@@ -507,16 +507,16 @@ window.openMatchDeckList = function(matchId, type) {
       <div class="list-section-header">${secIcons[secName]} ${secName} <span class="list-sec-count">${secTotal}</span></div>
       <div class="list-cards">
         ${cards.map(c => `<div class="list-card-row">
-          <span class="list-qty">${c.qty}×</span>
+          <span class="list-qty">${c.qty}Ã—</span>
           <span class="list-name">${c.name}</span>
         </div>`).join('')}
       </div>
     </div>`;
   }
 
-  body.innerHTML = html || '<p style="color:var(--text2);padding:1rem;text-align:center;">Nenhuma carta cadastrada para esta partida. Clique em <strong>"✏️ Editar / Importar Lista"</strong> acima para adicionar as cartas.</p>';
+  body.innerHTML = html || '<p style="color:var(--text2);padding:1rem;text-align:center;">Nenhuma carta cadastrada para esta partida. Clique em <strong>"âœï¸ Editar / Importar Lista"</strong> acima para adicionar as cartas.</p>';
   if (html) {
-    body.title = "Clique para copiar a lista no formato Pokémon TCG Live";
+    body.title = "Clique para copiar a lista no formato PokÃ©mon TCG Live";
     body.style.cursor = "pointer";
     body.onclick = function() {
       window.exportCurrentDeckToTCGLive();
@@ -541,12 +541,12 @@ window.openDeckListByName = function(deckName, playerName) {
     currentViewingMatchDeck = { matchId: null, type: 'transient', list: '', name: deckName, player: playerName || '' };
 
     document.getElementById('deckListTitle').textContent = deckName;
-    document.getElementById('deckListPlayer').textContent = playerName ? `👤 ${playerName}` : '';
+    document.getElementById('deckListPlayer').textContent = playerName ? `ðŸ‘¤ ${playerName}` : '';
     document.getElementById('deckListCount').textContent = `0/60 cartas`;
     document.getElementById('deckListCount').className = 'deck-list-count invalid';
 
     const body = document.getElementById('deckListBody');
-    body.innerHTML = `<p style="color:var(--text2);padding:1.5rem;text-align:center;">O deck <strong>"${deckName}"</strong> ainda não possui uma lista cadastrada no Gerenciador de Decks.</p>`;
+    body.innerHTML = `<p style="color:var(--text2);padding:1.5rem;text-align:center;">O deck <strong>"${deckName}"</strong> ainda nÃ£o possui uma lista cadastrada no Gerenciador de Decks.</p>`;
     body.title = "";
     body.style.cursor = "default";
     body.onclick = null;
@@ -572,7 +572,7 @@ window.openDeckList = function(deckId) {
   document.getElementById('deckListCount').className   = 'deck-list-count ' + (valid ? 'valid' : 'invalid');
 
   const body = document.getElementById('deckListBody');
-  const secIcons = { 'Pokémon': '🐾', 'Treinador': '🎓', 'Energia': '⚡' };
+  const secIcons = { 'PokÃ©mon': 'ðŸ¾', 'Treinador': 'ðŸŽ“', 'Energia': 'âš¡' };
 
   let html = '';
   for (const [secName, cards] of Object.entries(parsed.sections)) {
@@ -582,16 +582,16 @@ window.openDeckList = function(deckId) {
       <div class="list-section-header">${secIcons[secName]} ${secName} <span class="list-sec-count">${secTotal}</span></div>
       <div class="list-cards">
         ${cards.map(c => `<div class="list-card-row">
-          <span class="list-qty">${c.qty}×</span>
+          <span class="list-qty">${c.qty}Ã—</span>
           <span class="list-name">${c.name}</span>
         </div>`).join('')}
       </div>
     </div>`;
   }
 
-  body.innerHTML = html || '<p style="color:var(--text2);padding:1rem;text-align:center;">Lista vazia. Clique em <strong>"✏️ Editar / Importar Lista"</strong> acima para adicionar as cartas deste deck.</p>';
+  body.innerHTML = html || '<p style="color:var(--text2);padding:1rem;text-align:center;">Lista vazia. Clique em <strong>"âœï¸ Editar / Importar Lista"</strong> acima para adicionar as cartas deste deck.</p>';
   if (html) {
-    body.title = "Clique para copiar a lista no formato Pokémon TCG Live";
+    body.title = "Clique para copiar a lista no formato PokÃ©mon TCG Live";
     body.style.cursor = "pointer";
     body.onclick = function() {
       window.exportCurrentDeckToTCGLive();
@@ -613,8 +613,8 @@ window.viewMatchComment = function(matchId) {
   const bodyEl = document.getElementById('commentTextBody');
   if (!infoEl || !bodyEl) return;
 
-  infoEl.innerHTML = `📅 <strong>${match.Data || '—'}</strong> &middot; 👤 <strong>${match.Player}</strong> (${match.Deck || '—'}) vs <strong>${match.Adversario}</strong> (${match.DeckAdv || '—'}) &middot; Placar: <strong>${match.Placar || '—'}</strong> &middot; 📍 ${match.Local || '—'}`;
-  bodyEl.textContent = match.Comentarios || 'Sem comentários salvos.';
+  infoEl.innerHTML = `ðŸ“… <strong>${match.Data || 'â€”'}</strong> &middot; ðŸ‘¤ <strong>${match.Player}</strong> (${match.Deck || 'â€”'}) vs <strong>${match.Adversario}</strong> (${match.DeckAdv || 'â€”'}) &middot; Placar: <strong>${match.Placar || 'â€”'}</strong> &middot; ðŸ“ ${match.Local || 'â€”'}`;
+  bodyEl.textContent = match.Comentarios || 'Sem comentÃ¡rios salvos.';
 
   showModal('modalViewComment');
 };
@@ -629,11 +629,11 @@ window.exportCurrentDeckToTCGLive = function() {
   }
 
   if (!list) {
-    showToast('⚠️ Este deck não possui cartas cadastradas para exportar.');
+    showToast('âš ï¸ Este deck nÃ£o possui cartas cadastradas para exportar.');
     return;
   }
 
-  const notify = () => showToast('📋 Lista copiada para a área de transferência no formato Pokémon TCG Live!');
+  const notify = () => showToast('ðŸ“‹ Lista copiada para a Ã¡rea de transferÃªncia no formato PokÃ©mon TCG Live!');
 
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(list).then(notify).catch(() => fallbackCopyList(list));
@@ -653,9 +653,9 @@ function fallbackCopyList(text) {
     ta.select();
     document.execCommand('copy');
     document.body.removeChild(ta);
-    showToast('📋 Lista copiada para a área de transferência no formato Pokémon TCG Live!');
+    showToast('ðŸ“‹ Lista copiada para a Ã¡rea de transferÃªncia no formato PokÃ©mon TCG Live!');
   } catch(err) {
-    alert('Não foi possível copiar a lista automaticamente.');
+    alert('NÃ£o foi possÃ­vel copiar a lista automaticamente.');
   }
 }
 document.addEventListener('DOMContentLoaded', () => {
@@ -687,7 +687,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btnQuickAddDeckAdv')?.addEventListener('click', () => openDeckFormForTarget('quickLogDeckAdv'));
 });
 
-// ── ADD / EDIT DECK ──────────────────────────────────────────────────────────
+// â”€â”€ ADD / EDIT DECK â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 let editingDeckId = null;
 let deckSelectTargetId = null;
 
@@ -708,7 +708,7 @@ window.openNewDeck = function() {
 
   const playerEl = document.getElementById('formDeckPlayer');
   if (playerEl) {
-    playerEl.innerHTML = '<option value="">Sem player atribuído</option>' + (players || []).map(p => `<option value="${p}">👤 ${p}</option>`).join('');
+    playerEl.innerHTML = '<option value="">Sem player atribuÃ­do</option>' + (players || []).map(p => `<option value="${p}">ðŸ‘¤ ${p}</option>`).join('');
     playerEl.value = '';
     if (playerEl.syncSearchableSelect) playerEl.syncSearchableSelect();
   }
@@ -722,7 +722,7 @@ window.openEditDeck = function(deckId) {
   const deck = decks.find(d => d.id === deckId);
   if (!deck) return;
   editingDeckId = deckId;
-  document.getElementById('deckFormTitle').textContent = '✏️ Editar Deck';
+  document.getElementById('deckFormTitle').textContent = 'âœï¸ Editar Deck';
 
   const arqEl = document.getElementById('formDeckArquetipo');
   if (arqEl) arqEl.value = deck.arquetipo || deck.name || '';
@@ -732,7 +732,7 @@ window.openEditDeck = function(deckId) {
 
   const playerEl = document.getElementById('formDeckPlayer');
   if (playerEl) {
-    playerEl.innerHTML = '<option value="">Sem player atribuído</option>' + (players || []).map(p => `<option value="${p}">👤 ${p}</option>`).join('');
+    playerEl.innerHTML = '<option value="">Sem player atribuÃ­do</option>' + (players || []).map(p => `<option value="${p}">ðŸ‘¤ ${p}</option>`).join('');
     playerEl.value = deck.player || '';
     if (playerEl.syncSearchableSelect) playerEl.syncSearchableSelect();
   }
@@ -761,7 +761,7 @@ window.deleteDeck = function(deckId) {
   }
   if (typeof populateFilters === 'function') populateFilters();
   if (typeof applyFilters    === 'function') applyFilters();
-  showToast('🗑️ Deck excluído.');
+  showToast('ðŸ—‘ï¸ Deck excluÃ­do.');
 };
 
 function updateCardCounter() {
@@ -779,7 +779,7 @@ function saveDeckForm() {
   const player    = document.getElementById('formDeckPlayer')?.value.trim();
   const list      = document.getElementById('formDeckList')?.value.trim();
 
-  if (!arquetipo) { alert('⚠️ Arquétipo do Deck é obrigatório.'); return; }
+  if (!arquetipo) { alert('âš ï¸ ArquÃ©tipo do Deck Ã© obrigatÃ³rio.'); return; }
 
   const name = subtipo ? `${arquetipo} (${subtipo})` : arquetipo;
 
@@ -831,10 +831,10 @@ function saveDeckForm() {
   if (typeof applyFilters    === 'function') applyFilters();
 
   closeModal('modalDeckForm');
-  showToast(`💾 Deck "${name}" salvo com sucesso!`);
+  showToast(`ðŸ’¾ Deck "${name}" salvo com sucesso!`);
 }
 
-// ── MATCH FORM ────────────────────────────────────────────────────────────────
+// â”€â”€ MATCH FORM â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 let editingMatchId = null;
 
 function updateMatchDeckCounters() {
@@ -862,7 +862,7 @@ function openMatchForm(matchData) {
   populateLocalSelects();
   populateColecaoSelects();
   const h = document.querySelector('#modalMatchForm .modal-header h3');
-  if (h) h.textContent = editingMatchId ? '✏️ Editar Partida' : '⚔️ Registrar Partida';
+  if (h) h.textContent = editingMatchId ? 'âœï¸ Editar Partida' : 'âš”ï¸ Registrar Partida';
 
   const get = id => document.getElementById(id);
 
@@ -872,8 +872,8 @@ function openMatchForm(matchData) {
   get('formMatchDeckAdv').value   = matchData?.DeckAdvArquetipo || matchData?.DeckAdv  || '';
   if (get('formMatchSubtipoAdv')) get('formMatchSubtipoAdv').value = matchData?.SubtipoAdv || '';
   get('formMatchFormato').value   = matchData?.Formato  || 'MD1';
-  get('formMatchStart').value     = matchData?.Start    || '1º';
-  get('formMatchResultado').value = matchData?.Resultado|| 'Vitória';
+  get('formMatchStart').value     = matchData?.Start    || '1Âº';
+  get('formMatchResultado').value = matchData?.Resultado|| 'VitÃ³ria';
   if (typeof updatePlacarDropdown === 'function') {
     updatePlacarDropdown('formMatchFormato', 'formMatchPlacar', matchData?.Placar || null, matchData?.Resultado || null);
   } else {
@@ -919,9 +919,9 @@ function openMatchForm(matchData) {
   if (advListTA) advListTA.value = matchData?.ListaDeckAdv || (advDeckObj?.list || '');
 
   updateMatchDeckCounters();
-  const isOldBrick = v => v && v !== 'Nenhum' && v !== 'Não';
-  const brickVal   = isOldBrick(matchData?.Brick) ? 'Sim' : 'Não';
-  const brickOpVal = isOldBrick(matchData?.BrickOp) ? 'Sim' : 'Não';
+  const isOldBrick = v => v && v !== 'Nenhum' && v !== 'NÃ£o';
+  const brickVal   = isOldBrick(matchData?.Brick) ? 'Sim' : 'NÃ£o';
+  const brickOpVal = isOldBrick(matchData?.BrickOp) ? 'Sim' : 'NÃ£o';
   const rawConf = matchData?.Confiabilidade || 'Alta';
   const confVal = (String(rawConf).trim().toLowerCase() === 'baixa') ? 'Baixa' : 'Alta';
 
@@ -1046,9 +1046,9 @@ window.renderMD3GamesUI = function(existingGamesDetail = null, userCountOverride
       ? existingGamesDetail.find(g => g.game === i)
       : null;
 
-    const defaultStart = existingGame ? existingGame.start : (i === 1 ? '1º' : '2º');
-    const defaultBrick = existingGame ? existingGame.brick : 'Não';
-    const defaultBrickOp = existingGame ? existingGame.brickOp : 'Não';
+    const defaultStart = existingGame ? existingGame.start : (i === 1 ? '1Âº' : '2Âº');
+    const defaultBrick = existingGame ? existingGame.brick : 'NÃ£o';
+    const defaultBrickOp = existingGame ? existingGame.brickOp : 'NÃ£o';
 
     const card = document.createElement('div');
     card.className = 'md3-game-card';
@@ -1056,28 +1056,28 @@ window.renderMD3GamesUI = function(existingGamesDetail = null, userCountOverride
 
     card.innerHTML = `
       <span style="font-weight:600; font-size:0.82rem; color:var(--accent2); display:flex; align-items:center; gap:0.3rem;">
-        🎮 Game ${i}
+        ðŸŽ® Game ${i}
       </span>
       <div style="display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap;">
         <div style="display:flex; align-items:center; gap:0.3rem;">
           <span style="font-size:0.75rem; color:var(--text2);">Start:</span>
           <select id="md3GameStart_${i}" class="form-input" style="padding:0.25rem 0.4rem; font-size:0.78rem; width: auto;">
-            <option value="1º" ${defaultStart === '1º' ? 'selected' : ''}>1º (Começou)</option>
-            <option value="2º" ${defaultStart === '2º' ? 'selected' : ''}>2º (Segundo)</option>
+            <option value="1Âº" ${defaultStart === '1Âº' ? 'selected' : ''}>1Âº (ComeÃ§ou)</option>
+            <option value="2Âº" ${defaultStart === '2Âº' ? 'selected' : ''}>2Âº (Segundo)</option>
           </select>
         </div>
         <div style="display:flex; align-items:center; gap:0.3rem;">
           <span style="font-size:0.75rem; color:var(--text2);">Brickei:</span>
           <select id="md3GameBrick_${i}" class="form-input" style="padding:0.25rem 0.4rem; font-size:0.78rem; width: auto;">
-            <option value="Não" ${defaultBrick === 'Não' ? 'selected' : ''}>✅ Não</option>
-            <option value="Sim" ${defaultBrick === 'Sim' ? 'selected' : ''}>💥 Sim</option>
+            <option value="NÃ£o" ${defaultBrick === 'NÃ£o' ? 'selected' : ''}>âœ… NÃ£o</option>
+            <option value="Sim" ${defaultBrick === 'Sim' ? 'selected' : ''}>ðŸ’¥ Sim</option>
           </select>
         </div>
         <div style="display:flex; align-items:center; gap:0.3rem;">
           <span style="font-size:0.75rem; color:var(--text2);">Oponente brickou:</span>
           <select id="md3GameBrickOp_${i}" class="form-input" style="padding:0.25rem 0.4rem; font-size:0.78rem; width: auto;">
-            <option value="Não" ${defaultBrickOp === 'Não' ? 'selected' : ''}>✅ Não</option>
-            <option value="Sim" ${defaultBrickOp === 'Sim' ? 'selected' : ''}>💥 Sim</option>
+            <option value="NÃ£o" ${defaultBrickOp === 'NÃ£o' ? 'selected' : ''}>âœ… NÃ£o</option>
+            <option value="Sim" ${defaultBrickOp === 'Sim' ? 'selected' : ''}>ðŸ’¥ Sim</option>
           </select>
         </div>
       </div>
@@ -1243,18 +1243,18 @@ function saveMatchForm() {
   const deckAdv    = getVal('formMatchDeckAdv');
   const colecao    = getVal('formMatchColecao');
 
-  if (!player)   { alert('⚠️ Selecione o player.'); return; }
-  if (!deckName) { alert('⚠️ Selecione o seu deck (Arquétipo).'); return; }
-  if (!deckAdv)  { alert('⚠️ Selecione o deck do adversário (Arquétipo).'); return; }
+  if (!player)   { alert('âš ï¸ Selecione o player.'); return; }
+  if (!deckName) { alert('âš ï¸ Selecione o seu deck (ArquÃ©tipo).'); return; }
+  if (!deckAdv)  { alert('âš ï¸ Selecione o deck do adversÃ¡rio (ArquÃ©tipo).'); return; }
   if (!colecao || colecao === '' || colecao.toLowerCase().includes('toda')) {
-    alert('⚠️ A coleção é obrigatória. Selecione uma coleção específica (não pode ser vazia nem "Todas").');
+    alert('âš ï¸ A coleÃ§Ã£o Ã© obrigatÃ³ria. Selecione uma coleÃ§Ã£o especÃ­fica (nÃ£o pode ser vazia nem "Todas").');
     return;
   }
 
   const localSel = getVal('formMatchLocal');
   const localCustom = getVal('formMatchLocalCustom').trim();
   const local    = localSel === '__outro__' ? localCustom : localSel;
-  const pontos   = resultado === 'Vitória' ? 1 : resultado === 'Empate' ? 0.5 : 0;
+  const pontos   = resultado === 'VitÃ³ria' ? 1 : resultado === 'Empate' ? 0.5 : 0;
   const ownListRaw = getVal('formMatchDeckOwnList').trim();
   const advListRaw = getVal('formMatchDeckAdvList').trim();
 
@@ -1317,24 +1317,24 @@ function saveMatchForm() {
     for (let i = 1; i <= count; i++) {
       gamesDetail.push({
         game: i,
-        start: getVal(`md3GameStart_${i}`) || '1º',
-        brick: getVal(`md3GameBrick_${i}`) || 'Não',
-        brickOp: getVal(`md3GameBrickOp_${i}`) || 'Não'
+        start: getVal(`md3GameStart_${i}`) || '1Âº',
+        brick: getVal(`md3GameBrick_${i}`) || 'NÃ£o',
+        brickOp: getVal(`md3GameBrickOp_${i}`) || 'NÃ£o'
       });
     }
   }
 
   const startVal = (formato === 'MD3' && gamesDetail && gamesDetail.length > 0)
     ? gamesDetail.map(g => g.start).join(', ')
-    : (getVal('formMatchStart') || '1º');
+    : (getVal('formMatchStart') || '1Âº');
 
   const brickVal = (formato === 'MD3' && gamesDetail && gamesDetail.length > 0)
-    ? (gamesDetail.some(g => g.brick === 'Sim') ? 'Sim' : 'Não')
-    : (getVal('formMatchBrick') || 'Não');
+    ? (gamesDetail.some(g => g.brick === 'Sim') ? 'Sim' : 'NÃ£o')
+    : (getVal('formMatchBrick') || 'NÃ£o');
 
   const brickOpVal = (formato === 'MD3' && gamesDetail && gamesDetail.length > 0)
-    ? (gamesDetail.some(g => g.brickOp === 'Sim') ? 'Sim' : 'Não')
-    : (getVal('formMatchBrickOp') || 'Não');
+    ? (gamesDetail.some(g => g.brickOp === 'Sim') ? 'Sim' : 'NÃ£o')
+    : (getVal('formMatchBrickOp') || 'NÃ£o');
 
   const matchData = {
     id:               editingMatchId || (Date.now().toString() + Math.random().toString(36).substr(2, 4)),
@@ -1425,11 +1425,11 @@ function saveMatchForm() {
   }
 
   if (editingMatchId) {
-    showToast('✏️ Partida (e espelho do time) atualizada!');
+    showToast('âœï¸ Partida (e espelho do time) atualizada!');
   } else if (mirrorMatch) {
-    showToast(`⚔️ Partida registrada para ${matchData.Player} e espelho para ${mirrorMatch.Player}!`);
+    showToast(`âš”ï¸ Partida registrada para ${matchData.Player} e espelho para ${mirrorMatch.Player}!`);
   } else {
-    showToast('✅ Partida registrada com sucesso!');
+    showToast('âœ… Partida registrada com sucesso!');
   }
   editingMatchId = null;
 
@@ -1438,7 +1438,7 @@ function saveMatchForm() {
   closeModal('modalMatchForm', true);
 }
 
-// ── DELETE MATCH ──────────────────────────────────────────────────────────────
+// â”€â”€ DELETE MATCH â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 window.deleteMatch = function(matchId) {
   const manual = loadManual();
   const targetMatch = manual.find(m => m.id === matchId) || ((typeof allData !== 'undefined') ? allData.find(m => m.id === matchId) : null);
@@ -1447,11 +1447,11 @@ window.deleteMatch = function(matchId) {
   const currentName = currentUserObj?.linkedPlayer || currentUserObj?.name || '';
 
   if (targetMatch && currentName && targetMatch.Player.trim().toLowerCase() !== currentName.trim().toLowerCase()) {
-    if (typeof showToast === 'function') showToast('⚠️ Você só possui permissão para apagar suas próprias partidas!');
+    if (typeof showToast === 'function') showToast('âš ï¸ VocÃª sÃ³ possui permissÃ£o para apagar suas prÃ³prias partidas!');
     return;
   }
 
-  if (!confirm('Deletar esta partida? Esta ação não pode ser desfeita.')) return;
+  if (!confirm('Deletar esta partida? Esta aÃ§Ã£o nÃ£o pode ser desfeita.')) return;
   lastWriteTime = Date.now();
   const mirrorId = targetMatch?._mirrorId;
   const mirroredFromId = targetMatch?._mirroredFrom;
@@ -1487,31 +1487,31 @@ window.deleteMatch = function(matchId) {
 
   if (typeof populateFilters === 'function') populateFilters();
   if (typeof applyFilters    === 'function') applyFilters();
-  showToast('🗑️ Partida (e espelho do time) deletada.');
+  showToast('ðŸ—‘ï¸ Partida (e espelho do time) deletada.');
 };
 
-// ── EDIT MATCH ────────────────────────────────────────────────────────────────
+// â”€â”€ EDIT MATCH â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 window.editMatch = function(matchId) {
   const match = (typeof allData !== 'undefined') ? allData.find(m => m.id === matchId) : null;
-  if (!match) { showToast('⚠️ Partida não encontrada.'); return; }
+  if (!match) { showToast('âš ï¸ Partida nÃ£o encontrada.'); return; }
 
   const currentUserObj = typeof getCurrentUser === 'function' ? getCurrentUser() : window.currentUser;
   const currentName = currentUserObj?.linkedPlayer || currentUserObj?.name || '';
 
   if (currentName && match.Player.trim().toLowerCase() !== currentName.trim().toLowerCase()) {
-    if (typeof showToast === 'function') showToast('⚠️ Você só possui permissão para editar suas próprias partidas!');
+    if (typeof showToast === 'function') showToast('âš ï¸ VocÃª sÃ³ possui permissÃ£o para editar suas prÃ³prias partidas!');
     return;
   }
 
   openMatchForm(match);
 };
 
-// ── PLAYER MANAGEMENT ─────────────────────────────────────────────────────────
+// â”€â”€ PLAYER MANAGEMENT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function addPlayer() {
   const input = document.getElementById('newPlayerName');
   const name  = input?.value.trim();
   if (!name) return;
-  if (players.includes(name)) { showToast('⚠️ Player já existe.'); return; }
+  if (players.includes(name)) { showToast('âš ï¸ Player jÃ¡ existe.'); return; }
   players.push(name);
   savePlayers(players);
   populatePlayerSelects();
@@ -1519,7 +1519,7 @@ function addPlayer() {
   if (typeof populateFilters === 'function') populateFilters();
   if (typeof applyFilters    === 'function') applyFilters();
   input.value = '';
-  showToast(`👤 Player "${name}" adicionado!`);
+  showToast(`ðŸ‘¤ Player "${name}" adicionado!`);
 }
 
 window.deletePlayer = function(name) {
@@ -1536,7 +1536,7 @@ window.deletePlayer = function(name) {
   renderPlayersList();
   if (typeof populateFilters === 'function') populateFilters();
   if (typeof applyFilters    === 'function') applyFilters();
-  showToast(`🗑️ Player "${name}" removido.`);
+  showToast(`ðŸ—‘ï¸ Player "${name}" removido.`);
 }
 
 function renderPlayersList() {
@@ -1544,17 +1544,17 @@ function renderPlayersList() {
   if (!el) return;
   el.innerHTML = players.map(p => `
     <div class="player-tag">
-      <span>👤 ${p}</span>
+      <span>ðŸ‘¤ ${p}</span>
       <div style="display:flex; gap:0.25rem;">
-        <button class="icon-btn warning sm" onclick="resetPlayerAccount('${p.replace(/'/g, "\\'")}')" title="Resetar Senha da Conta">🔑</button>
-        <button class="icon-btn danger sm" onclick="deletePlayer('${p.replace(/'/g, "\\'")}')" title="Excluir Jogador do Time">🗑️</button>
+        <button class="icon-btn warning sm" onclick="resetPlayerAccount('${p.replace(/'/g, "\\'")}')" title="Resetar Senha da Conta">ðŸ”‘</button>
+        <button class="icon-btn danger sm" onclick="deletePlayer('${p.replace(/'/g, "\\'")}')" title="Excluir Jogador do Time">ðŸ—‘ï¸</button>
       </div>
     </div>
   `).join('');
 }
 
 window.resetPlayerAccount = async function(playerName) {
-  if (!confirm(`⚠️ Tem certeza que deseja resetar a senha da conta de "${playerName}"?\nO e-mail atrelado será apagado e a pessoa precisará se cadastrar novamente.`)) return;
+  if (!confirm(`âš ï¸ Tem certeza que deseja resetar a senha da conta de "${playerName}"?\nO e-mail atrelado serÃ¡ apagado e a pessoa precisarÃ¡ se cadastrar novamente.`)) return;
   try {
     const res = await fetch('/api/auth', {
       method: 'POST',
@@ -1563,7 +1563,7 @@ window.resetPlayerAccount = async function(playerName) {
     });
     const data = await res.json();
     if (res.ok) {
-      showToast?.(`✅ Conta de ${playerName} resetada com sucesso!`);
+      showToast?.(`âœ… Conta de ${playerName} resetada com sucesso!`);
       try {
         const claimed = JSON.parse(localStorage.getItem('jornada_claimed_players') || '[]');
         const updated = claimed.filter(n => n.trim() !== playerName.trim());
@@ -1572,19 +1572,19 @@ window.resetPlayerAccount = async function(playerName) {
       if (typeof fetchClaimedPlayers === 'function') await fetchClaimedPlayers();
       if (typeof populatePlayerRegisterDropdowns === 'function') populatePlayerRegisterDropdowns();
     } else {
-      showToast?.(`❌ Erro ao resetar: ${data.error}`);
+      showToast?.(`âŒ Erro ao resetar: ${data.error}`);
     }
   } catch (e) {
-    showToast?.(`❌ Erro de conexão com o servidor.`);
+    showToast?.(`âŒ Erro de conexÃ£o com o servidor.`);
   }
 };
 
-// ── LOCAL MANAGEMENT ──────────────────────────────────────────────────────────
+// â”€â”€ LOCAL MANAGEMENT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function addLocal() {
   const input = document.getElementById('newLocalName');
   const name  = input?.value.trim();
   if (!name) return;
-  if (locais.some(l => l.toLowerCase() === name.toLowerCase())) { showToast('⚠️ Local já existe.'); return; }
+  if (locais.some(l => l.toLowerCase() === name.toLowerCase())) { showToast('âš ï¸ Local jÃ¡ existe.'); return; }
   locais.push(name);
   saveLocais(locais);
   renderLocaisList();
@@ -1592,7 +1592,7 @@ function addLocal() {
   if (typeof populateFilters === 'function') populateFilters();
   if (typeof applyFilters    === 'function') applyFilters();
   input.value = '';
-  showToast(`📍 Local "${name}" adicionado!`);
+  showToast(`ðŸ“ Local "${name}" adicionado!`);
 }
 
 window.deleteLocal = function(name) {
@@ -1609,7 +1609,7 @@ window.deleteLocal = function(name) {
   populateLocalSelects();
   if (typeof populateFilters === 'function') populateFilters();
   if (typeof applyFilters    === 'function') applyFilters();
-  showToast(`🗑️ Local "${name}" removido.`);
+  showToast(`ðŸ—‘ï¸ Local "${name}" removido.`);
 }
 
 function renderLocaisList() {
@@ -1617,8 +1617,8 @@ function renderLocaisList() {
   if (!el) return;
   el.innerHTML = locais.map(l => `
     <div class="player-tag">
-      <span>📍 ${l}</span>
-      <button class="icon-btn danger sm" onclick="deleteLocal('${l.replace(/'/g, "\\'")}')">✕</button>
+      <span>ðŸ“ ${l}</span>
+      <button class="icon-btn danger sm" onclick="deleteLocal('${l.replace(/'/g, "\\'")}')">âœ•</button>
     </div>
   `).join('');
 }
@@ -1630,7 +1630,7 @@ function populateLocalSelects() {
   const modalSel = document.getElementById('formMatchLocal');
   if (modalSel) {
     const cur = modalSel.value;
-    modalSel.innerHTML = '<option value="">Selecione…</option>';
+    modalSel.innerHTML = '<option value="">Selecioneâ€¦</option>';
     allLocais.forEach(l => {
       const o = document.createElement('option');
       o.value = l; o.textContent = l;
@@ -1638,7 +1638,7 @@ function populateLocalSelects() {
     });
     const outroOpt = document.createElement('option');
     outroOpt.value = '__outro__';
-    outroOpt.textContent = 'Outro…';
+    outroOpt.textContent = 'Outroâ€¦';
     modalSel.appendChild(outroOpt);
     if (cur && (allLocais.includes(cur) || cur === '__outro__')) modalSel.value = cur;
     if (modalSel.syncSearchableSelect) modalSel.syncSearchableSelect();
@@ -1646,7 +1646,7 @@ function populateLocalSelects() {
   const quickSel = document.getElementById('quickLogLocal');
   if (quickSel) {
     const cur = quickSel.value;
-    quickSel.innerHTML = '<option value="">Selecione…</option>';
+    quickSel.innerHTML = '<option value="">Selecioneâ€¦</option>';
     allLocais.forEach(l => {
       const o = document.createElement('option');
       o.value = l; o.textContent = l;
@@ -1669,12 +1669,12 @@ function populateLocalSelects() {
   }
 }
 
-// ── COLEÇÃO MANAGEMENT ────────────────────────────────────────────────────────
+// â”€â”€ COLEÃ‡ÃƒO MANAGEMENT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function addColecao() {
   const input = document.getElementById('newColecaoName');
   const name  = input?.value.trim();
   if (!name) return;
-  if (colecoes.some(c => c.toLowerCase() === name.toLowerCase())) { showToast('⚠️ Coleção já existe.'); return; }
+  if (colecoes.some(c => c.toLowerCase() === name.toLowerCase())) { showToast('âš ï¸ ColeÃ§Ã£o jÃ¡ existe.'); return; }
   colecoes.push(name);
   saveColecoes(colecoes);
   renderColecoesList();
@@ -1682,11 +1682,11 @@ function addColecao() {
   if (typeof populateFilters === 'function') populateFilters();
   if (typeof applyFilters    === 'function') applyFilters();
   input.value = '';
-  showToast(`📦 Coleção "${name}" adicionada!`);
+  showToast(`ðŸ“¦ ColeÃ§Ã£o "${name}" adicionada!`);
 }
 
 window.deleteColecao = function(name) {
-  if (!confirm(`Remover coleção "${name}"?`)) return;
+  if (!confirm(`Remover coleÃ§Ã£o "${name}"?`)) return;
   lastWriteTime = Date.now();
 
   const delColecoes = loadDeletedColecoes();
@@ -1699,7 +1699,7 @@ window.deleteColecao = function(name) {
   populateColecaoSelects();
   if (typeof populateFilters === 'function') populateFilters();
   if (typeof applyFilters    === 'function') applyFilters();
-  showToast(`🗑️ Coleção "${name}" removida.`);
+  showToast(`ðŸ—‘ï¸ ColeÃ§Ã£o "${name}" removida.`);
 }
 
 function renderColecoesList() {
@@ -1707,8 +1707,8 @@ function renderColecoesList() {
   if (!el) return;
   el.innerHTML = colecoes.map(c => `
     <div class="player-tag">
-      <span>📦 ${c}</span>
-      <button class="icon-btn danger sm" onclick="deleteColecao('${c.replace(/'/g, "\\'")}')">✕</button>
+      <span>ðŸ“¦ ${c}</span>
+      <button class="icon-btn danger sm" onclick="deleteColecao('${c.replace(/'/g, "\\'")}')">âœ•</button>
     </div>
   `).join('');
 }
@@ -1720,7 +1720,7 @@ function populateColecaoSelects() {
   const modalSel = document.getElementById('formMatchColecao');
   if (modalSel) {
     const cur = modalSel.value;
-    modalSel.innerHTML = '<option value="">Selecione a coleção…</option>';
+    modalSel.innerHTML = '<option value="">Selecione a coleÃ§Ã£oâ€¦</option>';
     allColecoes.forEach(c => {
       const o = document.createElement('option');
       o.value = c; o.textContent = c;
@@ -1732,7 +1732,7 @@ function populateColecaoSelects() {
   const quickSel = document.getElementById('quickLogColecao');
   if (quickSel) {
     const cur = quickSel.value;
-    quickSel.innerHTML = '<option value="">Selecione a coleção…</option>';
+    quickSel.innerHTML = '<option value="">Selecione a coleÃ§Ã£oâ€¦</option>';
     allColecoes.forEach(c => {
       const o = document.createElement('option');
       o.value = c; o.textContent = c;
@@ -1744,7 +1744,7 @@ function populateColecaoSelects() {
   const filterSel = document.getElementById('filterColecao');
   if (filterSel) {
     const cur = filterSel.value;
-    filterSel.innerHTML = '<option value="">Todas as Coleções</option>';
+    filterSel.innerHTML = '<option value="">Todas as ColeÃ§Ãµes</option>';
     allColecoes.forEach(c => {
       const o = document.createElement('option');
       o.value = c; o.textContent = c;
@@ -1759,7 +1759,7 @@ function populateColecaoSelects() {
   }
 }
 
-// ── TOAST ─────────────────────────────────────────────────────────────────────
+// â”€â”€ TOAST â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function showToast(msg) {
   let toast = document.getElementById('toastMsg');
   if (!toast) {
@@ -1774,17 +1774,17 @@ function showToast(msg) {
   toast._timer = setTimeout(() => toast.classList.remove('show'), 3000);
 }
 
-// ── QUICK LOG — Trava #quickLogPlayer ao jogador autenticado ──────────────────
+// â”€â”€ QUICK LOG â€” Trava #quickLogPlayer ao jogador autenticado â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function populateQuickLogDropdowns() {
   const pSel = document.getElementById('quickLogPlayer');
   if (pSel) {
     const activeName = typeof getActivePlayerName === 'function' ? getActivePlayerName() : null;
     if (activeName) {
-      pSel.innerHTML = `<option value="${activeName}">👤 ${activeName}</option>`;
+      pSel.innerHTML = `<option value="${activeName}">ðŸ‘¤ ${activeName}</option>`;
       pSel.value = activeName;
       pSel.selectedIndex = 0;
     } else {
-      pSel.innerHTML = `<option value="">🔑 Faça Login para Registrar Partida</option>`;
+      pSel.innerHTML = `<option value="">ðŸ”‘ FaÃ§a Login para Registrar Partida</option>`;
     }
     if (pSel.syncSearchableSelect) pSel.syncSearchableSelect();
   }
@@ -1809,13 +1809,13 @@ function populateQuickLogDropdowns() {
 const PLACAR_RULES = {
   MD1: {
     'ALL':     ['1-0', '0-1', '0-0'],
-    'Vitória': ['1-0'],
+    'VitÃ³ria': ['1-0'],
     'Empate':  ['0-0'],
     'Derrota': ['0-1']
   },
   MD3: {
     'ALL':     ['2-0', '2-1', '1-1', '1-0', '0-0', '0-1', '1-2', '0-2'],
-    'Vitória': ['2-0', '2-1', '1-0'],
+    'VitÃ³ria': ['2-0', '2-1', '1-0'],
     'Empate':  ['1-1', '0-0'],
     'Derrota': ['0-2', '1-2', '0-1']
   }
@@ -1837,11 +1837,11 @@ window.updatePlacarDropdown = function(formatoId, placarId, currentVal = null, o
   if (formatoId === 'quickLogFormato' && !outcome) {
     options = fmtRules['ALL'];
   } else {
-    if (!activeOutcome) activeOutcome = 'Vitória';
-    if (activeOutcome.includes('Vitória')) activeOutcome = 'Vitória';
+    if (!activeOutcome) activeOutcome = 'VitÃ³ria';
+    if (activeOutcome.includes('VitÃ³ria')) activeOutcome = 'VitÃ³ria';
     else if (activeOutcome.includes('Empate')) activeOutcome = 'Empate';
     else if (activeOutcome.includes('Derrota')) activeOutcome = 'Derrota';
-    options = fmtRules[activeOutcome] || fmtRules['Vitória'];
+    options = fmtRules[activeOutcome] || fmtRules['VitÃ³ria'];
   }
 
   let selectedVal = currentVal || placarEl.value;
@@ -1885,7 +1885,7 @@ window.renderQuickLogTouchPills = function() {
   for (let i = 1; i <= count; i++) {
     if (!window.quickLogPillState[i]) {
       window.quickLogPillState[i] = {
-        start: i === 1 ? '1º' : (i % 2 === 0 ? '2º' : '1º'),
+        start: i === 1 ? '1Âº' : (i % 2 === 0 ? '2Âº' : '1Âº'),
         brick: false,
         brickOp: false
       };
@@ -1897,17 +1897,17 @@ window.renderQuickLogTouchPills = function() {
 
     card.innerHTML = `
       <div class="pill-game-header">
-        🎮 ${formato === 'MD3' ? 'Game ' + i : 'Game Principal'}
+        ðŸŽ® ${formato === 'MD3' ? 'Game ' + i : 'Game Principal'}
       </div>
       <div class="pill-btn-group">
-        <button type="button" class="pill-btn ${state.start === '1º' ? 'active-start' : ''}" onclick="toggleQuickLogPill(${i}, 'start')">
-          🎲 ${state.start === '1º' ? '1º (Começou)' : '2º (Segundo)'}
+        <button type="button" class="pill-btn ${state.start === '1Âº' ? 'active-start' : ''}" onclick="toggleQuickLogPill(${i}, 'start')">
+          ðŸŽ² ${state.start === '1Âº' ? '1Âº (ComeÃ§ou)' : '2Âº (Segundo)'}
         </button>
         <button type="button" class="pill-btn ${state.brick ? 'active-brick' : ''}" onclick="toggleQuickLogPill(${i}, 'brick')">
-          ${state.brick ? '💥 Meu Brick' : '✅ Meu Brick'}
+          ${state.brick ? 'ðŸ’¥ Meu Brick' : 'âœ… Meu Brick'}
         </button>
         <button type="button" class="pill-btn ${state.brickOp ? 'active-brick' : ''}" onclick="toggleQuickLogPill(${i}, 'brickOp')">
-          ${state.brickOp ? '💥 Opp Brick' : '✅ Opp Brick'}
+          ${state.brickOp ? 'ðŸ’¥ Opp Brick' : 'âœ… Opp Brick'}
         </button>
       </div>
     `;
@@ -1918,7 +1918,7 @@ window.renderQuickLogTouchPills = function() {
 window.toggleQuickLogPill = function(gameNum, field) {
   if (!window.quickLogPillState[gameNum]) return;
   if (field === 'start') {
-    window.quickLogPillState[gameNum].start = window.quickLogPillState[gameNum].start === '1º' ? '2º' : '1º';
+    window.quickLogPillState[gameNum].start = window.quickLogPillState[gameNum].start === '1Âº' ? '2Âº' : '1Âº';
   } else if (field === 'brick') {
     window.quickLogPillState[gameNum].brick = !window.quickLogPillState[gameNum].brick;
   } else if (field === 'brickOp') {
@@ -1938,13 +1938,13 @@ window.quickLogMatch = function(resultado) {
   updatePlacarDropdown('quickLogFormato', 'quickLogPlacar', null, resultado);
   const placarInput = document.getElementById('quickLogPlacar')?.value || (formato === 'MD1' ? '1-0' : '2-0');
 
-  if (!player)   { showToast('⚠️ Selecione seu player.'); return; }
-  if (!deckName) { showToast('⚠️ Selecione seu deck.'); return; }
-  if (!deckAdv)  { showToast('⚠️ Selecione o deck do oponente.'); return; }
-  if (!formato)  { showToast('⚠️ Selecione o formato (MD1 ou MD3).'); return; }
-  if (!colecao || colecao === '' || colecao.toLowerCase().includes('toda')) { showToast('⚠️ Selecione a coleção da partida (não pode ser vazia nem "Todas").'); return; }
-  if (!local)    { showToast('⚠️ Selecione o local da partida.'); return; }
-  if (!placarInput) { showToast('⚠️ Informe o placar da partida (ex: 2-1).'); return; }
+  if (!player)   { showToast('âš ï¸ Selecione seu player.'); return; }
+  if (!deckName) { showToast('âš ï¸ Selecione seu deck.'); return; }
+  if (!deckAdv)  { showToast('âš ï¸ Selecione o deck do oponente.'); return; }
+  if (!formato)  { showToast('âš ï¸ Selecione o formato (MD1 ou MD3).'); return; }
+  if (!colecao || colecao === '' || colecao.toLowerCase().includes('toda')) { showToast('âš ï¸ Selecione a coleÃ§Ã£o da partida (nÃ£o pode ser vazia nem "Todas").'); return; }
+  if (!local)    { showToast('âš ï¸ Selecione o local da partida.'); return; }
+  if (!placarInput) { showToast('âš ï¸ Informe o placar da partida (ex: 2-1).'); return; }
 
   const count = formato === 'MD3' ? getGameCountFromPlacar('MD3', placarInput) : 1;
   let gamesDetail = null;
@@ -1952,29 +1952,29 @@ window.quickLogMatch = function(resultado) {
   if (formato === 'MD3') {
     gamesDetail = [];
     for (let i = 1; i <= count; i++) {
-      const st = window.quickLogPillState[i] || { start: i === 1 ? '1º' : '2º', brick: false, brickOp: false };
+      const st = window.quickLogPillState[i] || { start: i === 1 ? '1Âº' : '2Âº', brick: false, brickOp: false };
       gamesDetail.push({
         game: i,
         start: st.start,
-        brick: st.brick ? 'Sim' : 'Não',
-        brickOp: st.brickOp ? 'Sim' : 'Não'
+        brick: st.brick ? 'Sim' : 'NÃ£o',
+        brickOp: st.brickOp ? 'Sim' : 'NÃ£o'
       });
     }
   }
 
   const startVal = (formato === 'MD3' && gamesDetail)
     ? gamesDetail.map(g => g.start).join(', ')
-    : (window.quickLogPillState[1]?.start || document.getElementById('quickLogStart')?.value || '1º');
+    : (window.quickLogPillState[1]?.start || document.getElementById('quickLogStart')?.value || '1Âº');
 
   const brickVal = (formato === 'MD3' && gamesDetail)
-    ? (gamesDetail.some(g => g.brick === 'Sim') ? 'Sim' : 'Não')
-    : (window.quickLogPillState[1]?.brick ? 'Sim' : 'Não');
+    ? (gamesDetail.some(g => g.brick === 'Sim') ? 'Sim' : 'NÃ£o')
+    : (window.quickLogPillState[1]?.brick ? 'Sim' : 'NÃ£o');
 
   const brickOpVal = (formato === 'MD3' && gamesDetail)
-    ? (gamesDetail.some(g => g.brickOp === 'Sim') ? 'Sim' : 'Não')
-    : (window.quickLogPillState[1]?.brickOp ? 'Sim' : 'Não');
+    ? (gamesDetail.some(g => g.brickOp === 'Sim') ? 'Sim' : 'NÃ£o')
+    : (window.quickLogPillState[1]?.brickOp ? 'Sim' : 'NÃ£o');
 
-  const pontos = resultado === 'Vitória' ? 1 : resultado === 'Empate' ? 0.5 : 0;
+  const pontos = resultado === 'VitÃ³ria' ? 1 : resultado === 'Empate' ? 0.5 : 0;
 
   const ownDeckObj = decks.find(d => d.name === deckName);
   const advDeckObj = decks.find(d => d.name === deckAdv);
@@ -2043,9 +2043,9 @@ window.quickLogMatch = function(resultado) {
   if (typeof applyFilters    === 'function') applyFilters();
 
   if (mirrorMatch) {
-    showToast(`⚡ Partida registrada para ${player} e espelho automático para ${mirrorMatch.Player}!`);
+    showToast(`âš¡ Partida registrada para ${player} e espelho automÃ¡tico para ${mirrorMatch.Player}!`);
   } else {
-    showToast(`⚡ Partida (${resultado} - ${placarInput} em ${colecao}) registrada!`);
+    showToast(`âš¡ Partida (${resultado} - ${placarInput} em ${colecao}) registrada!`);
   }
 };
 
@@ -2057,17 +2057,17 @@ function initQuickLogToggle() {
   const collapsed = localStorage.getItem('jornada_quicklog_collapsed') === 'true';
   if (collapsed) {
     body.classList.add('collapsed');
-    btn.textContent = '▲ Expandir';
+    btn.textContent = 'â–² Expandir';
   }
 
   btn.addEventListener('click', () => {
     const isCollapsed = body.classList.toggle('collapsed');
-    btn.textContent = isCollapsed ? '▲ Expandir' : '▼ Recolher';
+    btn.textContent = isCollapsed ? 'â–² Expandir' : 'â–¼ Recolher';
     localStorage.setItem('jornada_quicklog_collapsed', isCollapsed);
   });
 }
 
-// ── ONLINE SYNC FUNCTIONALITY ───────────────────────────────────────────────
+// â”€â”€ ONLINE SYNC FUNCTIONALITY â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 let syncInterval   = null;
 let isSyncing      = false;   // true while a push HTTP request is in-flight
 let isPullPushing  = false;   // true while pull triggered a remediation push
@@ -2091,9 +2091,9 @@ async function pullFromCloud(quiet = false) {
         const el = document.getElementById('appVersion') || document.getElementById('appVersionAuth');
         const currHTML = el ? el.textContent.replace('v', '').trim() : '';
         if (vData.version && currHTML && vData.version !== currHTML) {
-          console.log(`Nova versão detectada: ${vData.version} (Atual: ${currHTML}). Atualizando...`);
-          if (typeof showToast === 'function') showToast('🚀 Nova versão do sistema lançada! Atualizando painel...', 'info');
-          setTimeout(() => location.reload(true), 2500);
+          console.log(`Nova versÃ£o detectada: ${vData.version} (Atual: ${currHTML}). Atualizando...`);
+          if (typeof showToast === 'function') showToast('ðŸš€ Nova versÃ£o do sistema lanÃ§ada! Atualizando painel...', 'info');
+          handleVersionUpdate();
           return;
         }
       }
@@ -2102,24 +2102,24 @@ async function pullFromCloud(quiet = false) {
   const token = localStorage.getItem('jornada_sync_token');
   if (!token) return;
   if (isSyncing) {
-    if (!quiet) console.log('⏳ Sync [Pull]: Pulado pois uma gravação (Push) está ativa.');
+    if (!quiet) console.log('â³ Sync [Pull]: Pulado pois uma gravaÃ§Ã£o (Push) estÃ¡ ativa.');
     return;
   }
   if (Date.now() - lastWriteTime < 6000) {
-    if (!quiet) console.log('⏳ Sync [Pull]: Pulado para evitar colisão com uma gravação local recente.');
+    if (!quiet) console.log('â³ Sync [Pull]: Pulado para evitar colisÃ£o com uma gravaÃ§Ã£o local recente.');
     return;
   }
 
   try {
     if (!quiet) {
-      console.log(`🌐 Sync [Pull]: Iniciando consulta na nuvem para o token...`);
-      setSyncStatus('connecting', 'Conectando…');
+      console.log(`ðŸŒ Sync [Pull]: Iniciando consulta na nuvem para o token...`);
+      setSyncStatus('connecting', 'Conectandoâ€¦');
     }
     
     const res = await fetch(getSyncUrl(token));
     if (!res.ok) {
       if (res.status === 404) {
-        console.warn('⚠️ Sync [Pull]: Chave inexistente ou sem dados na nuvem. Enviando dados locais iniciais...');
+        console.warn('âš ï¸ Sync [Pull]: Chave inexistente ou sem dados na nuvem. Enviando dados locais iniciais...');
         await pushToCloud();
         setSyncStatus('connected', 'Sincronizado');
         return;
@@ -2172,7 +2172,7 @@ async function pullFromCloud(quiet = false) {
       const combinedDeletedLocais   = new Set([...localDeletedLocais, ...cloudDeletedLocais]);
       const combinedDeletedColecoes = new Set([...localDeletedColecoes, ...cloudDeletedColecoes]);
 
-      // ── CRITICAL FIX: Local live decks override cloud deletion markers ───────
+      // â”€â”€ CRITICAL FIX: Local live decks override cloud deletion markers â”€â”€â”€â”€â”€â”€â”€
       localDecks.forEach(d => {
         if (d?.id)   combinedDeletedDecks.delete(d.id);
         if (d?.name) combinedDeletedDecks.delete(d.name);
@@ -2253,7 +2253,7 @@ async function pullFromCloud(quiet = false) {
                                JSON.stringify(cloudDeletedColecoes) !== finalDeletedColecoesStr || JSON.stringify(cloudEdits) !== finalEditsStr);
 
       if (hasLocalChanges) {
-        console.log('🔄 Sync [Pull]: Novos dados mesclados localmente! Atualizando banco local...');
+        console.log('ðŸ”„ Sync [Pull]: Novos dados mesclados localmente! Atualizando banco local...');
         localStorage.setItem(KEY_DECKS, finalDecksStr);
         localStorage.setItem(KEY_MATCHES, finalMatchesStr);
         localStorage.setItem(KEY_PLAYERS, finalPlayersStr);
@@ -2288,7 +2288,7 @@ async function pullFromCloud(quiet = false) {
       }
 
       if (hasCloudChanges && !isPullPushing) {
-        console.log('🌐 Sync [Pull → Push]: Dados locais têm novidades. Enviando para a nuvem...');
+        console.log('ðŸŒ Sync [Pull â†’ Push]: Dados locais tÃªm novidades. Enviando para a nuvem...');
         isPullPushing = true;
         try {
           await pushToCloud();
@@ -2296,13 +2296,13 @@ async function pullFromCloud(quiet = false) {
           isPullPushing = false;
         }
       } else if (!hasLocalChanges && !hasCloudChanges) {
-        if (!quiet) console.log('🟢 Sync [Pull]: Dados locais e da nuvem estão em perfeita harmonia.');
+        if (!quiet) console.log('ðŸŸ¢ Sync [Pull]: Dados locais e da nuvem estÃ£o em perfeita harmonia.');
       }
       setSyncStatus('connected', 'Sincronizado');
     }
   } catch (err) {
-    console.error('❌ Sync [Pull] Error:', err);
-    setSyncStatus('error', 'Erro de Conexão');
+    console.error('âŒ Sync [Pull] Error:', err);
+    setSyncStatus('error', 'Erro de ConexÃ£o');
   }
 }
 
@@ -2312,7 +2312,7 @@ async function pushToCloud() {
   const token = localStorage.getItem('jornada_sync_token');
   if (!token) return;
   if (isSyncing) {
-    console.log('⏳ Sync [Push]: Envio em andamento. Agendando próximo envio para após a conclusão...');
+    console.log('â³ Sync [Push]: Envio em andamento. Agendando prÃ³ximo envio para apÃ³s a conclusÃ£o...');
     pendingPush = true;
     return;
   }
@@ -2333,7 +2333,7 @@ async function pushToCloud() {
       editedMatches: loadEdits()
     };
     
-    console.log(`🌐 Sync [Push]: Enviando dados locais para o banco na nuvem...`, {
+    console.log(`ðŸŒ Sync [Push]: Enviando dados locais para o banco na nuvem...`, {
       decksCount: payload.decks.length,
       matchesCount: payload.manualMatches.length,
       playersCount: payload.players.length,
@@ -2349,10 +2349,10 @@ async function pushToCloud() {
     
     if (!res.ok) throw new Error('Push failed');
     
-    console.log('🟢 Sync [Push]: Sucesso! Dados salvos e propagados no banco de dados da nuvem.');
+    console.log('ðŸŸ¢ Sync [Push]: Sucesso! Dados salvos e propagados no banco de dados da nuvem.');
     setSyncStatus('connected', 'Sincronizado');
   } catch (err) {
-    console.error('❌ Sync [Push] Error:', err);
+    console.error('âŒ Sync [Push] Error:', err);
     setSyncStatus('error', 'Erro ao enviar');
   } finally {
     isSyncing = false;
@@ -2379,9 +2379,9 @@ function setSyncStatus(state, text) {
 
   const colors = {
     disconnected: { color: '#f75050', label: 'Desativado (Local)' },
-    connecting: { color: '#f5c842', label: 'Conectando…' },
+    connecting: { color: '#f5c842', label: 'Conectandoâ€¦' },
     connected: { color: '#34e0a1', label: 'Sincronizado' },
-    error: { color: '#f75050', label: text || 'Erro de Conexão' }
+    error: { color: '#f75050', label: text || 'Erro de ConexÃ£o' }
   };
 
   const status = colors[state] || colors.disconnected;
@@ -2407,12 +2407,12 @@ function stopSyncInterval() {
 }
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) {
-    console.log('💤 Sync: Aba em segundo plano. Pausando consultas automáticas para economizar requisições no banco...');
+    console.log('ðŸ’¤ Sync: Aba em segundo plano. Pausando consultas automÃ¡ticas para economizar requisiÃ§Ãµes no banco...');
     stopSyncInterval();
   } else {
     const token = localStorage.getItem('jornada_sync_token');
     if (token) {
-      console.log('⚡ Sync: Aba reativada. Retomando consultas automáticas...');
+      console.log('âš¡ Sync: Aba reativada. Retomando consultas automÃ¡ticas...');
       startSyncInterval();
     }
   }
@@ -2425,7 +2425,7 @@ function initSyncUI() {
   startSyncInterval();
 }
 
-// ── INIT ──────────────────────────────────────────────────────────────────────
+// â”€â”€ INIT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 window.addEventListener('DOMContentLoaded', () => {
   window.loadManual  = loadManual;
   window.showToast   = showToast;
@@ -2501,7 +2501,7 @@ window.addEventListener('DOMContentLoaded', () => {
   document.getElementById('newColecaoName')?.addEventListener('keydown', e => {
     if (e.key === 'Enter') addColecao();
   });
-  document.getElementById('btnQuickWin')?.addEventListener('click', () => quickLogMatch('Vitória'));
+  document.getElementById('btnQuickWin')?.addEventListener('click', () => quickLogMatch('VitÃ³ria'));
   document.getElementById('btnQuickDraw')?.addEventListener('click', () => quickLogMatch('Empate'));
   document.getElementById('btnQuickLoss')?.addEventListener('click', () => quickLogMatch('Derrota'));
   document.getElementById('quickLogFormato')?.addEventListener('change', () => {
@@ -2570,20 +2570,20 @@ window.addEventListener('DOMContentLoaded', () => {
     const p1 = document.getElementById('changeAdminPinNew')?.value.trim();
     const p2 = document.getElementById('changeAdminPinConfirm')?.value.trim();
     if (!p1 || p1.length < 4) { alert('A senha deve ter pelo menos 4 caracteres.'); return; }
-    if (p1 !== p2) { alert('As senhas não coincidem!'); return; }
+    if (p1 !== p2) { alert('As senhas nÃ£o coincidem!'); return; }
     localStorage.setItem(KEY_ADMIN_PIN, p1);
     triggerSyncPush();
     document.getElementById('changeAdminPinNew').value = '';
     document.getElementById('changeAdminPinConfirm').value = '';
-    showToast('🔑 Senha de administrador atualizada e sincronizada com a nuvem!');
+    showToast('ðŸ”‘ Senha de administrador atualizada e sincronizada com a nuvem!');
   });
 
   document.getElementById('btnRemoveAdminPin')?.addEventListener('click', () => {
-    if (confirm('Tem certeza que deseja remover a proteção por senha do Gerenciador de Dados? Qualquer pessoa poderá acessar os dados.')) {
+    if (confirm('Tem certeza que deseja remover a proteÃ§Ã£o por senha do Gerenciador de Dados? Qualquer pessoa poderÃ¡ acessar os dados.')) {
       localStorage.removeItem(KEY_ADMIN_PIN);
       sessionStorage.removeItem('jornada_admin_unlocked');
       triggerSyncPush();
-      showToast('🔓 Proteção por senha desativada.');
+      showToast('ðŸ”“ ProteÃ§Ã£o por senha desativada.');
     }
   });
   document.getElementById('btnExportBackup')?.addEventListener('click', () => window.exportBackup());
@@ -2599,7 +2599,7 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-// ── ADMIN ACCESS ────────────────────────────────────────────────
+// â”€â”€ ADMIN ACCESS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 async function openProtectedManager() {
   document.getElementById('managerPanel').classList.add('open');
   renderDecksList();
@@ -2611,7 +2611,7 @@ async function openProtectedManager() {
 function lockAdminAccess() {
   sessionStorage.removeItem('jornada_admin_unlocked');
   document.getElementById('managerPanel').classList.remove('open');
-  showToast('🔒 Gerenciador de dados bloqueado!');
+  showToast('ðŸ”’ Gerenciador de dados bloqueado!');
 }
 
 window.exportBackup = function() {
@@ -2633,7 +2633,7 @@ window.exportBackup = function() {
   document.body.appendChild(downloadAnchor);
   downloadAnchor.click();
   downloadAnchor.remove();
-  showToast('📥 Backup baixado com sucesso!');
+  showToast('ðŸ“¥ Backup baixado com sucesso!');
 };
 
 window.importBackup = function(file) {
@@ -2644,7 +2644,7 @@ window.importBackup = function(file) {
       const data = JSON.parse(e.target.result);
       if (data && typeof data === 'object') {
         if (!data.decks && !data.manualMatches && !data.players) {
-          throw new Error('Formato de backup inválido.');
+          throw new Error('Formato de backup invÃ¡lido.');
         }
 
         localStorage.setItem(KEY_DECKS, JSON.stringify(data.decks || []));
@@ -2678,7 +2678,7 @@ window.importBackup = function(file) {
         if (typeof populateQuickLogDropdowns === 'function') populateQuickLogDropdowns();
 
         triggerSyncPush();
-        showToast('📤 Backup restaurado com sucesso!');
+        showToast('ðŸ“¤ Backup restaurado com sucesso!');
         
         const el = document.getElementById('backupFileInput');
         if (el) el.value = '';
@@ -2691,7 +2691,7 @@ window.importBackup = function(file) {
   reader.readAsText(file);
 };
 
-// ── AUTOMATED DAILY BACKUP SYSTEM ────────────────────────────────────────────
+// â”€â”€ AUTOMATED DAILY BACKUP SYSTEM â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const KEY_AUTO_BACKUPS = 'jornada_auto_backups';
 const KEY_LAST_AUTO_BACKUP_DATE = 'jornada_last_auto_backup_date';
 
@@ -2744,13 +2744,13 @@ function checkAndRunDailyAutoBackup(force = false) {
     safeSetItem(KEY_AUTO_BACKUPS, JSON.stringify(backupsList));
     safeSetItem(KEY_LAST_AUTO_BACKUP_DATE, todayStr);
 
-    console.log(`💾 Backup Diário Automático (${todayStr}): Criado snapshot com ${snapshot.matchesCount} partidas e ${snapshot.decksCount} decks.`);
+    console.log(`ðŸ’¾ Backup DiÃ¡rio AutomÃ¡tico (${todayStr}): Criado snapshot com ${snapshot.matchesCount} partidas e ${snapshot.decksCount} decks.`);
     if (force && typeof showToast === 'function') {
-      showToast(`💾 Snapshot de backup salvo! (${todayStr})`);
+      showToast(`ðŸ’¾ Snapshot de backup salvo! (${todayStr})`);
     }
     renderAutoBackupsList();
   } catch (err) {
-    console.error('❌ Erro no Backup Diário Automático:', err);
+    console.error('âŒ Erro no Backup DiÃ¡rio AutomÃ¡tico:', err);
   }
 }
 
@@ -2766,7 +2766,7 @@ window.renderAutoBackupsList = function() {
   }
 
   if (backupsList.length === 0) {
-    container.innerHTML = '<p style="font-size:0.78rem;color:var(--text2);text-align:center;padding:0.75rem;">Nenhum snapshot automático gerado ainda.</p>';
+    container.innerHTML = '<p style="font-size:0.78rem;color:var(--text2);text-align:center;padding:0.75rem;">Nenhum snapshot automÃ¡tico gerado ainda.</p>';
     return;
   }
 
@@ -2777,15 +2777,15 @@ window.renderAutoBackupsList = function() {
       <div style="display:flex;align-items:center;justify-content:space-between;background:var(--bg3);padding:0.6rem 0.75rem;border-radius:var(--radius-sm);border:1px solid var(--glass-bd);margin-bottom:0.5rem;font-size:0.78rem;">
         <div>
           <div style="font-weight:600;color:var(--text);display:flex;align-items:center;gap:0.35rem;">
-            📅 ${b.date} ${isToday ? '<span style="font-size:0.65rem;background:rgba(46,232,160,0.18);color:var(--green);padding:1px 6px;border-radius:10px;">Hoje</span>' : ''}
+            ðŸ“… ${b.date} ${isToday ? '<span style="font-size:0.65rem;background:rgba(46,232,160,0.18);color:var(--green);padding:1px 6px;border-radius:10px;">Hoje</span>' : ''}
           </div>
           <div style="color:var(--text2);font-size:0.72rem;margin-top:2px;">
-            🕒 ${formattedDate} &middot; 📊 ${b.matchesCount} partidas &middot; 🃏 ${b.decksCount} decks
+            ðŸ•’ ${formattedDate} &middot; ðŸ“Š ${b.matchesCount} partidas &middot; ðŸƒ ${b.decksCount} decks
           </div>
         </div>
         <div style="display:flex;gap:0.35rem;">
-          <button class="icon-btn sm" onclick="downloadAutoBackup('${b.id}')" title="Baixar JSON deste dia">📥</button>
-          <button class="icon-btn sm danger" onclick="restoreAutoBackup('${b.id}')" title="Restaurar dados deste dia">🔄</button>
+          <button class="icon-btn sm" onclick="downloadAutoBackup('${b.id}')" title="Baixar JSON deste dia">ðŸ“¥</button>
+          <button class="icon-btn sm danger" onclick="restoreAutoBackup('${b.id}')" title="Restaurar dados deste dia">ðŸ”„</button>
         </div>
       </div>
     `;
@@ -2796,7 +2796,7 @@ window.downloadAutoBackup = function(backupId) {
   let backupsList = [];
   try { backupsList = JSON.parse(localStorage.getItem(KEY_AUTO_BACKUPS)) || []; } catch (e) {}
   const target = backupsList.find(b => b.id === backupId);
-  if (!target || !target.payload) { showToast('⚠️ Snapshot não encontrado.'); return; }
+  if (!target || !target.payload) { showToast('âš ï¸ Snapshot nÃ£o encontrado.'); return; }
 
   const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(target.payload, null, 2));
   const downloadAnchor = document.createElement('a');
@@ -2805,16 +2805,16 @@ window.downloadAutoBackup = function(backupId) {
   document.body.appendChild(downloadAnchor);
   downloadAnchor.click();
   downloadAnchor.remove();
-  showToast(`📥 Backup de ${target.date} baixado com sucesso!`);
+  showToast(`ðŸ“¥ Backup de ${target.date} baixado com sucesso!`);
 };
 
 window.restoreAutoBackup = function(backupId) {
   let backupsList = [];
   try { backupsList = JSON.parse(localStorage.getItem(KEY_AUTO_BACKUPS)) || []; } catch (e) {}
   const target = backupsList.find(b => b.id === backupId);
-  if (!target || !target.payload) { showToast('⚠️ Snapshot não encontrado.'); return; }
+  if (!target || !target.payload) { showToast('âš ï¸ Snapshot nÃ£o encontrado.'); return; }
 
-  if (!confirm(`Restaurar o backup do dia ${target.date}? Seus dados atuais serão substituídos pelo estado do dia ${target.date}.`)) return;
+  if (!confirm(`Restaurar o backup do dia ${target.date}? Seus dados atuais serÃ£o substituÃ­dos pelo estado do dia ${target.date}.`)) return;
 
   const data = target.payload;
   safeSetItem(KEY_DECKS, JSON.stringify(data.decks || []));
@@ -2853,14 +2853,14 @@ window.restoreAutoBackup = function(backupId) {
   if (typeof populateQuickLogDropdowns === 'function') populateQuickLogDropdowns();
 
   triggerSyncPush();
-  showToast(`🔄 Backup de ${target.date} restaurado com sucesso!`);
+  showToast(`ðŸ”„ Backup de ${target.date} restaurado com sucesso!`);
 };
 
 window.triggerManualSnapshot = function() {
   checkAndRunDailyAutoBackup(true);
 };
 
-// ── BATCH ARCHETYPE UNIFICATION TOOL ─────────────────────────────────────────
+// â”€â”€ BATCH ARCHETYPE UNIFICATION TOOL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 window.openUnifyArchetypesModal = function() {
   const selFrom = document.getElementById('unifyFromDeckSelect');
   const inputTarget = document.getElementById('unifyTargetArchetypeInput');
@@ -2876,7 +2876,7 @@ window.openUnifyArchetypesModal = function() {
 
   const allNames = [...new Set([...registeredDeckNames, ...dataDecks, ...oppDecks])].sort((a, b) => a.localeCompare(b));
 
-  selFrom.innerHTML = '<option value="">Selecione o deck para unificar…</option>';
+  selFrom.innerHTML = '<option value="">Selecione o deck para unificarâ€¦</option>';
   allNames.forEach(name => {
     const o = document.createElement('option');
     o.value = name;
@@ -2893,9 +2893,9 @@ window.submitUnifyArchetypes = function() {
   const targetArchetype = document.getElementById('unifyTargetArchetypeInput')?.value.trim();
 
   if (!fromDeck) { alert('Selecione o deck atual que deseja unificar.'); return; }
-  if (!targetArchetype) { alert('Informe o arquétipo principal alvo.'); return; }
+  if (!targetArchetype) { alert('Informe o arquÃ©tipo principal alvo.'); return; }
 
-  if (!confirm(`Tem certeza que deseja unificar todas as partidas e registros de "${fromDeck}" para o arquétipo "${targetArchetype}"?`)) {
+  if (!confirm(`Tem certeza que deseja unificar todas as partidas e registros de "${fromDeck}" para o arquÃ©tipo "${targetArchetype}"?`)) {
     return;
   }
 
@@ -2962,7 +2962,7 @@ window.submitUnifyArchetypes = function() {
   if (typeof applyFilters        === 'function') applyFilters();
 
   closeModal('modalUnifyArchetypes');
-  showToast(`🔗 Arquétipo "${fromDeck}" unificado em "${targetArchetype}" com sucesso! (${updatedCount} registros atualizados)`);
+  showToast(`ðŸ”— ArquÃ©tipo "${fromDeck}" unificado em "${targetArchetype}" com sucesso! (${updatedCount} registros atualizados)`);
 };
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => setTimeout(checkAndRunDailyAutoBackup, 1500));
@@ -2970,7 +2970,7 @@ if (document.readyState === 'loading') {
   setTimeout(checkAndRunDailyAutoBackup, 1500);
 }
 
-// ---------- POLÍTICA DE ATUALIZAÇÃO DE VERSÃO ---------- //
+// ---------- POLÃTICA DE ATUALIZAÃ‡ÃƒO DE VERSÃƒO ---------- //
 let versionInterval = null;
 window.pendingVersionReload = false;
 
@@ -2979,7 +2979,7 @@ function checkAppVersion() {
   if (!currentVersionEl) return;
   const currentVersion = currentVersionEl.textContent.trim();
   
-  // Usamos timestamp para forçar bypass no cache do navegador/CDN
+  // Usamos timestamp para forÃ§ar bypass no cache do navegador/CDN
   fetch('version.json?t=' + Date.now())
     .then(r => r.json())
     .then(data => {
@@ -3009,7 +3009,7 @@ window.executeForcedLogout = function() {
   const overlay = document.getElementById('versionReloadOverlay');
   if (overlay) overlay.classList.add('show');
   
-  // Força logout removendo os tokens vitais de autenticação do usuário
+  // ForÃ§a logout removendo os tokens vitais de autenticaÃ§Ã£o do usuÃ¡rio
   localStorage.removeItem('jornada_auth_token');
   localStorage.removeItem('jornada_user_profile');
   localStorage.removeItem('jornada_sync_token');
@@ -3017,7 +3017,7 @@ window.executeForcedLogout = function() {
   sessionStorage.removeItem('jornada_admin_unlocked');
   
   setTimeout(() => {
-    location.reload(true);
+    window.location.href = window.location.pathname + '?v=' + Date.now();
   }, 2000);
 }
 
@@ -3027,7 +3027,7 @@ function startVersionInterval() {
   versionInterval = setInterval(checkAppVersion, 60000);
 }
 
-// Loop contínuo para ejetar o usuário assim que ele terminar de preencher dados
+// Loop contÃ­nuo para ejetar o usuÃ¡rio assim que ele terminar de preencher dados
 setInterval(() => {
   if (window.pendingVersionReload) {
     const isMatchModalOpen = document.getElementById('modalMatchForm')?.style.display === 'flex';
@@ -3042,6 +3042,7 @@ setInterval(() => {
 }, 3000);
 
 startVersionInterval();
+
 
 
 
