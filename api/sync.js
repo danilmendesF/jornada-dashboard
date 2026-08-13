@@ -95,7 +95,7 @@ export default async function handler(req, res) {
 
   // ── REDIS MODE: Connect per-request ────────────────────────────────────────
   const redis = createClient({ url: redisUrl });
-  redis.on('error', (err) => log('error', '[Serverless Sync] Redis client error:', { error:  });
+  redis.on('error', (err) => log('error', '[Serverless Sync] Redis client error:', { error: err.message }));
 
   try {
     await redis.connect();
