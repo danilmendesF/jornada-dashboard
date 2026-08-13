@@ -2776,3 +2776,25 @@ html.auth-session-active #appDashboardContainer {
 }
 .multi-deck-btn { padding: 0 0.8rem !important; justify-content: space-between; }
 .custom-date-trigger { padding: 0 0.8rem !important; justify-content: space-between; }
+
+/* ========================================= */
+/* FIX DROPDOWN OPTIONS DESIGN UNIFICATION   */
+/* ========================================= */
+.searchable-option,
+.multi-deck-item,
+.date-preset-option {
+  padding: 0.5rem 0.85rem !important;
+  font-size: 0.85rem !important;
+  color: var(--text) !important;
+  font-weight: 400 !important;
+  border-bottom: none !important;
+  border-radius: 4px !important;
+  transition: background 0.15s, color 0.15s !important;
+}
+
+.searchable-option:hover,
+.multi-deck-item:hover,
+.date-preset-option:hover {
+  background: rgba(26,127,255,0.15) !important;
+  color: #fff !important;
+}

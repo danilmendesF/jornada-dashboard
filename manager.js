@@ -1625,7 +1625,7 @@ function renderLocaisList() {
 function populateLocalSelects() {
   const customLocais = (typeof loadLocais === 'function') ? loadLocais() : [];
   const dataLocais   = (typeof allData !== 'undefined' && Array.isArray(allData)) ? allData.map(d => d.Local).filter(Boolean) : [];
-  const allLocais    = [...new Set([...customLocais, ...dataLocais])].sort((a, b) => a.localeCompare(b));
+  const allLocais    = [...new Set([...customLocais, ...dataLocais])].sort((a, b) => a.localeCompare(b));
   const modalSel = document.getElementById('formMatchLocal');
   if (modalSel) {
     const cur = modalSel.value;
@@ -1715,7 +1715,7 @@ function renderColecoesList() {
 function populateColecaoSelects() {
   const customColecoes = (typeof loadColecoes === 'function') ? loadColecoes() : [];
   const dataColecoes   = (typeof allData !== 'undefined' && Array.isArray(allData)) ? allData.map(d => d.Colecao).filter(Boolean) : [];
-  const allColecoes    = [...new Set([...customColecoes, ...dataColecoes])].sort((a, b) => a.localeCompare(b));
+  const allColecoes    = [...new Set([...customColecoes, ...dataColecoes].map(c => c ? c.trim() : ''))].filter(Boolean).sort((a, b) => a.localeCompare(b));
   const modalSel = document.getElementById('formMatchColecao');
   if (modalSel) {
     const cur = modalSel.value;
@@ -2968,6 +2968,7 @@ if (document.readyState === 'loading') {
 } else {
   setTimeout(checkAndRunDailyAutoBackup, 1500);
 }
+
 
 
 
