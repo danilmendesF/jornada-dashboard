@@ -18,7 +18,7 @@
       rel="stylesheet"
     />
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <link rel="stylesheet" href="dist/style.min.css?v=1.0.69" />
+    <link rel="stylesheet" href="dist/style.min.css?v=1.0.70" />
     <script>
       (function () {
         try {
@@ -213,7 +213,7 @@
               font-family: &quot;Outfit&quot;, sans-serif;
             "
           >
-            v<span id="appVersionAuth">1.0.69</span>
+            v<span id="appVersionAuth">1.0.70</span>
           </div>
         </div>
       </div>
@@ -429,17 +429,21 @@
                   <span id="multiConfBtnText">Todas</span>
                   <span class="multi-deck-arrow">&#9660;</span>
                 </button>
-                <div class="multi-deck-dropdown" id="multiConfDropdown" style="display: none; flex-direction: column;">
-                  <label class="multi-deck-item">
-                    <input type="checkbox" id="filterConfAlta" class="multi-conf-cb" value="Alta" checked /> 
-                    <i class="fas fa-check-circle" style="color: var(--green); margin-right: 4px;"></i> <span>Alta</span>
-                  </label>
-                  <label class="multi-deck-item">
-                    <input type="checkbox" id="filterConfBaixa" class="multi-conf-cb" value="Baixa" checked /> 
-                    <i class="fas fa-times-circle" style="color: var(--red); margin-right: 4px;"></i> <span>Baixa</span>
-                  </label>
+                                <div class="multi-deck-dropdown" id="multiConfDropdown" style="display: none; flex-direction: column;">
+                  <div class="multi-deck-list" style="max-height: none;">
+                    <label class="multi-deck-item">
+                      <input type="checkbox" id="filterConfAlta" class="multi-conf-cb" value="Alta" checked /> 
+                      <i class="fas fa-check-circle" style="color: var(--green); margin-right: 4px;"></i> 
+                      <span>Alta</span>
+                    </label>
+                    <label class="multi-deck-item">
+                      <input type="checkbox" id="filterConfBaixa" class="multi-conf-cb" value="Baixa" checked /> 
+                      <i class="fas fa-times-circle" style="color: var(--red); margin-right: 4px;"></i> 
+                      <span>Baixa</span>
+                    </label>
+                  </div>
                 </div>
-              </div>
+                </div>
             </div>
           <div style="display: flex; gap: 0.5rem; align-items: flex-end">
             <button
@@ -2367,7 +2371,7 @@
         </div>
       </div>
     </div>
-    <script src="dist/app.min.js?v=1.0.69"></script>
+    <script src="dist/app.min.js?v=1.0.70"></script>
     <script>
       // Mobile Hamburger Menu Toggle
       const mobileBtn = document.getElementById('mobileMenuBtn');
@@ -2393,9 +2397,10 @@
         });
       }
     </script>
-    <div class="app-version-footer">v<span id="appVersion">1.0.69</span></div>
+    <div class="app-version-footer">v<span id="appVersion">1.0.70</span></div>
   </body>
 </html>
+
 
 
 
