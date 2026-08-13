@@ -1,13 +1,13 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Jornada TCG Team â€” Dashboard Regional</title>
+    <title>Jornada TCG Team — Dashboard Regional</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <meta
       name="description"
-      content="Dashboard de anÃ¡lise de winrate, matchups e performance do Team Jornada TCG para regionais."
+      content="Dashboard de análise de winrate, matchups e performance do Team Jornada TCG para regionais."
     />
     <link rel="icon" type="image/png" href="logo.png" />
     <link rel="apple-touch-icon" href="logo.png" />
@@ -18,7 +18,7 @@
       rel="stylesheet"
     />
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <link rel="stylesheet" href="dist/style.min.css?v=1.2.0" />
+    <link rel="stylesheet" href="dist/style.min.css?v=1.2.1" />
     <script>
       (function () {
         try {
@@ -38,7 +38,7 @@
           <img src="logo.png" alt="Jornada TCG Team" class="auth-wall-logo" />
           <h1 class="auth-wall-title">Jornada Dashboard</h1>
           <p class="auth-wall-sub">
-            TCG Team &middot; AnÃ¡lise Regional & Matchups
+            TCG Team &middot; Análise Regional & Matchups
           </p>
         </div>
         <div
@@ -55,7 +55,7 @@
             style="flex: 1; text-align: center; padding: 0.6rem"
             onclick="switchAuthTab('login')"
           >
-            ðŸ”‘ Entrar
+            🔑 Entrar
           </button>
           <button
             id="tabWallRegister"
@@ -63,7 +63,7 @@
             style="flex: 1; text-align: center; padding: 0.6rem"
             onclick="switchAuthTab('register')"
           >
-            ðŸ“ Cadastrar-se
+            📝 Cadastrar-se
           </button>
         </div>
         <div
@@ -86,7 +86,7 @@
                 type="password"
                 id="wallLoginPassword"
                 class="form-input"
-                placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                placeholder="••••••••"
               />
               <button
                 type="button"
@@ -94,7 +94,7 @@
                 onclick="togglePasswordVisibility('wallLoginPassword', this)"
                 title="Mostrar / Ocultar Senha"
               >
-                ðŸ‘ï¸
+                👁️
               </button>
             </div>
           </div>
@@ -115,7 +115,7 @@
             "
             onclick="submitWallLogin()"
           >
-            âš¡ Entrar no Painel
+            ⚡ Entrar no Painel
           </button>
         </div>
         <div
@@ -142,7 +142,7 @@
                 type="password"
                 id="wallRegPassword"
                 class="form-input"
-                placeholder="MÃ­nimo 6 caracteres"
+                placeholder="Mínimo 6 caracteres"
                 oninput="checkPasswordMatch('wall')"
               />
               <button
@@ -151,7 +151,7 @@
                 onclick="togglePasswordVisibility('wallRegPassword', this)"
                 title="Mostrar / Ocultar Senha"
               >
-                ðŸ‘ï¸
+                👁️
               </button>
             </div>
           </div>
@@ -171,7 +171,7 @@
                 onclick="togglePasswordVisibility('wallRegConfirm', this)"
                 title="Mostrar / Ocultar Senha"
               >
-                ðŸ‘ï¸
+                👁️
               </button>
             </div>
             <div id="wallPasswordMatchHint" class="password-match-hint"></div>
@@ -193,7 +193,7 @@
             "
             onclick="submitWallRegister()"
           >
-            ðŸ“ Finalizar Cadastro
+            📝 Finalizar Cadastro
           </button>
         </div>
         <div
@@ -213,7 +213,7 @@
               font-family: &quot;Outfit&quot;, sans-serif;
             "
           >
-            v<span id="appVersionAuth">1.2.0</span>
+            v<span id="appVersionAuth">1.2.1</span>
           </div>
         </div>
       </div>
@@ -234,15 +234,15 @@
             </div>
             <div>
               <h1 class="logo-title">Jornada Dashboard</h1>
-              <p class="logo-sub">TCG Team &middot; AnÃ¡lise Regional</p>
+              <p class="logo-sub">TCG Team &middot; Análise Regional</p>
             </div>
           </div>
           
           <nav class="top-nav" id="topNavRouter">
-            <a href="#" class="nav-link active" data-target="tab-overview">ðŸ  VisÃ£o Geral</a>
-            <a href="#" class="nav-link" data-target="tab-analytics">ðŸ“Š Analytics AvanÃ§ado</a>
-            <a href="#" class="nav-link" data-target="tab-history">ðŸ“‹ HistÃ³rico</a>
-            <a href="#" class="nav-link" data-target="tab-tournaments">ðŸ† Torneios</a>
+            <a href="#" class="nav-link active" data-target="tab-overview">🏠 Visão Geral</a>
+            <a href="#" class="nav-link" data-target="tab-analytics">📊 Analytics Avançado</a>
+            <a href="#" class="nav-link" data-target="tab-history">📋 Histórico</a>
+            <a href="#" class="nav-link" data-target="tab-tournaments">🏆 Torneios</a>
           </nav>
           <div class="header-actions">
             <div id="userProfileBadge"></div>
@@ -259,7 +259,7 @@
       <section class="filters-bar">
         <div class="filters-inner">
           <div class="filter-group">
-            <label class="filter-label">Player (Multi-SeleÃ§Ã£o)</label>
+            <label class="filter-label">Player (Multi-Seleção)</label>
             <div class="multi-deck-wrap" id="multiPlayerWrap">
               <button
                 type="button"
@@ -275,7 +275,7 @@
                     type="text"
                     id="multiPlayerSearch"
                     class="multi-deck-search"
-                    placeholder="ðŸ” Buscar playerâ€¦"
+                    placeholder="🔍 Buscar player…"
                   />
                   <div class="multi-deck-actions">
                     <button
@@ -299,7 +299,7 @@
             </div>
           </div>
           <div class="filter-group">
-            <label class="filter-label">Decks (Multi-SeleÃ§Ã£o)</label>
+            <label class="filter-label">Decks (Multi-Seleção)</label>
             <div class="multi-deck-wrap" id="multiDeckWrap">
               <button
                 type="button"
@@ -315,7 +315,7 @@
                     type="text"
                     id="multiDeckSearch"
                     class="multi-deck-search"
-                    placeholder="ðŸ” Buscar deckâ€¦"
+                    placeholder="🔍 Buscar deck…"
                   />
                   <div class="multi-deck-actions">
                     <button
@@ -351,16 +351,16 @@
             </select>
           </div>
           <div class="filter-group">
-            <label class="filter-label">ColeÃ§Ã£o</label>
+            <label class="filter-label">Coleção</label>
             <select id="filterColecao" class="filter-select"></select>
           </div>
           <div class="filter-group">
-            <label class="filter-label">Data de criaÃ§Ã£o</label>
+            <label class="filter-label">Data de criação</label>
             <div class="custom-date-picker-wrap" id="customDatePickerWrap">
               <!-- Trigger Button -->
               <button class="filter-select custom-date-trigger" id="customDateTrigger">
                 <div style="display: flex; align-items: center; gap: 0.5rem;">
-                  <span id="customDateLabel">Todo o PerÃ­odo</span>
+                  <span id="customDateLabel">Todo o Período</span>
                 </div>
                 <div style="display: flex; align-items: center; gap: 0.5rem;">
                   <i class="fas fa-times clear-date-btn" id="customDateClear" style="display: none; cursor: pointer;"></i>
@@ -373,11 +373,11 @@
                 
                 <!-- View 1: Presets -->
                 <div class="date-presets-view" id="datePresetsView">
-                  <div class="date-preset-option" data-value="all">Todo o PerÃ­odo</div>
+                  <div class="date-preset-option" data-value="all">Todo o Período</div>
                   <div class="date-preset-option" data-value="today">Hoje</div>
                   <div class="date-preset-option" data-value="yesterday">Ontem</div>
-                  <div class="date-preset-option" data-value="week">Ãšltimos 7 dias</div>
-                  <div class="date-preset-option" data-value="month">Este MÃªs</div>
+                  <div class="date-preset-option" data-value="week">Últimos 7 dias</div>
+                  <div class="date-preset-option" data-value="month">Este Mês</div>
                   <div class="date-preset-option" data-value="custom">Personalizado...</div>
                 </div>
 
@@ -386,7 +386,7 @@
                   <div class="calendar-header-back">
                     <button id="calendarBackBtn" class="calendar-back-btn">
                       <i class="fas fa-chevron-left"></i>
-                      <span>PerÃ­odo personalizado</span>
+                      <span>Período personalizado</span>
                     </button>
                   </div>
                   
@@ -471,7 +471,7 @@
               id="resetFilters"
               onclick="resetAllFilters()"
             >
-              â†º Limpar
+              ↺ Limpar
             </button>
           </div>
           </div>
@@ -485,12 +485,12 @@
       <section id="newsSection" class="news-section" style="margin-bottom: 2rem;">
         <div class="news-card" style="background: var(--glass-bg); border: 1px solid var(--glass-bd); border-radius: var(--radius); padding: 1.5rem; position: relative; overflow: hidden; box-shadow: var(--shadow);">
           <div style="position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--accent2), var(--accent));"></div>
-          <h2 class="chart-title" style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">ðŸ“° AtualizaÃ§Ãµes do Metagame</h2>
+          <h2 class="chart-title" style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">📰 Atualizações do Metagame</h2>
           <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
             <div class="news-item" style="flex: 1; min-width: 250px; background: rgba(0,0,0,0.2); padding: 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border);">
               <span style="font-size: 0.7rem; color: var(--accent2); font-weight: bold; text-transform: uppercase;">11 de Agosto, 2026</span>
               <h4 style="margin: 0.4rem 0; font-family: 'Rajdhani', sans-serif; font-size: 1.1rem; color: var(--text);">Surging Sparks domina o online!</h4>
-              <p style="font-size: 0.85rem; color: var(--text2); margin: 0;">O arquÃ©tipo de Pikachu ex disparou no ranking geral. Preparem seus tech cards contra dano elÃ©trico para o prÃ³ximo regional.</p>
+              <p style="font-size: 0.85rem; color: var(--text2); margin: 0;">O arquétipo de Pikachu ex disparou no ranking geral. Preparem seus tech cards contra dano elétrico para o próximo regional.</p>
             </div>
             <div class="news-item" style="flex: 1; min-width: 250px; background: rgba(0,0,0,0.2); padding: 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border);">
               <span style="font-size: 0.7rem; color: var(--accent2); font-weight: bold; text-transform: uppercase;">05 de Agosto, 2026</span>
@@ -546,18 +546,18 @@
                 <div>
                   <h3 class="quick-log-title">Registrar Partida</h3>
                   <span class="quick-log-sub"
-                    >Log rÃ¡pido â€” 1 clique por resultado</span
+                    >Log rápido — 1 clique por resultado</span
                   >
                 </div>
               </div>
               <button class="icon-btn sm" id="btnToggleQuickLog">
-                â–¼ Recolher
+                ▼ Recolher
               </button>
             </div>
             <div class="quick-log-body" id="quickLogBody">
               <div class="quick-log-grid-top">
                 <div class="form-group">
-                  <label class="form-label">ðŸ‘¤ Meu Player *</label>
+                  <label class="form-label">👤 Meu Player *</label>
                   <select id="quickLogPlayer" class="form-input"></select>
                 </div>
                 <div class="form-group">
@@ -568,7 +568,7 @@
                       align-items: center;
                     "
                   >
-                    <label class="form-label">ðŸƒ Meu Deck *</label>
+                    <label class="form-label">🃏 Meu Deck *</label>
                     <button
                       type="button"
                       class="btn-add-deck"
@@ -579,12 +579,12 @@
                     </button>
                   </div>
                   <select id="quickLogDeck" class="form-input">
-                    <option value="">Selecioneâ€¦</option>
+                    <option value="">Selecione…</option>
                   </select>
                 </div>
                 <div class="form-group">
                   <label class="form-label"
-                    >âš”ï¸ Oponente (ou Jogador do Time)</label
+                    >⚔️ Oponente (ou Jogador do Time)</label
                   >
                   <input
                     list="playerOptionsAdv"
@@ -602,7 +602,7 @@
                       align-items: center;
                     "
                   >
-                    <label class="form-label">ðŸƒ Deck Oponente *</label>
+                    <label class="form-label">🃏 Deck Oponente *</label>
                     <button
                       type="button"
                       class="btn-add-deck"
@@ -613,56 +613,56 @@
                     </button>
                   </div>
                   <select id="quickLogDeckAdv" class="form-input">
-                    <option value="">Selecioneâ€¦</option>
+                    <option value="">Selecione…</option>
                   </select>
                 </div>
               </div>
               <div class="quick-log-grid-bottom">
                 <div class="form-group">
-                  <label class="form-label">ðŸ† Formato *</label>
+                  <label class="form-label">🏆 Formato *</label>
                   <select id="quickLogFormato" class="form-input">
                     <option value="MD1" selected>MD1</option>
                     <option value="MD3">MD3</option>
                   </select>
                 </div>
                 <div class="form-group">
-                  <label class="form-label">ðŸŽ² Start *</label>
+                  <label class="form-label">🎲 Start *</label>
                   <select id="quickLogStart" class="form-input">
-                    <option value="1Âº">1Âº (Saiu Jogando)</option>
-                    <option value="2Âº">2Âº (Foi Segundo)</option>
+                    <option value="1º">1º (Saiu Jogando)</option>
+                    <option value="2º">2º (Foi Segundo)</option>
                   </select>
                 </div>
                 <div class="form-group">
-                  <label class="form-label">ðŸ“¦ ColeÃ§Ã£o *</label>
+                  <label class="form-label">📦 Coleção *</label>
                   <select id="quickLogColecao" class="form-input">
-                    <option value="">Selecioneâ€¦</option>
+                    <option value="">Selecione…</option>
                   </select>
                 </div>
                 <div class="form-group">
-                  <label class="form-label">ðŸ“ Local *</label>
+                  <label class="form-label">📍 Local *</label>
                   <select id="quickLogLocal" class="form-input">
-                    <option value="">Selecioneâ€¦</option>
+                    <option value="">Selecione…</option>
                   </select>
                 </div>
                 <div class="form-group">
-                  <label class="form-label">ðŸŽ¯ Placar *</label>
+                  <label class="form-label">🎯 Placar *</label>
                   <select id="quickLogPlacar" class="form-input">
                     <option value="1-0">1-0</option>
                     <option value="0-1">0-1</option>
                   </select>
                 </div>
                 <div class="form-group">
-                  <label class="form-label">ðŸŸ¢ Confiabilidade</label>
+                  <label class="form-label">🟢 Confiabilidade</label>
                   <select id="quickLogConfiabilidade" class="form-input">
-                    <option value="Alta">ðŸŸ¢ Alta</option>
-                    <option value="Baixa">ðŸ”´ Baixa</option>
+                    <option value="Alta">🟢 Alta</option>
+                    <option value="Baixa">🔴 Baixa</option>
                   </select>
                 </div>
               </div>
               <div id="quickLogGamesStrip" class="quick-log-games-strip">
                 <div class="strip-header">
                   <span class="strip-title"
-                    >ðŸŽ® Detalhes dos Games
+                    >🎮 Detalhes dos Games
                     <span
                       id="quickLogFormatoLabel"
                       style="color: var(--text2); font-weight: normal"
@@ -670,20 +670,20 @@
                     ></span
                   >
                   <span class="strip-subtitle" id="quickLogGamesHint"
-                    >Toque nas pÃ­lulas para alternar</span
+                    >Toque nas pílulas para alternar</span
                   >
                 </div>
                 <div id="quickLogGamesPillGrid" class="pill-grid-wrap"></div>
               </div>
               <div class="quick-log-actions">
                 <button class="quick-log-btn win" id="btnQuickWin">
-                  ðŸ† VITÃ“RIA
+                  🏆 VITÓRIA
                 </button>
                 <button class="quick-log-btn draw" id="btnQuickDraw">
-                  ðŸ¤ EMPATE
+                  🤝 EMPATE
                 </button>
                 <button class="quick-log-btn loss" id="btnQuickLoss">
-                  âŒ DERROTA
+                  ❌ DERROTA
                 </button>
               </div>
             </div>
@@ -710,7 +710,7 @@
               </svg>
             </div>
             <div class="kpi-info">
-              <div class="kpi-value" id="kpiTotal">â€”</div>
+              <div class="kpi-value" id="kpiTotal">—</div>
               <div class="kpi-label">Partidas Totais</div>
             </div>
           </div>
@@ -737,8 +737,8 @@
               </svg>
             </div>
             <div class="kpi-info">
-              <div class="kpi-value green" id="kpiWin">â€”</div>
-              <div class="kpi-label">VitÃ³rias</div>
+              <div class="kpi-value green" id="kpiWin">—</div>
+              <div class="kpi-label">Vitórias</div>
             </div>
           </div>
           <div class="kpi-card">
@@ -761,7 +761,7 @@
               </svg>
             </div>
             <div class="kpi-info">
-              <div class="kpi-value yellow" id="kpiDraw">â€”</div>
+              <div class="kpi-value yellow" id="kpiDraw">—</div>
               <div class="kpi-label">Empates</div>
             </div>
           </div>
@@ -783,7 +783,7 @@
               </svg>
             </div>
             <div class="kpi-info">
-              <div class="kpi-value red" id="kpiLoss">â€”</div>
+              <div class="kpi-value red" id="kpiLoss">—</div>
               <div class="kpi-label">Derrotas</div>
             </div>
           </div>
@@ -804,7 +804,7 @@
               </svg>
             </div>
             <div class="kpi-info">
-              <div class="kpi-value cyan" id="kpiWR">â€”</div>
+              <div class="kpi-value cyan" id="kpiWR">—</div>
               <div class="kpi-label">Win Rate</div>
             </div>
           </div>
@@ -828,7 +828,7 @@
               </svg>
             </div>
             <div class="kpi-info">
-              <div class="kpi-value red" id="kpiBrick">â€”</div>
+              <div class="kpi-value red" id="kpiBrick">—</div>
               <div class="kpi-label">% Brick</div>
             </div>
           </div>
@@ -839,7 +839,7 @@
         <section class="charts-grid two-col">
           <div class="chart-card">
             <div class="chart-header">
-              <h2 class="chart-title">ðŸƒ Win Rate por Deck</h2>
+              <h2 class="chart-title">🃏 Win Rate por Deck</h2>
               <span class="chart-sub"
                 >Top 7 decks com maiores win rates da equipe</span
               >
@@ -848,9 +848,9 @@
           </div>
           <div class="chart-card">
             <div class="chart-header">
-              <h2 class="chart-title">ðŸ§¢ Performance por Treinador</h2>
+              <h2 class="chart-title">🧢 Performance por Treinador</h2>
               <span class="chart-sub"
-                >Treinadores ordenados por maior nÃºmero de vitÃ³rias</span
+                >Treinadores ordenados por maior número de vitórias</span
               >
             </div>
             <div class="chart-wrap"><canvas id="chartPlayerPerf"></canvas></div>
@@ -884,11 +884,11 @@
             >
               <div>
                 <h2 class="chart-title" id="playerSubtypeTitle">
-                  ðŸ“Š Variantes & Subtipos do Player
+                  📊 Variantes & Subtipos do Player
                 </h2>
                 <span class="chart-sub" id="playerSubtypeSub"
-                  >Desempenho individual detalhado por versÃ£o de deck de um
-                  Ãºnico jogador</span
+                  >Desempenho individual detalhado por versão de deck de um
+                  único jogador</span
                 >
               </div>
               <span
@@ -899,7 +899,7 @@
                   font-weight: 700;
                 "
                 id="playerSubtypeBadge"
-                >ðŸ‘¤ VisÃ£o Individual de Player</span
+                >👤 Visão Individual de Player</span
               >
             </div>
             <div id="playerSubtypeBody" style="padding-top: 0.5rem"></div>
@@ -908,9 +908,9 @@
         <section class="charts-grid three-col">
           <div class="chart-card">
             <div class="chart-header">
-              <h2 class="chart-title">ðŸ“Š Resultados Gerais</h2>
+              <h2 class="chart-title">📊 Resultados Gerais</h2>
               <span class="chart-sub"
-                >DistribuiÃ§Ã£o total de vitÃ³rias, empates e derrotas</span
+                >Distribuição total de vitórias, empates e derrotas</span
               >
             </div>
             <div class="chart-wrap chart-wrap-sm">
@@ -919,9 +919,9 @@
           </div>
           <div class="chart-card">
             <div class="chart-header">
-              <h2 class="chart-title">ðŸŸï¸ Torneios &amp; Locais</h2>
+              <h2 class="chart-title">🏟️ Torneios &amp; Locais</h2>
               <span class="chart-sub"
-                >FrequÃªncia de jogos presenciais e online</span
+                >Frequência de jogos presenciais e online</span
               >
             </div>
             <div class="chart-wrap chart-wrap-sm">
@@ -930,8 +930,8 @@
           </div>
           <div class="chart-card">
             <div class="chart-header">
-              <h2 class="chart-title">âš”ï¸ Formato das Partidas</h2>
-              <span class="chart-sub">DistribuiÃ§Ã£o de jogos MD1 vs MD3</span>
+              <h2 class="chart-title">⚔️ Formato das Partidas</h2>
+              <span class="chart-sub">Distribuição de jogos MD1 vs MD3</span>
             </div>
             <div class="chart-wrap chart-wrap-sm">
               <canvas id="chartFormato"></canvas>
@@ -941,7 +941,7 @@
         <section class="charts-grid three-col">
           <div class="chart-card">
             <div class="chart-header">
-              <h2 class="chart-title">ðŸƒ Volume de Jogos por Deck</h2>
+              <h2 class="chart-title">🃏 Volume de Jogos por Deck</h2>
               <span class="chart-sub"
                 >Quantidade total de partidas registradas</span
               >
@@ -952,9 +952,9 @@
           </div>
           <div class="chart-card">
             <div class="chart-header">
-              <h2 class="chart-title">ðŸª™ 1Âº vs 2Âº a Jogar (Moeda)</h2>
+              <h2 class="chart-title">🪙 1º vs 2º a Jogar (Moeda)</h2>
               <span class="chart-sub"
-                >Impacto de comeÃ§ar jogando no resultado final</span
+                >Impacto de começar jogando no resultado final</span
               >
             </div>
             <div class="chart-wrap chart-wrap-sm">
@@ -963,9 +963,9 @@
           </div>
           <div class="chart-card">
             <div class="chart-header">
-              <h2 class="chart-title">ðŸ§± Brick Analysis por Deck</h2>
+              <h2 class="chart-title">🧱 Brick Analysis por Deck</h2>
               <span class="chart-sub"
-                >Porcentagem de mÃ£os ruins / zoadas por deck</span
+                >Porcentagem de mãos ruins / zoadas por deck</span
               >
             </div>
             <div class="chart-wrap chart-wrap-sm">
@@ -976,9 +976,9 @@
         <section class="chart-card matchup-section">
           <div class="matchup-header">
             <div>
-              <h2 class="chart-title">âš”ï¸ Matriz de Matchups (Deck vs Deck)</h2>
+              <h2 class="chart-title">⚔️ Matriz de Matchups (Deck vs Deck)</h2>
               <span class="chart-sub"
-                >Taxa de vitÃ³ria em confrontos diretos â€” clique em uma cÃ©lula
+                >Taxa de vitória em confrontos diretos — clique em uma célula
                 para ver o raio-x</span
               >
             </div>
@@ -1002,15 +1002,15 @@
                 </select>
               </div>
               <div class="filter-group">
-                <label class="filter-label">OrdenaÃ§Ã£o WR</label>
+                <label class="filter-label">Ordenação WR</label>
                 <button
                   type="button"
                   class="btn-sort-toggle"
                   id="btnMatchupSortToggle"
                   onclick="toggleMatchupSortOrder()"
-                  title="Alternar ordenaÃ§Ã£o por Win Rate (Maior WR / Menor WR / AlfabÃ©tica)"
+                  title="Alternar ordenação por Win Rate (Maior WR / Menor WR / Alfabética)"
                 >
-                  <span id="matchupSortIcon">â¬‡ï¸</span>
+                  <span id="matchupSortIcon">⬇️</span>
                   <span id="matchupSortLabel">Maior WR</span>
                 </button>
               </div>
@@ -1078,7 +1078,7 @@
                     'none'
                 "
               >
-                âœ•
+                ✕
               </button>
             </div>
             <div id="detailBody" class="detail-body"></div>
@@ -1089,7 +1089,7 @@
       <div id="tab-history" class="page-tab">
         <section class="table-section">
           <div class="table-header">
-            <h2 class="chart-title">ðŸ“‹ Registro de Partidas</h2>
+            <h2 class="chart-title">📋 Registro de Partidas</h2>
             <div
               style="
                 display: flex;
@@ -1105,7 +1105,7 @@
                   type="search"
                   id="tableSearch"
                   class="table-search"
-                  placeholder="ðŸ” Buscar player, deck, placarâ€¦"
+                  placeholder="🔍 Buscar player, deck, placar…"
                   style="padding-right: 2rem"
                   onkeyup="
                     if (event.key === 'Enter') triggerTableSearch();
@@ -1130,7 +1130,7 @@
                     padding: 0;
                   "
                 >
-                  âœ•
+                  ✕
                 </button>
               </div>
               <button
@@ -1147,7 +1147,7 @@
                   gap: 0.4rem;
                 "
               >
-                ðŸ” Buscar
+                🔍 Buscar
               </button>
             </div>
           </div>
@@ -1200,9 +1200,9 @@
                   <th
                     class="sortable-th"
                     onclick="sortTableByColumn('Colecao')"
-                    title="Ordenar por coleÃ§Ã£o"
+                    title="Ordenar por coleção"
                   >
-                    ColeÃ§Ã£o <span id="sort-icon-Colecao"></span>
+                    Coleção <span id="sort-icon-Colecao"></span>
                   </th>
                   <th
                     class="sortable-th"
@@ -1214,7 +1214,7 @@
                   <th
                     class="sortable-th"
                     onclick="sortTableByColumn('Start')"
-                    title="Ordenar por quem comeÃ§ou"
+                    title="Ordenar por quem começou"
                   >
                     Start <span id="sort-icon-Start"></span>
                   </th>
@@ -1248,12 +1248,12 @@
                   </th>
                   <th
                     style="cursor: default; text-align: center"
-                    title="Lista de cartas (nÃ£o ordenÃ¡vel)"
+                    title="Lista de cartas (não ordenável)"
                   >
                     Listas
                   </th>
-                  <th style="cursor: default; text-align: center" title="AÃ§Ãµes">
-                    AÃ§Ãµes
+                  <th style="cursor: default; text-align: center" title="Ações">
+                    Ações
                   </th>
                 </tr>
               </thead>
@@ -1262,7 +1262,7 @@
           </div>
           <div class="table-pagination" id="tablePagination">
             <div class="pagination-info" id="paginationInfo">
-              Mostrando 0â€“0 de 0 partidas
+              Mostrando 0–0 de 0 partidas
             </div>
             <div class="pagination-controls" id="paginationControls"></div>
           </div>
@@ -1271,10 +1271,10 @@
       
       <div id="tab-tournaments" class="page-tab">
         <section class="tournaments-section" style="padding: 2rem; text-align: center; color: var(--text2);">
-          <h2 class="chart-title" style="margin-bottom: 1rem;">ðŸ† Torneios & CompetiÃ§Ãµes</h2>
+          <h2 class="chart-title" style="margin-bottom: 1rem;">🏆 Torneios & Competições</h2>
           <div style="background: var(--glass-bg); border: 1px dashed var(--border); border-radius: var(--radius); padding: 3rem; margin-top: 1rem;">
             <p style="font-size: 1.1rem; margin-bottom: 0.5rem;">Resultados de campeonatos oficiais e grandes eventos.</p>
-            <p style="font-size: 0.9rem; opacity: 0.7;">Em breve haverÃ¡ integraÃ§Ã£o com plataformas externas para obter dados automatizados.</p>
+            <p style="font-size: 0.9rem; opacity: 0.7;">Em breve haverá integração com plataformas externas para obter dados automatizados.</p>
           </div>
         </section>
       </div>
@@ -1317,7 +1317,7 @@
       </button>
       <div class="manager-panel" id="managerPanel">
         <div class="manager-header">
-          <h2>ðŸ“‹ Gerenciador de Dados</h2>
+          <h2>📋 Gerenciador de Dados</h2>
           <div
             style="
               display: flex;
@@ -1343,7 +1343,7 @@
                 gap: 4px;
               "
             >
-              ðŸ”’ Bloquear
+              🔒 Bloquear
             </button>
             <button
               class="icon-btn close-panel-btn"
@@ -1363,22 +1363,22 @@
                 font-weight: 600;
               "
             >
-              âœ• Fechar
+              ✕ Fechar
             </button>
           </div>
         </div>
         <div class="tab-bar">
           <button class="tab-btn active" data-tab="tabDecks">
-            ðŸƒ ArquÃ©tipos
+            🃏 Arquétipos
           </button>
           <button class="tab-btn" data-tab="tabVariantes">
-            ðŸ“œ Variantes & Listas
+            📜 Variantes & Listas
           </button>
           <button class="tab-btn" data-tab="tabPlayers">Players</button>
           <button class="tab-btn" data-tab="tabLocais">Locais</button>
-          <button class="tab-btn" data-tab="tabColecoes">ColeÃ§Ãµes</button>
+          <button class="tab-btn" data-tab="tabColecoes">Coleções</button>
           <button class="tab-btn" data-tab="tabBackup">Backup</button>
-          <button class="tab-btn" data-tab="tabSeguranca">ðŸ”’ SeguranÃ§a</button>
+          <button class="tab-btn" data-tab="tabSeguranca">🔒 Segurança</button>
         </div>
         <div class="tab-pane active" id="tabDecks">
           <div
@@ -1393,7 +1393,7 @@
             <div
               style="font-size: 0.8rem; color: var(--text2); font-weight: 600"
             >
-              ðŸƒ ArquÃ©tipos Principais da Equipe
+              🃏 Arquétipos Principais da Equipe
             </div>
             <button
               class="action-btn"
@@ -1405,7 +1405,7 @@
                 color: var(--accent2);
               "
             >
-              ðŸ”— Unificar ArquÃ©tipos
+              🔗 Unificar Arquétipos
             </button>
           </div>
           <div id="archetypesList" class="decks-list"></div>
@@ -1432,7 +1432,7 @@
               type="text"
               id="newPlayerName"
               class="filter-select"
-              placeholder="Nome do playerâ€¦"
+              placeholder="Nome do player…"
             />
             <button class="action-btn" id="btnAddPlayer">+ Adicionar</button>
           </div>
@@ -1444,7 +1444,7 @@
               type="text"
               id="newLocalName"
               class="filter-select"
-              placeholder="Nome do local (ex: Regional SP)â€¦"
+              placeholder="Nome do local (ex: Regional SP)…"
             />
             <button class="action-btn" id="btnAddLocal">+ Adicionar</button>
           </div>
@@ -1456,7 +1456,7 @@
               type="text"
               id="newColecaoName"
               class="filter-select"
-              placeholder="Nome da coleÃ§Ã£o (ex: SV8 Surging Sparks)â€¦"
+              placeholder="Nome da coleção (ex: SV8 Surging Sparks)…"
             />
             <button class="action-btn" id="btnAddColecao">+ Adicionar</button>
           </div>
@@ -1471,8 +1471,8 @@
               margin-bottom: 1rem;
             "
           >
-            O sistema gera um <strong>backup diÃ¡rio automÃ¡tico</strong> a cada
-            novo dia de uso (mantendo os Ãºltimos 7 dias). VocÃª tambÃ©m pode
+            O sistema gera um <strong>backup diário automático</strong> a cada
+            novo dia de uso (mantendo os últimos 7 dias). Você também pode
             exportar/importar arquivos JSON manualmente a qualquer momento.
           </p>
           <div style="display: flex; flex-direction: column; gap: 1rem">
@@ -1488,7 +1488,7 @@
                 padding: 0.65rem;
               "
             >
-              ðŸ“¥ Exportar Backup Completo (.json)
+              📥 Exportar Backup Completo (.json)
             </button>
             <div style="border-top: 1px solid var(--border); padding-top: 1rem">
               <div
@@ -1500,7 +1500,7 @@
                 "
               >
                 <label class="form-label" style="margin: 0; font-weight: 700"
-                  >ðŸ’¾ Snapshots DiÃ¡rios AutomÃ¡ticos</label
+                  >💾 Snapshots Diários Automáticos</label
                 >
                 <button
                   class="icon-btn sm"
@@ -1536,7 +1536,7 @@
                   cursor: pointer;
                 "
               >
-                <span>ðŸ“¤ Selecionar Arquivo .json</span>
+                <span>📤 Selecionar Arquivo .json</span>
                 <input
                   type="file"
                   id="backupFileInput"
@@ -1559,7 +1559,7 @@
               gap: 0.4rem;
             "
           >
-            ðŸ”‘ ProteÃ§Ã£o do Administrador
+            🔑 Proteção do Administrador
           </h4>
           <p
             style="
@@ -1595,7 +1595,7 @@
               font-weight: 600;
             "
           >
-            âœ• Fechar Gerenciador
+            ✕ Fechar Gerenciador
           </button>
         </div>
       </div>
@@ -1608,7 +1608,7 @@
           <div class="modal-body">
             <div class="form-row three-col">
               <div class="form-group">
-                <label class="form-label">ArquÃ©tipo do Deck *</label>
+                <label class="form-label">Arquétipo do Deck *</label>
                 <input
                   type="text"
                   id="formDeckArquetipo"
@@ -1622,13 +1622,13 @@
                   type="text"
                   id="formDeckSubtipo"
                   class="form-input"
-                  placeholder="Ex: VersÃ£o Dusknoir, teste 1"
+                  placeholder="Ex: Versão Dusknoir, teste 1"
                 />
               </div>
               <div class="form-group">
                 <label class="form-label">Player (Opcional)</label>
                 <select id="formDeckPlayer" class="form-input">
-                  <option value="">Sem player atribuÃ­do</option>
+                  <option value="">Sem player atribuído</option>
                 </select>
               </div>
             </div>
@@ -1645,7 +1645,7 @@
                 id="formDeckList"
                 class="form-textarea"
                 rows="18"
-                placeholder="Cole aqui a lista exportada do PTCGL:PokÃ©mon: 124 Zoroark ex sv5 1592 Zorua sv5 103...Treinador: 364 Arven sv5 186...Energia: 124 Energia PsÃ­quica bÃ¡sica SVE 5...Total de cartas: 60"
+                placeholder="Cole aqui a lista exportada do PTCGL:Pokémon: 124 Zoroark ex sv5 1592 Zorua sv5 103...Treinador: 364 Arven sv5 186...Energia: 124 Energia Psíquica básica SVE 5...Total de cartas: 60"
               ></textarea>
             </div>
           </div>
@@ -1653,7 +1653,7 @@
             <button class="cancel-btn" data-close-modal="modalDeckForm">
               Cancelar
             </button>
-            <button class="save-btn" id="btnSaveDeck">ðŸ’¾ Salvar Deck</button>
+            <button class="save-btn" id="btnSaveDeck">💾 Salvar Deck</button>
           </div>
         </div>
       </div>
@@ -1689,7 +1689,7 @@
                   border-radius: var(--radius-sm);
                   cursor: pointer;
                 "
-                title="Copiar lista em formato PokÃ©mon TCG Live"
+                title="Copiar lista em formato Pokémon TCG Live"
               >
                 <svg
                   width="14"
@@ -1723,7 +1723,7 @@
                 id="btnEditDeckListFromModal"
                 style="font-size: 0.75rem; padding: 4px 10px"
               >
-                âœï¸ Editar / Importar Lista
+                ✏️ Editar / Importar Lista
               </button>
               <span id="deckListCount" class="deck-list-count"></span>
             </div>
@@ -1733,7 +1733,7 @@
               type="search"
               id="deckListSearch"
               class="table-search"
-              placeholder="Buscar cartaâ€¦"
+              placeholder="Buscar carta…"
               style="width: 100%; margin-bottom: 1rem"
             />
             <div id="deckListBody" class="deck-list-body"></div>
@@ -1744,14 +1744,14 @@
               data-close-modal="modalDeckList"
               style="width: 100%; text-align: center"
             >
-              âœ• Fechar Lista
+              ✕ Fechar Lista
             </button>
           </div>
         </div>
       </div>
       <div class="modal-overlay" id="modalMatchForm">
         <div class="modal modal-wide">
-          <div class="modal-header"><h3>âš”ï¸ Registrar Partida</h3></div>
+          <div class="modal-header"><h3>⚔️ Registrar Partida</h3></div>
           <div class="modal-body">
             <div class="form-row three-col">
               <div class="form-group">
@@ -1761,7 +1761,7 @@
               <div class="form-group">
                 <label class="form-label">Player *</label>
                 <select id="formMatchPlayer" class="form-input">
-                  <option value="">Selecioneâ€¦</option>
+                  <option value="">Selecione…</option>
                 </select>
               </div>
               <div class="form-group">
@@ -1772,7 +1772,7 @@
                     align-items: center;
                   "
                 >
-                  <label class="form-label">Meu Deck (ArquÃ©tipo)</label>
+                  <label class="form-label">Meu Deck (Arquétipo)</label>
                   <button
                     type="button"
                     class="btn-add-deck"
@@ -1799,7 +1799,7 @@
             <div class="form-row two-col">
               <div class="form-group">
                 <label class="form-label"
-                  >AdversÃ¡rio / Treinador Oponente</label
+                  >Adversário / Treinador Oponente</label
                 >
                 <input
                   list="playerOptionsAdv"
@@ -1819,7 +1819,7 @@
                   "
                 >
                   <label class="form-label"
-                    >Deck do AdversÃ¡rio (ArquÃ©tipo)</label
+                    >Deck do Adversário (Arquétipo)</label
                   >
                   <button
                     type="button"
@@ -1831,7 +1831,7 @@
                   </button>
                 </div>
                 <select id="formMatchDeckAdv" class="form-input">
-                  <option value="">Selecioneâ€¦</option>
+                  <option value="">Selecione…</option>
                 </select>
                 <input
                   list="subtipoOptionsAdv"
@@ -1855,16 +1855,16 @@
               <div class="form-group">
                 <label class="form-label">Start</label>
                 <select id="formMatchStart" class="form-input">
-                  <option value="1Âº">1Âº</option>
-                  <option value="2Âº">2Âº</option>
+                  <option value="1º">1º</option>
+                  <option value="2º">2º</option>
                 </select>
               </div>
               <div class="form-group">
                 <label class="form-label">Resultado</label>
                 <select id="formMatchResultado" class="form-input">
-                  <option value="VitÃ³ria">âœ… VitÃ³ria</option>
-                  <option value="Empate">ðŸ¤ Empate</option>
-                  <option value="Derrota">âŒ Derrota</option>
+                  <option value="Vitória">✅ Vitória</option>
+                  <option value="Empate">🤝 Empate</option>
+                  <option value="Derrota">❌ Derrota</option>
                 </select>
               </div>
               <div class="form-group">
@@ -1882,10 +1882,10 @@
                   <button
                     type="button"
                     class="brick-toggle active"
-                    data-value="NÃ£o"
+                    data-value="Não"
                     id="brickNo"
                   >
-                    âœ… NÃ£o
+                    ✅ Não
                   </button>
                   <button
                     type="button"
@@ -1893,10 +1893,10 @@
                     data-value="Sim"
                     id="brickYes"
                   >
-                    ðŸ’¥ Sim
+                    💥 Sim
                   </button>
                 </div>
-                <input type="hidden" id="formMatchBrick" value="NÃ£o" />
+                <input type="hidden" id="formMatchBrick" value="Não" />
               </div>
               <div class="form-group" id="singleMatchBrickOpGroup">
                 <label class="form-label">Oponente brickou?</label>
@@ -1904,10 +1904,10 @@
                   <button
                     type="button"
                     class="brick-toggle active"
-                    data-value="NÃ£o"
+                    data-value="Não"
                     id="brickOpNo"
                   >
-                    âœ… NÃ£o
+                    ✅ Não
                   </button>
                   <button
                     type="button"
@@ -1915,10 +1915,10 @@
                     data-value="Sim"
                     id="brickOpYes"
                   >
-                    ðŸ’¥ Sim
+                    💥 Sim
                   </button>
                 </div>
-                <input type="hidden" id="formMatchBrickOp" value="NÃ£o" />
+                <input type="hidden" id="formMatchBrickOp" value="Não" />
               </div>
               <div class="form-group">
                 <label class="form-label">Confiabilidade *</label>
@@ -1929,7 +1929,7 @@
                     data-value="Alta"
                     id="confAltaBtn"
                   >
-                    ðŸŸ¢ Alta
+                    🟢 Alta
                   </button>
                   <button
                     type="button"
@@ -1937,7 +1937,7 @@
                     data-value="Baixa"
                     id="confBaixaBtn"
                   >
-                    ðŸ”´ Baixa
+                    🔴 Baixa
                   </button>
                 </div>
                 <input
@@ -1977,7 +1977,7 @@
                     gap: 0.4rem;
                   "
                 >
-                  ðŸŽ® Detalhamento dos Games da MD3
+                  🎮 Detalhamento dos Games da MD3
                 </h4>
                 <span
                   style="font-size: 0.75rem; color: var(--text2)"
@@ -1992,16 +1992,16 @@
             </div>
             <div class="form-row two-col">
               <div class="form-group">
-                <label class="form-label">ColeÃ§Ã£o *</label>
+                <label class="form-label">Coleção *</label>
                 <select id="formMatchColecao" class="form-input">
-                  <option value="">Selecioneâ€¦</option>
+                  <option value="">Selecione…</option>
                 </select>
               </div>
               <div class="form-group">
                 <label class="form-label">Local</label>
                 <select id="formMatchLocal" class="form-input">
-                  <option value="">Selecioneâ€¦</option>
-                  <option value="__outro__">Outroâ€¦</option>
+                  <option value="">Selecione…</option>
+                  <option value="__outro__">Outro…</option>
                 </select>
               </div>
             </div>
@@ -2011,7 +2011,7 @@
                 type="text"
                 id="formMatchLocalCustom"
                 class="form-input"
-                placeholder="Digite o localâ€¦"
+                placeholder="Digite o local…"
                 style="display: none"
               />
             </div>
@@ -2019,7 +2019,7 @@
               <div class="form-group">
                 <div class="list-label-row">
                   <label class="form-label"
-                    >ðŸ“œ Lista do Meu Deck (Opcional)</label
+                    >📜 Lista do Meu Deck (Opcional)</label
                   >
                   <span class="card-counter under" id="formMatchDeckOwnCounter"
                     >0/60</span
@@ -2029,13 +2029,13 @@
                   id="formMatchDeckOwnList"
                   class="form-textarea"
                   rows="3"
-                  placeholder="Opcional: Cole o export PTCGL do seu deckâ€¦"
+                  placeholder="Opcional: Cole o export PTCGL do seu deck…"
                 ></textarea>
               </div>
               <div class="form-group">
                 <div class="list-label-row">
                   <label class="form-label"
-                    >ðŸ“œ Lista do Deck Oponente (Opcional)</label
+                    >📜 Lista do Deck Oponente (Opcional)</label
                   >
                   <span class="card-counter under" id="formMatchDeckAdvCounter"
                     >0/60</span
@@ -2045,17 +2045,17 @@
                   id="formMatchDeckAdvList"
                   class="form-textarea"
                   rows="3"
-                  placeholder="Opcional: Cole o export PTCGL do deck do oponenteâ€¦"
+                  placeholder="Opcional: Cole o export PTCGL do deck do oponente…"
                 ></textarea>
               </div>
             </div>
             <div class="form-group">
-              <label class="form-label">ComentÃ¡rios</label>
+              <label class="form-label">Comentários</label>
               <textarea
                 id="formMatchComentarios"
                 class="form-textarea"
                 rows="3"
-                placeholder="ObservaÃ§Ãµes sobre a partidaâ€¦"
+                placeholder="Observações sobre a partida…"
               ></textarea>
             </div>
           </div>
@@ -2064,7 +2064,7 @@
               Cancelar
             </button>
             <button class="save-btn" id="btnSaveMatch">
-              âš”ï¸ Salvar Partida
+              ⚔️ Salvar Partida
             </button>
           </div>
         </div>
@@ -2074,7 +2074,7 @@
           class="modal"
           style="max-width: 480px; max-height: 85vh; max-height: 85dvh"
         >
-          <div class="modal-header"><h3>ðŸ’¬ ComentÃ¡rio da Partida</h3></div>
+          <div class="modal-header"><h3>💬 Comentário da Partida</h3></div>
           <div class="modal-body" style="padding: 1.25rem; overflow-y: auto">
             <div
               id="commentMatchInfo"
@@ -2109,7 +2109,7 @@
               data-close-modal="modalViewComment"
               style="width: 100%; text-align: center; font-weight: 600"
             >
-              âœ• Fechar ComentÃ¡rio
+              ✕ Fechar Comentário
             </button>
           </div>
         </div>
@@ -2117,23 +2117,23 @@
       <div class="modal-overlay" id="modalUnifyArchetypes">
         <div class="modal modal-wide">
           <div class="modal-header">
-            <h3>ðŸ”— Unificar ArquÃ©tipos em Lote</h3>
+            <h3>🔗 Unificar Arquétipos em Lote</h3>
           </div>
           <div class="modal-body">
             <p class="modal-sub" style="margin-bottom: 1rem">
               Selecione o deck/variante que deseja unificar e escolha o
-              arquÃ©tipo principal para onde todas as estatÃ­sticas histÃ³ricas
+              arquétipo principal para onde todas as estatísticas históricas
               devem ser associadas.
             </p>
             <div class="form-row two-col" style="margin-bottom: 1rem">
               <div class="form-group">
                 <label class="form-label">Deck / Variante Atual *</label>
                 <select id="unifyFromDeckSelect" class="form-input">
-                  <option value="">Selecione o deck para unificarâ€¦</option>
+                  <option value="">Selecione o deck para unificar…</option>
                 </select>
               </div>
               <div class="form-group">
-                <label class="form-label">ArquÃ©tipo Principal Alvo *</label>
+                <label class="form-label">Arquétipo Principal Alvo *</label>
                 <input
                   type="text"
                   id="unifyTargetArchetypeInput"
@@ -2152,10 +2152,10 @@
                 color: var(--text2);
               "
             >
-              ðŸ’¡ <strong>Como funciona:</strong> Todas as partidas registradas
-              no histÃ³rico que usavam esse deck passarÃ£o a agrupar sob o
-              arquÃ©tipo principal nos grÃ¡ficos, matriz de matchups e
-              estatÃ­sticas gerais.
+              💡 <strong>Como funciona:</strong> Todas as partidas registradas
+              no histórico que usavam esse deck passarão a agrupar sob o
+              arquétipo principal nos gráficos, matriz de matchups e
+              estatísticas gerais.
             </div>
           </div>
           <div class="modal-footer">
@@ -2167,7 +2167,7 @@
               id="btnSubmitUnifyArchetypes"
               onclick="submitUnifyArchetypes()"
             >
-              ðŸ”— Unificar em Lote
+              🔗 Unificar em Lote
             </button>
           </div>
         </div>
@@ -2188,13 +2188,13 @@
             </div>
             <p class="footer-desc">
               Plataforma competitiva de alta performance para tracking e
-              anÃ¡lises de PokÃ©mon TCG.
+              análises de Pokémon TCG.
             </p>
           </div>
           <div class="footer-links">
             <h4>Menu</h4>
             <ul>
-              <li><a href="#" onclick="window.scrollTo(0, 0)">InÃ­cio</a></li>
+              <li><a href="#" onclick="window.scrollTo(0, 0)">Início</a></li>
               <li>
                 <a
                   href="#"
@@ -2206,7 +2206,7 @@
                       .getElementById('panelOverlay')
                       .classList.add('active');
                   "
-                  >AdministraÃ§Ã£o</a
+                  >Administração</a
                 >
               </li>
             </ul>
@@ -2235,9 +2235,9 @@
             class="modal-title"
             style="font-size: 1.1rem; color: var(--accent2)"
           >
-            âš¡ Acesso do Time
+            ⚡ Acesso do Time
           </h2>
-          <button class="modal-close" data-close-modal="modalAuth">âœ•</button>
+          <button class="modal-close" data-close-modal="modalAuth">✕</button>
         </div>
         <div class="modal-body" style="padding: 1.2rem">
           <div
@@ -2254,7 +2254,7 @@
               style="flex: 1; text-align: center"
               onclick="switchAuthTab('login')"
             >
-              ðŸ”‘ Entrar
+              🔑 Entrar
             </button>
             <button
               id="tabAuthRegister"
@@ -2262,7 +2262,7 @@
               style="flex: 1; text-align: center"
               onclick="switchAuthTab('register')"
             >
-              ðŸ“ Cadastrar-se
+              📝 Cadastrar-se
             </button>
           </div>
           <div
@@ -2285,7 +2285,7 @@
                   type="password"
                   id="authLoginPassword"
                   class="form-input"
-                  placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                  placeholder="••••••••"
                 />
                 <button
                   type="button"
@@ -2293,7 +2293,7 @@
                   onclick="togglePasswordVisibility('authLoginPassword', this)"
                   title="Mostrar / Ocultar Senha"
                 >
-                  ðŸ‘ï¸
+                  👁️
                 </button>
               </div>
             </div>
@@ -2302,7 +2302,7 @@
               style="width: 100%; margin-top: 0.5rem; justify-content: center"
               onclick="submitUserLogin()"
             >
-              âš¡ Entrar no Painel
+              ⚡ Entrar no Painel
             </button>
           </div>
           <div
@@ -2329,7 +2329,7 @@
                   type="password"
                   id="authRegPassword"
                   class="form-input"
-                  placeholder="MÃ­nimo 6 caracteres"
+                  placeholder="Mínimo 6 caracteres"
                   oninput="checkPasswordMatch('auth')"
                 />
                 <button
@@ -2338,7 +2338,7 @@
                   onclick="togglePasswordVisibility('authRegPassword', this)"
                   title="Mostrar / Ocultar Senha"
                 >
-                  ðŸ‘ï¸
+                  👁️
                 </button>
               </div>
             </div>
@@ -2358,7 +2358,7 @@
                   onclick="togglePasswordVisibility('authRegConfirm', this)"
                   title="Mostrar / Ocultar Senha"
                 >
-                  ðŸ‘ï¸
+                  👁️
                 </button>
               </div>
               <div id="authPasswordMatchHint" class="password-match-hint"></div>
@@ -2368,13 +2368,13 @@
               style="width: 100%; margin-top: 0.5rem; justify-content: center"
               onclick="submitUserRegister()"
             >
-              ðŸ“ Finalizar Cadastro
+              📝 Finalizar Cadastro
             </button>
           </div>
         </div>
       </div>
     </div>
-    <script src="dist/app.min.js?v=1.2.0"></script>
+    <script src="dist/app.min.js?v=1.2.1"></script>
     <script>
       // Mobile Hamburger Menu Toggle
       const mobileBtn = document.getElementById('mobileMenuBtn');
@@ -2404,12 +2404,11 @@
       <div class="version-reload-spinner">
         <i class="fas fa-sync-alt"></i>
       </div>
-      <div class="version-reload-text">Nova versÃ£o detectada!</div>
+      <div class="version-reload-text">Nova versão detectada!</div>
       <div class="version-reload-sub">Atualizando o painel para sincronizar seus dados...</div>
     </div>
-    <div class="app-version-footer">v<span id="appVersion">1.2.0</span></div>
+    <div class="app-version-footer">v<span id="appVersion">1.2.1</span></div>
   </body>
-
 
 
 
