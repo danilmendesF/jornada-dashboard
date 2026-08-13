@@ -737,9 +737,9 @@ function fillSelect(id, values) {
 
 // ── 6. FILTER LOGIC ──────────────────────────────────────────────────────────
 function getDateFilters() {
-  const pPeriod = document.getElementById('filterPeriod')?.value || 'all';
-  let dStart = document.getElementById('filterDateStart')?.value || '';
-  let dEnd   = document.getElementById('filterDateEnd')?.value || '';
+  const pPeriod = window.customDatePickerState ? window.customDatePickerState.period : 'all';
+  let dStart = window.customDatePickerState ? window.customDatePickerState.start : '';
+  let dEnd   = window.customDatePickerState ? window.customDatePickerState.end : '';
 
   if (pPeriod !== 'custom' && pPeriod !== 'all') {
     const today = new Date();
@@ -2417,13 +2417,15 @@ window.resetAllFilters = function() {
     }
   });
 
-  const periodEl = document.getElementById('filterPeriod');
-  if (periodEl) {
-    periodEl.value = 'all';
-    if (periodEl.syncSearchableSelect) periodEl.syncSearchableSelect();
+  if (window.customDatePickerState) {
+    window.customDatePickerState.period = 'all';
+    window.customDatePickerState.start = '';
+    window.customDatePickerState.end = '';
+    const label = document.getElementById('customDateLabel');
+    if (label) label.textContent = 'Todo o Período';
+    const clearBtn = document.getElementById('customDateClear');
+    if (clearBtn) clearBtn.style.display = 'none';
   }
-  const customWrap = document.getElementById('customDateWrap');
-  if (customWrap) customWrap.style.display = 'none';
 
   const colEl = document.getElementById('filterColecao');
   if (colEl) {
@@ -2512,6 +2514,9 @@ window.addEventListener('DOMContentLoaded', () => {
 // =========================================================================
 // CUSTOM DATE RANGE PICKER
 // =========================================================================
+// =========================================================================
+// CUSTOM DATE RANGE PICKER
+// =========================================================================
 window.customDatePickerState = {
   period: 'all',
   start: '',
@@ -2545,36 +2550,52 @@ function initCustomDatePicker() {
   let tempStart = null;
   let tempEnd = null;
 
-  // Toggle Dropdown
-  trigger.addEventListener('click', (e) => {
+  // Toggle Dropdown (mousedown to avoid blur issues)
+  trigger.addEventListener('mousedown', (e) => {
+    e.preventDefault();
     if (e.target.closest('#customDateClear')) return;
     
     const isShowing = dropdown.style.display === 'flex';
     // Close other dropdowns
-    document.querySelectorAll('.searchable-select-wrap.active').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.searchable-select-wrap.open').forEach(el => {
+      el.classList.remove('open');
+      const drop = el.querySelector('.searchable-select-dropdown');
+      if (drop) drop.style.display = 'none';
+    });
     document.getElementById('userDropdownMenu')?.classList.remove('show-dropdown');
     document.getElementById('mobileMenu')?.classList.remove('active');
     
     if (!isShowing) {
       dropdown.style.display = 'flex';
+      wrap.classList.add('open');
       showPresetsView();
     } else {
       dropdown.style.display = 'none';
+      wrap.classList.remove('open');
     }
   });
 
   // Clear button
-  clearBtn.addEventListener('click', (e) => {
+  clearBtn.addEventListener('mousedown', (e) => {
+    e.preventDefault();
     e.stopPropagation();
     setPeriod('all');
+    dropdown.style.display = 'none';
+    wrap.classList.remove('open');
     applyFilters();
   });
 
-  // Click outside to close
-  document.addEventListener('click', (e) => {
+  // Click outside to close (mousedown is safer for dynamically rebuilt DOM)
+  document.addEventListener('mousedown', (e) => {
     if (!wrap.contains(e.target)) {
       dropdown.style.display = 'none';
+      wrap.classList.remove('open');
     }
+  });
+
+  // Prevent dropdown closing when clicking inside
+  dropdown.addEventListener('mousedown', (e) => {
+    e.stopPropagation();
   });
 
   // PRESETS VIEW
@@ -2587,6 +2608,7 @@ function initCustomDatePicker() {
       } else {
         setPeriod(val);
         dropdown.style.display = 'none';
+        wrap.classList.remove('open');
         applyFilters();
       }
     });
@@ -2608,13 +2630,19 @@ function initCustomDatePicker() {
   });
 
   applyBtn.addEventListener('click', () => {
-    if (tempStart && tempEnd) {
+    if (tempStart) {
+      if (!tempEnd) tempEnd = tempStart; // Single date selection fallback
       window.customDatePickerState.period = 'custom';
       window.customDatePickerState.start = formatDateStr(tempStart);
       window.customDatePickerState.end = formatDateStr(tempEnd);
-      label.textContent = `${formatDateBr(tempStart)} - ${formatDateBr(tempEnd)}`;
+      
+      label.textContent = tempStart.getTime() === tempEnd.getTime() 
+        ? formatDateBr(tempStart) 
+        : `${formatDateBr(tempStart)} - ${formatDateBr(tempEnd)}`;
+        
       clearBtn.style.display = 'block';
       dropdown.style.display = 'none';
+      wrap.classList.remove('open');
       applyFilters();
     }
   });
@@ -2710,7 +2738,9 @@ function initCustomDatePicker() {
           cell.classList.add('in-range');
         }
         
-        cell.addEventListener('click', () => {
+        // Use mousedown instead of click to prevent issues with detached DOM nodes
+        cell.addEventListener('mousedown', (e) => {
+          e.preventDefault(); // Prevent text selection
           if (!tempStart || (tempStart && tempEnd)) {
             tempStart = cellDate;
             tempEnd = null;
@@ -2748,4 +2778,3 @@ function initCustomDatePicker() {
 document.addEventListener('DOMContentLoaded', () => {
   initCustomDatePicker();
 });
-

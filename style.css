@@ -2520,20 +2520,19 @@ html.auth-session-active #appDashboardContainer {
 
 .custom-date-trigger {
   width: 100%;
+  padding: 0.4rem 0.75rem;
+  background: var(--bg3);
+  border: 1px solid var(--glass-bd);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.84rem;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  text-align: left;
-  cursor: pointer;
-  background: var(--bg3);
-  border: 1px solid var(--glass-bd);
-  color: var(--text);
-  padding: 0.65rem 1rem;
-  border-radius: var(--radius-sm);
-  font-family: inherit;
-  font-size: 0.85rem;
-  font-weight: 500;
-  transition: var(--transition-smooth);
 }
 
 .custom-date-trigger:hover,
@@ -2750,3 +2749,4 @@ html.auth-session-active #appDashboardContainer {
 .cal-apply-btn:hover {
   background: var(--accent-hover);
 }
+
