@@ -17,7 +17,7 @@
       rel="stylesheet"
     />
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <link rel="stylesheet" href="dist/style.min.css?v=1.0.60" />
+    <link rel="stylesheet" href="dist/style.min.css?v=1.0.61" />
     <script>
       (function () {
         try {
@@ -212,7 +212,7 @@
               font-family: &quot;Outfit&quot;, sans-serif;
             "
           >
-            v<span id="appVersionAuth">1.0.60</span>
+            v<span id="appVersionAuth">1.0.61</span>
           </div>
         </div>
       </div>
@@ -354,22 +354,35 @@
             <select id="filterColecao" class="filter-select"></select>
           </div>
           <div class="filter-group">
-            <label class="filter-label">Data Início</label>
-            <input
-              type="date"
-              id="filterDateStart"
-              class="filter-select"
-              style="min-width: 135px"
-            />
+            <label class="filter-label">Período</label>
+            <select id="filterPeriod" class="filter-select">
+              <option value="all">Todo o Período</option>
+              <option value="today">Hoje</option>
+              <option value="yesterday">Ontem</option>
+              <option value="week">Últimos 7 dias</option>
+              <option value="month">Este Mês</option>
+              <option value="custom">Personalizado...</option>
+            </select>
           </div>
-          <div class="filter-group">
-            <label class="filter-label">Data Fim</label>
-            <input
-              type="date"
-              id="filterDateEnd"
-              class="filter-select"
-              style="min-width: 135px"
-            />
+          <div class="filter-group" id="customDateWrap" style="display: none; align-items: center; gap: 0.5rem; flex-direction: row;">
+            <div>
+              <label class="filter-label">Data Início</label>
+              <input
+                type="date"
+                id="filterDateStart"
+                class="filter-select"
+                style="min-width: 135px"
+              />
+            </div>
+            <div>
+              <label class="filter-label">Data Fim</label>
+              <input
+                type="date"
+                id="filterDateEnd"
+                class="filter-select"
+                style="min-width: 135px"
+              />
+            </div>
           </div>
           <div class="filter-group">
             <label class="filter-label">Confiabilidade</label>
@@ -2355,7 +2368,7 @@
         </div>
       </div>
     </div>
-    <script src="dist/app.min.js?v=1.0.60"></script>
+    <script src="dist/app.min.js?v=1.0.61"></script>
     <script>
       // Mobile Hamburger Menu Toggle
       const mobileBtn = document.getElementById('mobileMenuBtn');
@@ -2381,6 +2394,6 @@
         });
       }
     </script>
-    <div class="app-version-footer">v<span id="appVersion">1.0.60</span></div>
+    <div class="app-version-footer">v<span id="appVersion">1.0.61</span></div>
   </body>
 </html>

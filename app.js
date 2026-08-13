@@ -696,11 +696,27 @@ function populateFilters() {
   populateMatchupDeckSelects();
   initAllSearchableSelects();
 
-  ['filterFormato', 'filterLocal', 'filterColecao', 'filterDateStart', 'filterDateEnd'].forEach(id => {
+  const d = new Date();
+  const pad = (n) => String(n).padStart(2, '0');
+  const localToday = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+  const fStart = document.getElementById('filterDateStart');
+  const fEnd = document.getElementById('filterDateEnd');
+  if (fStart) fStart.max = localToday;
+  if (fEnd) fEnd.max = localToday;
+
+  ['filterFormato', 'filterLocal', 'filterColecao', 'filterPeriod', 'filterDateStart', 'filterDateEnd'].forEach(id => {
     const el = document.getElementById(id);
     if (el && !el.dataset.filterHandler) {
       el.dataset.filterHandler = "true";
-      el.addEventListener('change', applyFilters);
+      el.addEventListener('change', (e) => {
+        if (e.target.id === 'filterPeriod') {
+          const customWrap = document.getElementById('customDateWrap');
+          if (customWrap) {
+            customWrap.style.display = e.target.value === 'custom' ? 'flex' : 'none';
+          }
+        }
+        applyFilters();
+      });
     }
   });
 }
@@ -720,12 +736,47 @@ function fillSelect(id, values) {
 }
 
 // ── 6. FILTER LOGIC ──────────────────────────────────────────────────────────
+function getDateFilters() {
+  const pPeriod = document.getElementById('filterPeriod')?.value || 'all';
+  let dStart = document.getElementById('filterDateStart')?.value || '';
+  let dEnd   = document.getElementById('filterDateEnd')?.value || '';
+
+  if (pPeriod !== 'custom' && pPeriod !== 'all') {
+    const today = new Date();
+    const pad = (n) => String(n).padStart(2, '0');
+    const format = (d) => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+    
+    if (pPeriod === 'today') {
+      dStart = format(today);
+      dEnd = dStart;
+    } else if (pPeriod === 'yesterday') {
+      const y = new Date(today);
+      y.setDate(y.getDate() - 1);
+      dStart = format(y);
+      dEnd = dStart;
+    } else if (pPeriod === 'week') {
+      const w = new Date(today);
+      w.setDate(w.getDate() - 7);
+      dStart = format(w);
+      dEnd = format(today);
+    } else if (pPeriod === 'month') {
+      const m = new Date(today);
+      m.setDate(1);
+      dStart = format(m);
+      dEnd = format(today);
+    }
+  } else if (pPeriod === 'all') {
+    dStart = '';
+    dEnd = '';
+  }
+  return { dStart, dEnd };
+}
+
 function applyFilters() {
   const formato   = (document.getElementById('filterFormato')?.value || '').trim().toLowerCase();
   const local     = (document.getElementById('filterLocal')?.value || '').trim().toLowerCase();
   const colecao   = (document.getElementById('filterColecao')?.value || '').trim().toLowerCase();
-  const dateStart = document.getElementById('filterDateStart')?.value || '';
-  const dateEnd   = document.getElementById('filterDateEnd')?.value || '';
+  const { dStart: dateStart, dEnd: dateEnd } = getDateFilters();
   const confAltaChecked  = document.getElementById('filterConfAlta')?.checked ?? true;
   const confBaixaChecked = document.getElementById('filterConfBaixa')?.checked ?? true;
 
@@ -1683,8 +1734,7 @@ function getMatchupBaseDataset() {
   const formato   = (document.getElementById('filterFormato')?.value || '').trim().toLowerCase();
   const local     = (document.getElementById('filterLocal')?.value || '').trim().toLowerCase();
   const colecao   = (document.getElementById('filterColecao')?.value || '').trim().toLowerCase();
-  const dateStart = document.getElementById('filterDateStart')?.value || '';
-  const dateEnd   = document.getElementById('filterDateEnd')?.value || '';
+  const { dStart: dateStart, dEnd: dateEnd } = getDateFilters();
   const confAltaChecked  = document.getElementById('filterConfAlta')?.checked ?? true;
   const confBaixaChecked = document.getElementById('filterConfBaixa')?.checked ?? true;
 
@@ -2366,6 +2416,14 @@ window.resetAllFilters = function() {
       if (el.syncSearchableSelect) el.syncSearchableSelect();
     }
   });
+
+  const periodEl = document.getElementById('filterPeriod');
+  if (periodEl) {
+    periodEl.value = 'all';
+    if (periodEl.syncSearchableSelect) periodEl.syncSearchableSelect();
+  }
+  const customWrap = document.getElementById('customDateWrap');
+  if (customWrap) customWrap.style.display = 'none';
 
   const colEl = document.getElementById('filterColecao');
   if (colEl) {
