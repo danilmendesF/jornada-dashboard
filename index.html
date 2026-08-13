@@ -17,7 +17,7 @@
       rel="stylesheet"
     />
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <link rel="stylesheet" href="dist/style.min.css?v=1.0.66" />
+    <link rel="stylesheet" href="dist/style.min.css?v=1.0.67" />
     <script>
       (function () {
         try {
@@ -212,7 +212,7 @@
               font-family: &quot;Outfit&quot;, sans-serif;
             "
           >
-            v<span id="appVersionAuth">1.0.66</span>
+            v<span id="appVersionAuth">1.0.67</span>
           </div>
         </div>
       </div>
@@ -359,7 +359,6 @@
               <!-- Trigger Button -->
               <button class="filter-select custom-date-trigger" id="customDateTrigger">
                 <div style="display: flex; align-items: center; gap: 0.5rem;">
-                  <i class="fas fa-calendar-alt" style="color: var(--text-muted)"></i>
                   <span id="customDateLabel">Todo o Período</span>
                 </div>
                 <div style="display: flex; align-items: center; gap: 0.5rem;">
@@ -430,13 +429,13 @@
                   <span class="multi-deck-arrow">&#9660;</span>
                 </button>
                 <div class="multi-deck-dropdown" id="multiConfDropdown" style="display: none; flex-direction: column;">
-                  <label class="multi-deck-option">
+                  <label class="multi-deck-item">
                     <input type="checkbox" id="filterConfAlta" class="multi-conf-cb" checked /> 
-                    <span>Alta</span>
+                    <i class="fas fa-check-circle" style="color: var(--green); margin-right: 4px;"></i> <span>Alta</span>
                   </label>
-                  <label class="multi-deck-option">
+                  <label class="multi-deck-item">
                     <input type="checkbox" id="filterConfBaixa" class="multi-conf-cb" checked /> 
-                    <span>Baixa</span>
+                    <i class="fas fa-times-circle" style="color: var(--red); margin-right: 4px;"></i> <span>Baixa</span>
                   </label>
                 </div>
               </div>
@@ -2367,7 +2366,7 @@
         </div>
       </div>
     </div>
-    <script src="dist/app.min.js?v=1.0.66"></script>
+    <script src="dist/app.min.js?v=1.0.67"></script>
     <script>
       // Mobile Hamburger Menu Toggle
       const mobileBtn = document.getElementById('mobileMenuBtn');
@@ -2393,9 +2392,10 @@
         });
       }
     </script>
-    <div class="app-version-footer">v<span id="appVersion">1.0.66</span></div>
+    <div class="app-version-footer">v<span id="appVersion">1.0.67</span></div>
   </body>
 </html>
+
 
 
 
