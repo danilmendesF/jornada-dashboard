@@ -790,30 +790,31 @@ function renderActiveFilters() {
     pills.push({ label: '<b>Local:</b> ' + localEl.value, remove: () => { localEl.value = ''; if(localEl.syncSearchableSelect) localEl.syncSearchableSelect(); } });
   }
 
-  // Cole��o
+  // Coleção
   const colecaoEl = document.getElementById('filterColecao');
   if (colecaoEl && colecaoEl.value) {
-    pills.push({ label: '<b>Cole��o:</b> ' + colecaoEl.value, remove: () => { colecaoEl.value = ''; if(colecaoEl.syncSearchableSelect) colecaoEl.syncSearchableSelect(); } });
+    pills.push({ label: '<b>Coleção:</b> ' + colecaoEl.value, remove: () => { colecaoEl.value = ''; if(colecaoEl.syncSearchableSelect) colecaoEl.syncSearchableSelect(); } });
   }
 
-  // Data de Cria��o
+  // Data de Criação
   const { dStart, dEnd } = typeof getDateFilters === 'function' ? getDateFilters() : {dStart:'',dEnd:''};
   if (dStart || dEnd) {
     let dateStr = '';
-    const presetLabel = document.querySelector('.date-preset-option.selected')?.textContent;
-    if (presetLabel && presetLabel !== 'Todo o Per�odo' && presetLabel !== 'Personalizado...') {
-      dateStr = presetLabel;
+    const customDateLabel = document.getElementById('customDateLabel');
+    if (customDateLabel && customDateLabel.textContent !== 'Todo o Período' && customDateLabel.textContent !== 'Personalizado...') {
+      dateStr = customDateLabel.textContent;
     } else {
-      dateStr = (dStart ? dStart.split('-').reverse().join('/') : 'In�cio') + ' - ' + (dEnd ? dEnd.split('-').reverse().join('/') : 'Fim');
+      dateStr = (dStart ? dStart.split('-').reverse().join('/') : 'Início') + ' - ' + (dEnd ? dEnd.split('-').reverse().join('/') : 'Fim');
     }
     pills.push({ 
       label: '<b>Data:</b> ' + dateStr, 
       remove: () => { 
-        document.querySelectorAll('.date-preset-option').forEach(el => el.classList.remove('selected'));
-        const allOpt = document.querySelector('.date-preset-option[data-value="all"]');
-        if(allOpt) allOpt.classList.add('selected');
-        const customDateLabel = document.getElementById('customDateLabel');
-        if(customDateLabel) customDateLabel.textContent = 'Todo o Per�odo';
+        if (typeof window.customDatePickerState !== 'undefined') {
+          window.customDatePickerState.period = 'all';
+          window.customDatePickerState.start = '';
+          window.customDatePickerState.end = '';
+        }
+        if (customDateLabel) customDateLabel.textContent = 'Todo o Período';
         const calStart = document.getElementById('calInputStart');
         const calEnd = document.getElementById('calInputEnd');
         if(calStart) calStart.value = '';
