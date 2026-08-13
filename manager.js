@@ -3008,7 +3008,9 @@ window.executeForcedLogout = function() {
   const overlay = document.getElementById('versionReloadOverlay');
   if (overlay) overlay.classList.add('show');
   
-  // Força logout removendo os tokens vitais
+  // Força logout removendo os tokens vitais de autenticação do usuário
+  localStorage.removeItem('jornada_auth_token');
+  localStorage.removeItem('jornada_user_profile');
   localStorage.removeItem('jornada_sync_token');
   localStorage.removeItem(KEY_ADMIN_PIN);
   sessionStorage.removeItem('jornada_admin_unlocked');
