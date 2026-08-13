@@ -17,7 +17,7 @@
       rel="stylesheet"
     />
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <link rel="stylesheet" href="dist/style.min.css?v=1.0.61" />
+    <link rel="stylesheet" href="dist/style.min.css?v=1.0.62" />
     <script>
       (function () {
         try {
@@ -212,7 +212,7 @@
               font-family: &quot;Outfit&quot;, sans-serif;
             "
           >
-            v<span id="appVersionAuth">1.0.61</span>
+            v<span id="appVersionAuth">1.0.62</span>
           </div>
         </div>
       </div>
@@ -354,34 +354,72 @@
             <select id="filterColecao" class="filter-select"></select>
           </div>
           <div class="filter-group">
-            <label class="filter-label">Período</label>
-            <select id="filterPeriod" class="filter-select">
-              <option value="all">Todo o Período</option>
-              <option value="today">Hoje</option>
-              <option value="yesterday">Ontem</option>
-              <option value="week">Últimos 7 dias</option>
-              <option value="month">Este Mês</option>
-              <option value="custom">Personalizado...</option>
-            </select>
-          </div>
-          <div class="filter-group" id="customDateWrap" style="display: none; align-items: center; gap: 0.5rem; flex-direction: row;">
-            <div>
-              <label class="filter-label">Data Início</label>
-              <input
-                type="date"
-                id="filterDateStart"
-                class="filter-select"
-                style="min-width: 135px"
-              />
-            </div>
-            <div>
-              <label class="filter-label">Data Fim</label>
-              <input
-                type="date"
-                id="filterDateEnd"
-                class="filter-select"
-                style="min-width: 135px"
-              />
+            <label class="filter-label">Data de criação</label>
+            <div class="custom-date-picker-wrap" id="customDatePickerWrap">
+              <!-- Trigger Button -->
+              <button class="filter-select custom-date-trigger" id="customDateTrigger">
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                  <i class="fas fa-calendar-alt" style="color: var(--text-muted)"></i>
+                  <span id="customDateLabel">Todo o Período</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                  <i class="fas fa-times clear-date-btn" id="customDateClear" style="display: none; cursor: pointer;"></i>
+                  <i class="fas fa-caret-down"></i>
+                </div>
+              </button>
+              
+              <!-- Dropdown Content -->
+              <div class="custom-date-dropdown" id="customDateDropdown" style="display: none;">
+                
+                <!-- View 1: Presets -->
+                <div class="date-presets-view" id="datePresetsView">
+                  <div class="date-preset-option" data-value="all">Todo o Período</div>
+                  <div class="date-preset-option" data-value="today">Hoje</div>
+                  <div class="date-preset-option" data-value="yesterday">Ontem</div>
+                  <div class="date-preset-option" data-value="week">Últimos 7 dias</div>
+                  <div class="date-preset-option" data-value="month">Este Mês</div>
+                  <div class="date-preset-option" data-value="custom">Personalizado...</div>
+                </div>
+
+                <!-- View 2: Custom Calendar -->
+                <div class="date-calendar-view" id="dateCalendarView" style="display: none;">
+                  <div class="calendar-header-back">
+                    <button id="calendarBackBtn" class="calendar-back-btn">
+                      <i class="fas fa-chevron-left"></i>
+                      <span>Período personalizado</span>
+                    </button>
+                  </div>
+                  
+                  <div class="calendar-inputs-row">
+                    <input type="text" id="calInputStart" class="cal-input" placeholder="DD/MM/YYYY" readonly />
+                    <span class="cal-separator">-</span>
+                    <input type="text" id="calInputEnd" class="cal-input" placeholder="DD/MM/YYYY" readonly />
+                  </div>
+
+                  <div class="calendar-month-header">
+                    <button id="calPrevMonth" class="cal-nav-btn"><i class="fas fa-chevron-left"></i></button>
+                    <span id="calMonthLabel" class="cal-month-label">Agosto 2026</span>
+                    <button id="calNextMonth" class="cal-nav-btn"><i class="fas fa-chevron-right"></i></button>
+                  </div>
+
+                  <div class="calendar-grid">
+                    <div class="cal-day-header">Dom</div>
+                    <div class="cal-day-header">Seg</div>
+                    <div class="cal-day-header">Ter</div>
+                    <div class="cal-day-header">Qua</div>
+                    <div class="cal-day-header">Qui</div>
+                    <div class="cal-day-header">Sex</div>
+                    <div class="cal-day-header">Sab</div>
+                    <!-- Calendar days will be generated via JS -->
+                    <div id="calDaysContainer" class="cal-days-container"></div>
+                  </div>
+
+                  <div class="calendar-footer">
+                    <button id="calApplyBtn" class="cal-apply-btn">Aplicar</button>
+                  </div>
+                </div>
+                
+              </div>
             </div>
           </div>
           <div class="filter-group">
@@ -2368,7 +2406,7 @@
         </div>
       </div>
     </div>
-    <script src="dist/app.min.js?v=1.0.61"></script>
+    <script src="dist/app.min.js?v=1.0.62"></script>
     <script>
       // Mobile Hamburger Menu Toggle
       const mobileBtn = document.getElementById('mobileMenuBtn');
@@ -2394,6 +2432,6 @@
         });
       }
     </script>
-    <div class="app-version-footer">v<span id="appVersion">1.0.61</span></div>
+    <div class="app-version-footer">v<span id="appVersion">1.0.62</span></div>
   </body>
 </html>

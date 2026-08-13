@@ -2507,3 +2507,245 @@ window.addEventListener('DOMContentLoaded', () => {
   renderAll();
 });
 
+
+
+// =========================================================================
+// CUSTOM DATE RANGE PICKER
+// =========================================================================
+window.customDatePickerState = {
+  period: 'all',
+  start: '',
+  end: ''
+};
+
+function initCustomDatePicker() {
+  const wrap = document.getElementById('customDatePickerWrap');
+  if (!wrap) return;
+
+  const trigger = document.getElementById('customDateTrigger');
+  const label = document.getElementById('customDateLabel');
+  const clearBtn = document.getElementById('customDateClear');
+  const dropdown = document.getElementById('customDateDropdown');
+  
+  const presetsView = document.getElementById('datePresetsView');
+  const calendarView = document.getElementById('dateCalendarView');
+  
+  const backBtn = document.getElementById('calendarBackBtn');
+  const applyBtn = document.getElementById('calApplyBtn');
+  
+  const inputStart = document.getElementById('calInputStart');
+  const inputEnd = document.getElementById('calInputEnd');
+  
+  const prevMonth = document.getElementById('calPrevMonth');
+  const nextMonth = document.getElementById('calNextMonth');
+  const monthLabel = document.getElementById('calMonthLabel');
+  const daysContainer = document.getElementById('calDaysContainer');
+
+  let currentViewDate = new Date();
+  let tempStart = null;
+  let tempEnd = null;
+
+  // Toggle Dropdown
+  trigger.addEventListener('click', (e) => {
+    if (e.target.closest('#customDateClear')) return;
+    
+    const isShowing = dropdown.style.display === 'flex';
+    // Close other dropdowns
+    document.querySelectorAll('.searchable-select-wrap.active').forEach(el => el.classList.remove('active'));
+    document.getElementById('userDropdownMenu')?.classList.remove('show-dropdown');
+    document.getElementById('mobileMenu')?.classList.remove('active');
+    
+    if (!isShowing) {
+      dropdown.style.display = 'flex';
+      showPresetsView();
+    } else {
+      dropdown.style.display = 'none';
+    }
+  });
+
+  // Clear button
+  clearBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    setPeriod('all');
+    applyFilters();
+  });
+
+  // Click outside to close
+  document.addEventListener('click', (e) => {
+    if (!wrap.contains(e.target)) {
+      dropdown.style.display = 'none';
+    }
+  });
+
+  // PRESETS VIEW
+  const presetOptions = presetsView.querySelectorAll('.date-preset-option');
+  presetOptions.forEach(opt => {
+    opt.addEventListener('click', () => {
+      const val = opt.dataset.value;
+      if (val === 'custom') {
+        showCalendarView();
+      } else {
+        setPeriod(val);
+        dropdown.style.display = 'none';
+        applyFilters();
+      }
+    });
+  });
+
+  // CALENDAR VIEW
+  backBtn.addEventListener('click', () => {
+    showPresetsView();
+  });
+
+  prevMonth.addEventListener('click', () => {
+    currentViewDate.setMonth(currentViewDate.getMonth() - 1);
+    renderCalendar();
+  });
+
+  nextMonth.addEventListener('click', () => {
+    currentViewDate.setMonth(currentViewDate.getMonth() + 1);
+    renderCalendar();
+  });
+
+  applyBtn.addEventListener('click', () => {
+    if (tempStart && tempEnd) {
+      window.customDatePickerState.period = 'custom';
+      window.customDatePickerState.start = formatDateStr(tempStart);
+      window.customDatePickerState.end = formatDateStr(tempEnd);
+      label.textContent = `${formatDateBr(tempStart)} - ${formatDateBr(tempEnd)}`;
+      clearBtn.style.display = 'block';
+      dropdown.style.display = 'none';
+      applyFilters();
+    }
+  });
+
+  function showPresetsView() {
+    presetsView.style.display = 'flex';
+    calendarView.style.display = 'none';
+    
+    presetOptions.forEach(opt => {
+      opt.classList.toggle('selected', opt.dataset.value === window.customDatePickerState.period);
+    });
+  }
+
+  function showCalendarView() {
+    presetsView.style.display = 'none';
+    calendarView.style.display = 'flex';
+    
+    if (window.customDatePickerState.period === 'custom' && window.customDatePickerState.start) {
+      tempStart = parseDateStr(window.customDatePickerState.start);
+      tempEnd = parseDateStr(window.customDatePickerState.end);
+      currentViewDate = new Date(tempStart);
+    } else {
+      tempStart = null;
+      tempEnd = null;
+      currentViewDate = new Date();
+    }
+    updateCalendarInputs();
+    renderCalendar();
+  }
+
+  function setPeriod(p) {
+    window.customDatePickerState.period = p;
+    window.customDatePickerState.start = '';
+    window.customDatePickerState.end = '';
+    clearBtn.style.display = p === 'all' ? 'none' : 'block';
+    
+    const labels = {
+      'all': 'Todo o Período',
+      'today': 'Hoje',
+      'yesterday': 'Ontem',
+      'week': 'Últimos 7 dias',
+      'month': 'Este Mês'
+    };
+    label.textContent = labels[p] || 'Período';
+  }
+
+  function updateCalendarInputs() {
+    inputStart.value = tempStart ? formatDateBr(tempStart) : '';
+    inputEnd.value = tempEnd ? formatDateBr(tempEnd) : '';
+  }
+
+  function renderCalendar() {
+    daysContainer.innerHTML = '';
+    
+    const year = currentViewDate.getFullYear();
+    const month = currentViewDate.getMonth();
+    
+    const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+    monthLabel.textContent = `${monthNames[month]} ${year}`;
+    
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    
+    for (let i = 0; i < firstDay; i++) {
+      const empty = document.createElement('div');
+      empty.className = 'cal-day empty';
+      daysContainer.appendChild(empty);
+    }
+    
+    for (let d = 1; d <= daysInMonth; d++) {
+      const cellDate = new Date(year, month, d);
+      cellDate.setHours(0,0,0,0);
+      
+      const cell = document.createElement('div');
+      cell.className = 'cal-day';
+      cell.textContent = d;
+      
+      if (cellDate > today) {
+        cell.classList.add('disabled');
+      } else {
+        if (tempStart && cellDate.getTime() === tempStart.getTime()) {
+          cell.classList.add('selected', 'selected-start');
+        }
+        if (tempEnd && cellDate.getTime() === tempEnd.getTime()) {
+          cell.classList.add('selected', 'selected-end');
+          if (tempStart && tempStart.getTime() === tempEnd.getTime()) {
+            cell.classList.remove('selected-start', 'selected-end');
+          }
+        }
+        if (tempStart && tempEnd && cellDate > tempStart && cellDate < tempEnd) {
+          cell.classList.add('in-range');
+        }
+        
+        cell.addEventListener('click', () => {
+          if (!tempStart || (tempStart && tempEnd)) {
+            tempStart = cellDate;
+            tempEnd = null;
+          } else if (tempStart && !tempEnd) {
+            if (cellDate < tempStart) {
+              tempEnd = tempStart;
+              tempStart = cellDate;
+            } else {
+              tempEnd = cellDate;
+            }
+          }
+          updateCalendarInputs();
+          renderCalendar();
+        });
+      }
+      daysContainer.appendChild(cell);
+    }
+  }
+
+  function formatDateStr(d) {
+    const pad = (n) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+  }
+  function formatDateBr(d) {
+    const pad = (n) => String(n).padStart(2, '0');
+    return `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()}`;
+  }
+  function parseDateStr(s) {
+    if (!s) return null;
+    const [y, m, d] = s.split('-');
+    return new Date(y, m - 1, d);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  initCustomDatePicker();
+});
+
