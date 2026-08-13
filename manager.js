@@ -17,6 +17,7 @@ const KEY_DELETED_PLAYERS = 'jornada_deleted_players';
 const KEY_DELETED_LOCAIS  = 'jornada_deleted_locais';
 const KEY_DELETED_COLECOES = 'jornada_deleted_colecoes';
 const KEY_EDITS   = 'jornada_edited_matches';
+const KEY_ADMIN_PIN = 'jornada_admin_pin';
 
 // ── LOAD / SAVE ───────────────────────────────────────────────────────────────
 function loadDecks()   { try { return JSON.parse(localStorage.getItem(KEY_DECKS))   || []; } catch { return []; } }
