@@ -321,6 +321,13 @@ function makeSearchableSelect(selectEl) {
     input.blur();
   }
 
+  input.addEventListener("mousedown", (e) => {
+    if (wrap.classList.contains("open")) {
+      closeDropdown();
+      e.preventDefault();
+    }
+  });
+
   input.addEventListener("focus", () => {
     input.select();
     openDropdown();
