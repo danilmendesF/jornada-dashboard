@@ -1,3 +1,9 @@
+
+function log(level, message, context = {}) {
+  const payload = { timestamp: new Date().toISOString(), level, message, ...context };
+  if (level === 'error') console.error(JSON.stringify(payload));
+  else console.log(JSON.stringify(payload));
+}
 /**
  * 📧 EMAIL DISPATCHER MODULE — Jornada Dashboard
  * Sends HTML confirmation & welcome emails to registered team players.
@@ -10,7 +16,7 @@ const FROM_EMAIL = process.env.FROM_EMAIL || 'Jornada TCG Team <nao-responda@jor
 export async function sendNewDeckEmail(playerName, deckName) {
   const adminEmail = process.env.ADMIN_EMAIL;
   if (!adminEmail) {
-    console.error('[Email Module] ADMIN_EMAIL not configured');
+    log('error', '[Email Module] ADMIN_EMAIL not configured');
     return { success: false, error: 'ADMIN_EMAIL_MISSING' };
   }
 
@@ -108,7 +114,7 @@ export async function sendWelcomeEmail(playerName, playerEmail) {
   // ── RESEND API MODE (If API Key Configured) ────────────────────────────────
   if (RESEND_API_KEY) {
     try {
-      console.log(`[Email Module] Sending email via Resend API to ${playerEmail}...`);
+      log('info', `[Email Module] Sending email via Resend API to ${playerEmail}...`);
       const res = await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: {
@@ -124,26 +130,26 @@ export async function sendWelcomeEmail(playerName, playerEmail) {
       });
 
       if (res.ok) {
-        console.log(`[Email Module] Welcome email delivered successfully to ${playerEmail}`);
+        log('info', `[Email Module] Welcome email delivered successfully to ${playerEmail}`);
         return { success: true, delivered: true };
       } else {
         const errText = await res.text();
-        console.error('[Email Module] Resend API error:', errText);
+        log('error', '[Email Module] Resend API error:', { error: errText });
         return { success: false, delivered: false, error: errText };
       }
     } catch (err) {
-      console.error('[Email Module] Error invoking Resend API:', err.message);
+      log('error', '[Email Module] Error invoking Resend API:', { error: err.message });
       return { success: false, delivered: false, error: err.message };
     }
   }
 
   // ── FALLBACK / LOCAL SIMULATION MODE ───────────────────────────────────────
-  console.log(`\n==================================================`);
-  console.log(`📧 [SIMULAÇÃO E-MAIL DE CONFIRMAÇÃO]`);
-  console.log(`   Para: ${playerName} <${playerEmail}>`);
-  console.log(`   Assunto: ⚡ Cadastro Confirmado! Bem-vindo ao Jornada TCG Team 🎮`);
-  console.log(`   Status: Simulação local (RESEND_API_KEY não configurada)`);
-  console.log(`==================================================\n`);
+  log('info', `\n==================================================`);
+  log('info', `📧 [SIMULAÇÃO E-MAIL DE CONFIRMAÇÃO]`);
+  log('info', `   Para: ${playerName} <${playerEmail}>`);
+  log('info', `   Assunto: ⚡ Cadastro Confirmado! Bem-vindo ao Jornada TCG Team 🎮`);
+  log('info', `   Status: Simulação local (RESEND_API_KEY não configurada)`);
+  log('info', `==================================================\n`);
 
   return { success: true, delivered: false, reason: 'RESEND_API_KEY_MISSING' };
 }

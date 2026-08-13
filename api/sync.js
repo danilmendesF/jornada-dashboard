@@ -4,6 +4,12 @@
 import { createClient } from 'redis';
 import crypto from 'crypto';
 
+
+function log(level, message, context = {}) {
+  const payload = { timestamp: new Date().toISOString(), level, message, ...context };
+  if (level === 'error') console.error(JSON.stringify(payload));
+  else console.log(JSON.stringify(payload));
+}
 const JWT_SECRET = process.env.JWT_SECRET || 'jornada_tcg_jwt_secret_2026_key';
 
 function verifyJwt(token) {
@@ -53,11 +59,11 @@ export default async function handler(req, res) {
   const redisUrl = process.env.REDIS_URL;
   const key = `jornada_sync_${activeToken.replace(/[^a-zA-Z0-9_-]/g, '')}`;
 
-  console.log(`[Serverless Sync] ${req.method} | Authorized Request`);
+  log('info', `[Serverless Sync] ${req.method} | Authorized Request`);
 
   // ── FALLBACK: No Redis URL configured → proxy to keyvalue.xyz ───────────────
   if (!redisUrl) {
-    console.log('[Serverless Sync] REDIS_URL not found. Falling back to keyvalue.xyz proxy...');
+    log('info', '[Serverless Sync] REDIS_URL not found. Falling back to keyvalue.xyz proxy...');
     try {
       if (req.method === 'GET') {
         const proxyRes = await fetch(`https://keyvalue.xyz/v1/${key}`);
@@ -81,7 +87,7 @@ export default async function handler(req, res) {
         return res.status(200).json({ success: true });
       }
     } catch (proxyErr) {
-      console.error('[Serverless Sync] Proxy Error:', proxyErr.message);
+      log('error', '[Serverless Sync] Proxy Error:', { error: proxyErr.message });
       return res.status(500).json({ error: proxyErr.message });
     }
     return;
@@ -89,7 +95,7 @@ export default async function handler(req, res) {
 
   // ── REDIS MODE: Connect per-request ────────────────────────────────────────
   const redis = createClient({ url: redisUrl });
-  redis.on('error', (err) => console.error('[Serverless Sync] Redis client error:', err.message));
+  redis.on('error', (err) => log('error', '[Serverless Sync] Redis client error:', { error:  });
 
   try {
     await redis.connect();
@@ -114,7 +120,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
 
   } catch (err) {
-    console.error('[Serverless Sync] Redis Error:', err.message);
+    log('error', '[Serverless Sync] Redis Error:', { error: err.message });
     return res.status(500).json({ error: err.message });
   } finally {
     if (redis && redis.isOpen) {

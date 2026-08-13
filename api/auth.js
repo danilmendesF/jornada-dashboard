@@ -7,6 +7,12 @@ import { createClient } from 'redis';
 import crypto from 'crypto';
 import { sendWelcomeEmail } from './email.js';
 
+
+function log(level, message, context = {}) {
+  const payload = { timestamp: new Date().toISOString(), level, message, ...context };
+  if (level === 'error') console.error(JSON.stringify(payload));
+  else console.log(JSON.stringify(payload));
+}
 // Secret key for JWT signing (uses ENV or fallback hash)
 const JWT_SECRET = process.env.JWT_SECRET || 'jornada_tcg_jwt_secret_2026_key';
 const REDIS_URL = process.env.REDIS_URL;
@@ -239,7 +245,7 @@ export default async function handler(req, res) {
 
     return res.status(400).json({ error: 'Ação não suportada.' });
   } catch (e) {
-    console.error('Auth handler error:', e);
+    log('error', 'Auth handler error:', { error: e });
     return res.status(500).json({ error: e.message || 'Erro interno no servidor de autenticação.' });
   } finally {
     if (redis && redis.isOpen) {
