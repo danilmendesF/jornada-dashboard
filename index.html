@@ -19,7 +19,7 @@
     />
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
-    <link rel="stylesheet" href="dist/style.min.css?v=1.7.1" />
+    <link rel="stylesheet" href="dist/style.min.css?v=1.7.2" />
     <script>
       (function () {
         try {
@@ -214,7 +214,7 @@
               font-family: &quot;Outfit&quot;, sans-serif;
             "
           >
-            v<span id="appVersionAuth">1.7.1</span>
+            v<span id="appVersionAuth">1.7.2</span>
           </div>
         </div>
       </div>
@@ -2143,45 +2143,57 @@
 
       <!-- ===== PROFESSIONAL FOOTER ===== -->
       <footer class="site-footer">
-        <div class="footer-content">
-          <div class="footer-brand">
-            <div class="logo">
-              <div class="logo-icon">
-                <img src="logo.png" alt="Jornada Logo" class="logo-img" />
+        <div class="footer-container">
+          <div class="footer-top-row">
+            <div class="footer-brand">
+              <div class="logo">
+                <div class="logo-icon">
+                  <img src="logo.png" alt="Jornada Logo" class="logo-img" />
+                </div>
+                <div>
+                  <h1 class="logo-title" style="font-size: 1.2rem">JORNADA</h1>
+                  <div class="logo-sub">TCG TEAM</div>
+                </div>
               </div>
-              <div>
-                <h1 class="logo-title" style="font-size: 1.2rem">JORNADA</h1>
-                <div class="logo-sub">TCG TEAM</div>
-              </div>
+              <p class="footer-desc">
+                Plataforma competitiva de alta performance para tracking e
+                análises de Pokémon TCG.
+              </p>
             </div>
-            <p class="footer-desc">
-              Plataforma competitiva de alta performance para tracking e
-              análises de Pokémon TCG.
+            <div class="footer-action-wrap">
+              <button
+                type="button"
+                class="footer-back-to-top-btn"
+                onclick="window.scrollTo({ top: 0, behavior: 'smooth' })"
+                title="Voltar ao topo"
+              >
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M18 15l-6-6-6 6" />
+                </svg>
+                <span>Voltar ao topo</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="footer-disclaimer">
+            <p>
+              Projeto independente desenvolvido para a equipe Jornada TCG, sem qualquer vínculo ou afiliação oficial com a The Pokémon Company, Nintendo, Creatures Inc., GAME FREAK inc. ou RK9 Labs. Pokémon e todas as respectivas marcas registradas, nomes de cartas, imagens e mecânicas pertencem aos seus respectivos donos.
             </p>
           </div>
-          <div class="footer-links">
-            <h4>Menu</h4>
-            <ul>
-              <li><a href="#" onclick="window.scrollTo(0, 0)">Início</a></li>
-              <li>
-                <a
-                  href="#"
-                  onclick="
-                    document
-                      .getElementById('managerPanel')
-                      .classList.add('open');
-                    document
-                      .getElementById('panelOverlay')
-                      .classList.add('active');
-                  "
-                  >Administração</a
-                >
-              </li>
-            </ul>
+
+          <div class="footer-bottom">
+            <p class="footer-copy">&copy; 2026 Jornada TCG. Todos os direitos reservados.</p>
+            <div class="footer-version-tag">v<span id="appVersion">1.7.2</span></div>
           </div>
-        </div>
-        <div class="footer-bottom">
-          <p>&copy; 2026 Jornada TCG. Todos os direitos reservados.</p>
         </div>
       </footer>
     </div>
@@ -2342,7 +2354,7 @@
         </div>
       </div>
     </div>
-    <script src="dist/app.min.js?v=1.7.1"></script>
+    <script src="dist/app.min.js?v=1.7.2"></script>
     <script>
       // Mobile Hamburger Menu Toggle
       const mobileBtn = document.getElementById('mobileMenuBtn');
@@ -2375,7 +2387,6 @@
       <div class="version-reload-text">Nova versão detectada!</div>
       <div class="version-reload-sub">Atualizando o painel para sincronizar seus dados...</div>
     </div>
-    <div class="app-version-footer">v<span id="appVersion">1.7.1</span></div>
   </body>
 
 
