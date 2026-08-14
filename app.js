@@ -2040,6 +2040,8 @@ function getMatchupBaseDataset() {
 
 function renderMatchup() {
   const selectedPlayer = document.getElementById('matchupPlayer')?.value || '';
+  const selectedSort   = document.getElementById('matchupSortOrder')?.value || window.matchupSortState || 'desc';
+  window.matchupSortState = selectedSort;
   
   let matchupDataset = getMatchupBaseDataset();
   if (selectedPlayer) {
@@ -2101,53 +2103,18 @@ function populateMatchupDeckSelects() {
   if (selOpp.syncSearchableSelect) selOpp.syncSearchableSelect();
 }
 
-window.matchupSortState = 'desc'; // Default: 'desc' (Maior WR primeiro), 'asc' (Menor WR primeiro), 'name' (Alfabética)
-
-window.toggleMatchupSortOrder = function() {
-  if (window.matchupSortState === 'desc') {
-    window.matchupSortState = 'asc';
-  } else if (window.matchupSortState === 'asc') {
-    window.matchupSortState = 'name';
-  } else {
-    window.matchupSortState = 'desc';
-  }
-  updateMatchupSortButtonUI();
-  renderMatchup();
-};
-
-function updateMatchupSortButtonUI() {
-  const icon = document.getElementById('matchupSortIcon');
-  const label = document.getElementById('matchupSortLabel');
-  const btn = document.getElementById('btnMatchupSortToggle');
-  if (btn) {
-    if (window.matchupSortState !== 'desc') btn.classList.add('active');
-    else btn.classList.remove('active');
-  }
-  if (icon && label) {
-    if (window.matchupSortState === 'desc') {
-      icon.textContent = '⬇️';
-      label.textContent = 'Maior WR';
-    } else if (window.matchupSortState === 'asc') {
-      icon.textContent = '⬆️';
-      label.textContent = 'Menor WR';
-    } else {
-      icon.textContent = '🔤';
-      label.textContent = 'Alfabética';
-    }
-  }
-}
-
 window.resetMatchupFilters = function() {
   const selPlayer = document.getElementById('matchupPlayer');
   const selMy     = document.getElementById('matchupSelectMyDeck');
   const selOpp    = document.getElementById('matchupSelectOppDeck');
+  const selSort   = document.getElementById('matchupSortOrder');
 
   if (selPlayer) { selPlayer.value = ''; if (selPlayer.syncSearchableSelect) selPlayer.syncSearchableSelect(); }
   if (selMy)     { selMy.value = '';     if (selMy.syncSearchableSelect) selMy.syncSearchableSelect(); }
   if (selOpp)    { selOpp.value = '';    if (selOpp.syncSearchableSelect) selOpp.syncSearchableSelect(); }
+  if (selSort)   { selSort.value = 'desc'; if (selSort.syncSearchableSelect) selSort.syncSearchableSelect(); }
 
   window.matchupSortState = 'desc';
-  updateMatchupSortButtonUI();
 
   window.activeDeckSort = { deck: null, mode: 'desc' };
 
@@ -2535,7 +2502,7 @@ window.showMatchupDetail = function(myDeck, oppDeck, scroll = true) {
 };
 
 function initMatchupToggle() {
-  ['matchupPlayer', 'matchupSelectMyDeck', 'matchupSelectOppDeck'].forEach(id => {
+  ['matchupPlayer', 'matchupSelectMyDeck', 'matchupSelectOppDeck', 'matchupSortOrder'].forEach(id => {
     document.getElementById(id)?.addEventListener('change', () => {
       window.applyMatchupFilter();
     });
