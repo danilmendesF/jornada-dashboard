@@ -34,10 +34,30 @@ window.openMatchForm = function(matchData = null) {
   };
 
   const currentUserObj = typeof getCurrentUser === 'function' ? getCurrentUser() : window.currentUser;
-  const activeName = currentUserObj?.linkedPlayer || currentUserObj?.name;
+  const activeName = (typeof getActivePlayerName === 'function' ? getActivePlayerName() : null) || currentUserObj?.linkedPlayer || currentUserObj?.name || '';
+  const playerName = matchData?.Player || activeName;
+  const today = new Date().toISOString().slice(0, 10);
 
-  setVal('formMatchData', matchData?.Data || new Date().toISOString().slice(0, 10));
-  setVal('formMatchPlayer', matchData?.Player || activeName || '');
+  const dataInput = document.getElementById('formMatchData');
+  if (dataInput) {
+    dataInput.max = today;
+    dataInput.value = matchData?.Data || today;
+  }
+
+  setVal('formMatchPlayer', playerName);
+  const pDisplay = document.getElementById('formMatchPlayerDisplay');
+  if (pDisplay) pDisplay.textContent = playerName ? `${playerName}` : 'Treinador não identificado';
+
+  const dlAdv = document.getElementById('playerOptionsAdv');
+  if (dlAdv && typeof players !== 'undefined') {
+    dlAdv.innerHTML = '';
+    (players || []).filter(p => !playerName || p.trim().toLowerCase() !== playerName.trim().toLowerCase()).forEach(p => {
+      const opt = document.createElement('option');
+      opt.value = p;
+      dlAdv.appendChild(opt);
+    });
+  }
+
   setVal('formMatchAdv', matchData?.Adversario || '');
   setVal('formMatchDeckAdv', matchData?.DeckAdvArquetipo || matchData?.DeckAdv || '');
   setVal('formMatchSubtipoAdv', matchData?.SubtipoAdv || '');
@@ -67,22 +87,32 @@ window.openMatchForm = function(matchData = null) {
 window.saveMatchForm = function() {
   const getVal = (id) => document.getElementById(id)?.value?.trim() || '';
 
-  const player = getVal('formMatchPlayer');
+  const player = getVal('formMatchPlayer') || (typeof getActivePlayerName === 'function' ? getActivePlayerName() : '') || '';
   const deckArquetipo = getVal('formMatchDeck');
   const deckSubtipo = getVal('formMatchSubtipo');
   const deckAdvArquetipo = getVal('formMatchDeckAdv');
   const deckAdvSubtipo = getVal('formMatchSubtipoAdv');
   const colecao = getVal('formMatchColecao');
+  const dataStr = getVal('formMatchData') || new Date().toISOString().slice(0, 10);
+  const adversario = getVal('formMatchAdv');
 
+  const today = new Date().toISOString().slice(0, 10);
+  if (dataStr > today) {
+    if (typeof showToast === 'function') showToast('⚠️ A data da partida não pode ser futura!');
+    return;
+  }
   if (!player || !deckArquetipo || !deckAdvArquetipo || !colecao) {
-    if (typeof showToast === 'function') showToast('⚠️ Preencha Player, Meu Deck, Deck Adv e Coleção!');
+    if (typeof showToast === 'function') showToast('⚠️ Preencha Meu Deck, Deck Adv e Coleção!');
+    return;
+  }
+  if (adversario && player && adversario.trim().toLowerCase() === player.trim().toLowerCase()) {
+    if (typeof showToast === 'function') showToast('⚠️ O adversário não pode ser você mesmo!');
     return;
   }
 
   const formato = getVal('formMatchFormato') || 'MD1';
   const placar = getVal('formMatchPlacar') || '1-0';
   const resultado = getVal('formMatchResultado') || 'Vitória';
-  const dataStr = getVal('formMatchData') || new Date().toISOString().slice(0, 10);
   const local = getVal('formMatchLocal') || 'TCG Live';
 
   const ownDeckName = deckSubtipo ? `${deckArquetipo} (${deckSubtipo})` : deckArquetipo;

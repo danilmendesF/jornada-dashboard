@@ -402,7 +402,7 @@ function initAllSearchableSelects() {
     'filterPlayer', 'filterDeck', 'filterFormato', 'filterLocal', 'filterColecao',
     'quickLogPlayer', 'quickLogDeck', 'quickLogDeckAdv', 'quickLogColecao',
     'matchupPlayer', 'matchupSelectMyDeck', 'matchupSelectOppDeck', 'matchupSortOrder',
-    'formMatchPlayer', 'formMatchDeck', 'formMatchDeckAdv', 'formDeckPlayer', 'formMatchColecao'
+    'formMatchDeck', 'formMatchDeckAdv', 'formDeckPlayer', 'formMatchColecao'
   ];
   ids.forEach(id => {
     const el = document.getElementById(id);

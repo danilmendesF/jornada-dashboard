@@ -19,7 +19,7 @@
     />
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
-    <link rel="stylesheet" href="dist/style.min.css?v=1.7.2" />
+    <link rel="stylesheet" href="dist/style.min.css?v=1.7.3" />
     <script>
       (function () {
         try {
@@ -214,7 +214,7 @@
               font-family: &quot;Outfit&quot;, sans-serif;
             "
           >
-            v<span id="appVersionAuth">1.7.2</span>
+            v<span id="appVersionAuth">1.7.3</span>
           </div>
         </div>
       </div>
@@ -1728,9 +1728,11 @@
               </div>
               <div class="form-group">
                 <label class="form-label">Player *</label>
-                <select id="formMatchPlayer" class="form-input">
-                  <option value="">Selecione…</option>
-                </select>
+                <div class="logged-player-badge">
+                  <span class="player-badge-icon">👤</span>
+                  <span id="formMatchPlayerDisplay" class="logged-player-name">Treinador</span>
+                  <input type="hidden" id="formMatchPlayer" value="" />
+                </div>
               </div>
               <div class="form-group">
                 <div
@@ -1996,7 +1998,8 @@
                 <textarea
                   id="formMatchDeckOwnList"
                   class="form-textarea"
-                  rows="3"
+                  rows="6"
+                  style="min-height: 130px;"
                   placeholder="Opcional: Cole o export PTCGL do seu deck…"
                 ></textarea>
               </div>
@@ -2012,7 +2015,8 @@
                 <textarea
                   id="formMatchDeckAdvList"
                   class="form-textarea"
-                  rows="3"
+                  rows="6"
+                  style="min-height: 130px;"
                   placeholder="Opcional: Cole o export PTCGL do deck do oponente…"
                 ></textarea>
               </div>
@@ -2022,7 +2026,8 @@
               <textarea
                 id="formMatchComentarios"
                 class="form-textarea"
-                rows="3"
+                rows="4"
+                style="min-height: 90px;"
                 placeholder="Observações sobre a partida…"
               ></textarea>
             </div>
@@ -2192,7 +2197,7 @@
 
           <div class="footer-bottom">
             <p class="footer-copy">&copy; 2026 Jornada TCG. Todos os direitos reservados.</p>
-            <div class="footer-version-tag">v<span id="appVersion">1.7.2</span></div>
+            <div class="footer-version-tag">v<span id="appVersion">1.7.3</span></div>
           </div>
         </div>
       </footer>
@@ -2354,7 +2359,7 @@
         </div>
       </div>
     </div>
-    <script src="dist/app.min.js?v=1.7.2"></script>
+    <script src="dist/app.min.js?v=1.7.3"></script>
     <script>
       // Mobile Hamburger Menu Toggle
       const mobileBtn = document.getElementById('mobileMenuBtn');

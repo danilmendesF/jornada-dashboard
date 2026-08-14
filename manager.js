@@ -1,4 +1,4 @@
-﻿/* ============================================================
+/* ============================================================
    JORNADA DASHBOARD — manager.js
    CRUD: Decks (com lista PTCGL), Partidas manuais, Players
    ============================================================ */
@@ -158,46 +158,47 @@ function closeModal(id, force = false) {
 
 // ── POPULATE PLAYER SELECTS ──────────────────────────────────────────────────
 function populatePlayerSelects() {
-  const activeName = typeof getActivePlayerName === 'function' ? getActivePlayerName() : null;
+  const activeName = (typeof getActivePlayerName === 'function' ? getActivePlayerName() : null) || window.currentUser?.name || '';
 
-  ['formMatchPlayer','formDeckPlayer','filterPlayer'].forEach(id => {
+  ['formDeckPlayer','filterPlayer'].forEach(id => {
     const sel = document.getElementById(id);
     if (!sel) return;
     const cur = sel.value;
     const first = sel.options[0];
     sel.innerHTML = '';
 
-    if (id === 'formMatchPlayer' && activeName) {
+    if (first) sel.appendChild(first);
+    (players || []).forEach(p => {
       const o = document.createElement('option');
-      o.value = activeName;
-      o.textContent = `👤 ${activeName}`;
+      o.value = p; o.textContent = p;
       sel.appendChild(o);
-      sel.value = activeName;
-    } else {
-      if (first) sel.appendChild(first);
-      players.forEach(p => {
-        const o = document.createElement('option');
-        o.value = p; o.textContent = p;
-        sel.appendChild(o);
-      });
-      sel.value = cur;
-    }
+    });
+    sel.value = cur;
     if (sel.syncSearchableSelect) sel.syncSearchableSelect();
   });
+
+  const formPlayerInput = document.getElementById('formMatchPlayer');
+  const formPlayerDisplay = document.getElementById('formMatchPlayerDisplay');
+  if (formPlayerInput && !formPlayerInput.value && activeName) {
+    formPlayerInput.value = activeName;
+  }
+  if (formPlayerDisplay) {
+    const curVal = formPlayerInput?.value || activeName || '';
+    formPlayerDisplay.textContent = curVal ? `${curVal}` : 'Treinador não identificado';
+  }
 
   if (typeof populateQuickLogDropdowns === 'function') populateQuickLogDropdowns();
 
   const dlAdv = document.getElementById('playerOptionsAdv');
   if (dlAdv) {
     dlAdv.innerHTML = '';
-    players.forEach(p => {
+    const currentP = formPlayerInput?.value || activeName || '';
+    (players || []).filter(p => !currentP || p.trim().toLowerCase() !== currentP.trim().toLowerCase()).forEach(p => {
       const opt = document.createElement('option');
       opt.value = p;
       dlAdv.appendChild(opt);
     });
   }
-
-  if (typeof populateQuickLogDropdowns === 'function') populateQuickLogDropdowns();
 }
 
 // ── MIRROR MATCH AUTOMATION ───────────────────────────────────────────────────
@@ -865,9 +866,32 @@ function openMatchForm(matchData) {
   if (h) h.textContent = editingMatchId ? '✏️ Editar Partida' : '⚔️ Registrar Partida';
 
   const get = id => document.getElementById(id);
+  const today = new Date().toISOString().slice(0, 10);
 
-  get('formMatchData').value      = matchData?.Data     || new Date().toISOString().slice(0, 10);
-  get('formMatchPlayer').value    = matchData?.Player   || '';
+  const dataInput = get('formMatchData');
+  if (dataInput) {
+    dataInput.max = today;
+    dataInput.value = matchData?.Data || today;
+  }
+
+  const activePlayer = (typeof getActivePlayerName === 'function' ? getActivePlayerName() : null) || window.currentUser?.name || '';
+  const playerName = matchData?.Player || activePlayer;
+  const pInput = get('formMatchPlayer');
+  if (pInput) pInput.value = playerName;
+  const pDisplay = get('formMatchPlayerDisplay');
+  if (pDisplay) pDisplay.textContent = playerName ? `${playerName}` : 'Treinador não identificado';
+
+  // Exclude own player from adversary suggestions datalist
+  const dlAdv = get('playerOptionsAdv');
+  if (dlAdv) {
+    dlAdv.innerHTML = '';
+    (players || []).filter(p => !playerName || p.trim().toLowerCase() !== playerName.trim().toLowerCase()).forEach(p => {
+      const opt = document.createElement('option');
+      opt.value = p;
+      dlAdv.appendChild(opt);
+    });
+  }
+
   get('formMatchAdv').value       = matchData?.Adversario || '';
   get('formMatchDeckAdv').value   = matchData?.DeckAdvArquetipo || matchData?.DeckAdv  || '';
   if (get('formMatchSubtipoAdv')) get('formMatchSubtipoAdv').value = matchData?.SubtipoAdv || '';
@@ -1236,14 +1260,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function saveMatchForm() {
   const getVal = id => document.getElementById(id)?.value || '';
-  const player     = getVal('formMatchPlayer');
+  const data       = getVal('formMatchData');
+  const player     = getVal('formMatchPlayer') || (typeof getActivePlayerName === 'function' ? getActivePlayerName() : '') || window.currentUser?.name || '';
   const deckName   = getVal('formMatchDeck');
   const adversario = getVal('formMatchAdv').trim() || 'Oponente';
   const resultado  = getVal('formMatchResultado');
   const deckAdv    = getVal('formMatchDeckAdv');
   const colecao    = getVal('formMatchColecao');
 
-  if (!player)   { alert('⚠️ Selecione o player.'); return; }
+  const today = new Date().toISOString().slice(0, 10);
+  if (data && data > today) {
+    alert('⚠️ A data da partida não pode ser futura (máximo: data de hoje).');
+    return;
+  }
+  if (!player)   { alert('⚠️ Treinador não identificado. Faça login para registrar partidas.'); return; }
+  if (adversario && player && adversario.trim().toLowerCase() === player.trim().toLowerCase()) {
+    alert('⚠️ O adversário não pode ser o mesmo treinador que está registrando a partida (' + player + ').');
+    return;
+  }
   if (!deckName) { alert('⚠️ Selecione o seu deck (Arquétipo).'); return; }
   if (!deckAdv)  { alert('⚠️ Selecione o deck do adversário (Arquétipo).'); return; }
   if (!colecao || colecao === '' || colecao.toLowerCase().includes('toda')) {
