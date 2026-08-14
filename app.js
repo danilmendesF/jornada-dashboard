@@ -1034,7 +1034,7 @@ function renderDeckWR() {
       maintainAspectRatio: false,
       plugins: {
           legend: { display: false },
-          datalabels: { display: true, color: '#fff', font: { weight: 'bold', size: 12 }, anchor: 'end', align: 'left', formatter: v => Math.round(v) + '%' },
+          datalabels: { display: true, color: '#fff', font: { weight: 'bold', size: 12 }, anchor: 'center', align: 'center', textStrokeColor: '#0f172a', textStrokeWidth: 3, formatter: v => Math.round(v) + '%' },
           tooltip: {
           callbacks: {
             label: ctx => {
@@ -1278,7 +1278,7 @@ function renderResultPie() {
       cutout: '65%',
       plugins: {
           legend: { position: 'bottom' },
-          datalabels: { display: true, color: '#fff', font: { weight: 'bold', size: 14 }, textStrokeColor: '#0f172a', textStrokeWidth: 2, formatter: Math.round },
+          datalabels: { display: function(ctx) { return ctx.dataset.data[ctx.dataIndex] > 0; }, color: '#fff', font: { weight: 'bold', size: 14 }, textStrokeColor: '#0f172a', textStrokeWidth: 3, formatter: Math.round },
           tooltip: {
           callbacks: {
             label: ctx => {
@@ -1316,7 +1316,7 @@ function renderLocal() {
       responsive: true,
       maintainAspectRatio: false,
       cutout: '55%',
-      plugins: { legend: { position: 'bottom' }, datalabels: { display: true, color: '#fff', font: { weight: 'bold', size: 14 }, textStrokeColor: '#0f172a', textStrokeWidth: 2, formatter: Math.round } }
+      plugins: { legend: { position: 'bottom' }, datalabels: { display: function(ctx) { return ctx.dataset.data[ctx.dataIndex] > 0; }, color: '#fff', font: { weight: 'bold', size: 14 }, textStrokeColor: '#0f172a', textStrokeWidth: 3, formatter: Math.round } }
     }
   });
 }
@@ -1343,7 +1343,7 @@ function renderFormato() {
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: { legend: { position: 'bottom' }, datalabels: { display: true, color: '#fff', font: { weight: 'bold', size: 14 }, textStrokeColor: '#0f172a', textStrokeWidth: 2, formatter: Math.round } }
+      plugins: { legend: { position: 'bottom' }, datalabels: { display: function(ctx) { return ctx.dataset.data[ctx.dataIndex] > 0; }, color: '#fff', font: { weight: 'bold', size: 14 }, textStrokeColor: '#0f172a', textStrokeWidth: 3, formatter: Math.round } }
     }
   });
 }
@@ -1375,7 +1375,7 @@ function renderDeckCount() {
       indexAxis: 'y',
       responsive: true,
       maintainAspectRatio: false,
-      plugins: { legend: { display: false }, datalabels: { display: true, color: '#fff', font: { weight: 'bold', size: 12 }, anchor: 'end', align: 'left', formatter: Math.round } },
+      layout: { padding: { right: 30 } }, plugins: { legend: { display: false }, datalabels: { display: function(ctx) { return ctx.dataset.data[ctx.dataIndex] > 0; }, color: '#fff', font: { weight: 'bold', size: 12 }, anchor: 'end', align: 'right', textStrokeColor: '#0f172a', textStrokeWidth: 3, formatter: Math.round } },
       scales: {
         x: { grid: { color: 'rgba(255,255,255,0.05)' } },
         y: { grid: { color: 'rgba(255,255,255,0.03)' } }
@@ -1427,7 +1427,7 @@ function renderStart() {
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: { legend: { position: 'bottom' }, datalabels: { display: function(ctx) { return ctx.dataset.data[ctx.dataIndex] > 0; }, color: '#fff', font: { weight: 'bold', size: 12 }, textStrokeColor: '#0f172a', textStrokeWidth: 2, formatter: Math.round } },
+      plugins: { legend: { position: 'bottom' }, datalabels: { display: function(ctx) { return ctx.dataset.data[ctx.dataIndex] > 0; }, color: '#fff', font: { weight: 'bold', size: 12 }, textStrokeColor: '#0f172a', textStrokeWidth: 3, formatter: Math.round } },
       scales: {
         y: { grid: { color:'rgba(255,255,255,0.05)' } },
         x: { grid: { color:'rgba(255,255,255,0.03)' } }
