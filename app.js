@@ -135,8 +135,10 @@ window.addEventListener('storage', (e) => {
 
 
 // ── 3. CHART DEFAULTS ────────────────────────────────────────────────────────
+Chart.register(ChartDataLabels);
 Chart.defaults.color = '#8890b0';
 Chart.defaults.font.family = "'Outfit', sans-serif";
+Chart.defaults.plugins.datalabels.display = false; // Off by default, enable per chart
 Chart.defaults.plugins.legend.labels.boxWidth = 12;
 Chart.defaults.plugins.legend.labels.padding  = 16;
 Chart.defaults.plugins.tooltip.backgroundColor = 'rgba(16,19,31,0.95)';
@@ -1005,13 +1007,13 @@ function renderDeckWR() {
     return { deck: d, wr: s.wr, wins: s.wins, tot: s.total };
   });
 
-  deckStats.sort((a, b) => b.wr - a.wr || b.tot - a.tot);
-
-  const top7 = deckStats.slice(0, 7);
-
-  const labels = top7.map(d => d.deck);
-  const wrData = top7.map(d => d.wr);
-  const bgColors = top7.map((_, i) => PALETTE[i % PALETTE.length]);
+  let validDecks = deckStats.filter(d => d.tot >= 10);
+    if (validDecks.length === 0) validDecks = deckStats;
+    validDecks.sort((a, b) => b.wr - a.wr || b.tot - a.tot);
+    const top10 = validDecks.slice(0, 10);
+    const labels = top10.map(d => d.deck);
+    const wrData = top10.map(d => d.wr);
+    const bgColors = top10.map((_, i) => PALETTE[i % PALETTE.length]);
 
   charts['deckWR'] = new Chart(document.getElementById('chartDeckWR'), {
     type: 'bar',
@@ -1055,48 +1057,71 @@ function renderDeckWR() {
 
 // ── 9. CHART: PLAYER PERFORMANCE ────────────────────────────────────────────
 function renderPlayerPerf() {
-  destroyChart('playerPerf');
-  const byPlayer = groupBy(filtered, 'Player');
-
-  const registeredPlayers = (typeof players !== 'undefined') ? players : [];
-  const allPlayerNames = [...new Set([...Object.keys(byPlayer), ...registeredPlayers])];
-
-  const playerStats = allPlayerNames.map(p => {
-    const pMatches = byPlayer[p] || [];
-    const wins   = pMatches.filter(r => r.Resultado === 'Vitória').length;
-    const draws  = pMatches.filter(r => r.Resultado === 'Empate').length;
-    const losses = pMatches.filter(r => r.Resultado === 'Derrota').length;
-    const total  = pMatches.length;
-    const wr     = total > 0 ? pct(wins, total) : 0;
-    return { player: p, wins, draws, losses, total, wr };
-  });
-
-  playerStats.sort((a, b) => b.wins - a.wins || b.wr - a.wr || b.total - a.total);
-
-  const labels = playerStats.map(s => s.player);
-  const wins   = playerStats.map(s => s.wins);
-  const draws  = playerStats.map(s => s.draws);
-  const losses = playerStats.map(s => s.losses);
-
-  charts['playerPerf'] = new Chart(document.getElementById('chartPlayerPerf'), {
-    type: 'bar',
-    data: {
-      labels,
-      datasets: [
-        { label: 'Vitórias', data: wins,   backgroundColor: WIN_COLOR  + 'bb', borderColor: WIN_COLOR,   borderWidth: 2, borderRadius: 6 },
-        { label: 'Empates',  data: draws,  backgroundColor: DRAW_COLOR + 'bb', borderColor: DRAW_COLOR,  borderWidth: 2, borderRadius: 6 },
-        { label: 'Derrotas', data: losses, backgroundColor: LOSS_COLOR + 'bb', borderColor: LOSS_COLOR,  borderWidth: 2, borderRadius: 6 },
-      ]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { position: 'bottom' },
-        tooltip: {
-          callbacks: {
-            label: ctx => {
-              const stat = playerStats[ctx.dataIndex];
+    destroyChart('playerPerf');
+    const byPlayer = groupBy(filtered, 'Player');
+  
+    const registeredPlayers = (typeof players !== 'undefined') ? players : [];
+    let baseLabels = registeredPlayers.map(p => p.name || p);
+    if (baseLabels.length === 0) baseLabels = Object.keys(byPlayer);
+  
+    const playerStats = baseLabels.map(p => {
+      const ms = byPlayer[p] || [];
+      return calculateStats(ms);
+    });
+  
+    const combined = baseLabels.map((l, i) => ({ label: l, stat: playerStats[i] }));
+    combined.sort((a, b) => b.stat.wins - a.stat.wins || b.stat.tot - a.stat.tot);
+  
+    const labels = combined.map(c => c.label + ' (WR: ' + c.stat.wr + '%)');
+    const sortedStats = combined.map(c => c.stat);
+  
+    const wins   = sortedStats.map(s => s.wins);
+    const draws  = sortedStats.map(s => s.draws);
+    const losses = sortedStats.map(s => s.losses);
+  
+    charts['playerPerf'] = new Chart(document.getElementById('chartPlayerPerf'), {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [
+          { label: 'Vit�rias', data: wins,   backgroundColor: WIN_COLOR  + 'bb', borderColor: WIN_COLOR,   borderWidth: 2, borderRadius: 6 },
+          { label: 'Empates',  data: draws,  backgroundColor: DRAW_COLOR + 'bb', borderColor: DRAW_COLOR,  borderWidth: 2, borderRadius: 6 },
+          { label: 'Derrotas', data: losses, backgroundColor: LOSS_COLOR + 'bb', borderColor: LOSS_COLOR,  borderWidth: 2, borderRadius: 6 },
+        ]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'bottom' },
+          datalabels: {
+            display: function(context) { return context.dataset.data[context.dataIndex] > 0; },
+            color: '#fff',
+            font: { weight: 'bold', size: 12 },
+            formatter: Math.round
+          },
+          tooltip: {
+            callbacks: {
+              label: ctx => {
+                const stat = sortedStats[ctx.dataIndex];
+                const dsLabel = ctx.dataset.label;
+                const val = ctx.parsed.x;
+                return ` ${dsLabel}: ${val} (Total: ${stat.total} jogos)`;
+              }
+            }
+          }
+        },
+        scales: {
+          x: { stacked: true, grid: { color: 'rgba(255,255,255,0.05)' } },
+          y: {
+            stacked: true,
+            grid: { color: 'rgba(255,255,255,0.03)' },
+            ticks: { autoSkip: false }
+          }
+        }
+      }
+    });
               const dsLabel = ctx.dataset.label;
               const val = ctx.parsed.y;
               return ` ${dsLabel}: ${val} (Total: ${stat.total} jogos | WR: ${stat.wr}%)`;
@@ -1415,59 +1440,75 @@ function renderStart() {
 
 // ── 16. CHART: BRICK ───────────────────────────────────────────────────────
 function renderBrick() {
-  destroyChart('brick');
-
-  const byDeck     = groupBy(filtered, 'Deck');
-  const deckLabels = Object.keys(byDeck).sort();
-
-  const bricked    = deckLabels.map(deck => {
-    const rows = byDeck[deck];
-    let totalGames = 0, brickedGames = 0;
-    rows.forEach(r => {
-      if (r.GamesDetail && Array.isArray(r.GamesDetail) && r.GamesDetail.length > 0) {
-        totalGames += r.GamesDetail.length;
-        brickedGames += r.GamesDetail.filter(g => g.brick === 'Sim').length;
-      } else {
-        totalGames += 1;
-        if (isBricked(r)) brickedGames += 1;
-      }
+    destroyChart('brick');
+  
+    const byDeck = groupBy(filtered, 'Deck');
+    let brickStats = Object.keys(byDeck).map(deck => {
+      const rows = byDeck[deck];
+      let totalGames = 0, brickedGames = 0;
+      rows.forEach(r => {
+        if (r.GamesDetail && Array.isArray(r.GamesDetail) && r.GamesDetail.length > 0) {
+          totalGames += r.GamesDetail.length;
+          brickedGames += r.GamesDetail.filter(g => g.brick === 'Sim').length;
+        } else {
+          totalGames += 1;
+          if (isBricked(r)) brickedGames += 1;
+        }
+      });
+      const pct = totalGames ? Math.round((brickedGames / totalGames) * 100) : 0;
+      return { deck, pct, total: totalGames };
     });
-    return totalGames ? Math.round((brickedGames / totalGames) * 100) : 0;
-  });
-  const notBricked = bricked.map(v => 100 - v);
-
-  charts['brick'] = new Chart(document.getElementById('chartBrick'), {
-    type: 'bar',
-    data: {
-      labels: deckLabels,
-      datasets: [
-        {
-          label: '🟢 Sem Brick',
-          data: notBricked,
-          backgroundColor: '#34e0a1bb',
-          borderColor: '#34e0a1',
-          borderWidth: 1,
-          borderSkipped: false,
-        },
-        {
-          label: '🔴 Brickado',
-          data: bricked,
+    
+    // Filtra decks com pelo menos 1 jogo para evitar divis�o por zero se houver sujeira
+    brickStats = brickStats.filter(s => s.total > 0);
+    // Ordena decrescente por % de brick e desempata por total de jogos
+    brickStats.sort((a, b) => b.pct - a.pct || b.total - a.total);
+    // Limita aos 10 maiores
+    const top10 = brickStats.slice(0, 10);
+  
+    const labels = top10.map(s => s.deck);
+    const dataPct = top10.map(s => s.pct);
+  
+    charts['brick'] = new Chart(document.getElementById('chartBrick'), {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{
+          label: '% Brick',
+          data: dataPct,
           backgroundColor: '#f75050bb',
           borderColor: '#f75050',
-          borderWidth: 1,
-          borderSkipped: false,
+          borderWidth: 2,
+          borderRadius: 6
+        }]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false }, // Sem legenda porque � s� 1 cor
+          datalabels: {
+            display: function(context) { return context.dataset.data[context.dataIndex] > 0; },
+            color: '#fff',
+            font: { weight: 'bold', size: 12 },
+            formatter: (value) => value + '%'
+          },
+          tooltip: {
+            callbacks: {
+              label: ctx => {
+                const stat = top10[ctx.dataIndex];
+                return ` Brick: ${stat.pct}% (Total: ${stat.total} jogos)`;
+              }
+            }
+          }
         },
-      ]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { position: 'bottom' },
-        tooltip: {
-          callbacks: {
-            label: ctx => {
-              const deck  = deckLabels[ctx.dataIndex];
+        scales: {
+          x: { grid: { color: 'rgba(255,255,255,0.05)' }, max: 100 },
+          y: { grid: { color: 'rgba(255,255,255,0.03)' }, ticks: { autoSkip: false } }
+        }
+      }
+    });
               const rows  = byDeck[deck];
               const isBrick = ctx.datasetIndex === 1;
               const count = rows.filter(r => isBrick
@@ -3026,4 +3067,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 });
+
+
+
 

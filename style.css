@@ -629,7 +629,7 @@ body::after {
 .kpi-label { font-size: 0.73rem; color: var(--text2); margin-top: 4px; letter-spacing: 0.02em; }
 
 /* ---------- Chart Grids ---------- */
-.charts-grid { display: grid; gap: 1.5rem; }
+.charts-grid { display: grid; gap: 1.5rem; margin-bottom: 1.5rem; }
 .two-col   { grid-template-columns: 1fr 1fr; }
 .three-col { grid-template-columns: 1fr 1fr 1fr; }
 
