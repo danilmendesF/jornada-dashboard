@@ -1485,8 +1485,7 @@ function renderBrick() {
           legend: { display: false }, // Sem legenda porque � s� 1 cor
           datalabels: {
             display: function(context) {
-              const val = context.dataset.data[context.dataIndex];
-              return val > 0 && (val / maxTotal) > 0.04;
+              return context.dataset.data[context.dataIndex] > 0;
             },
             color: '#fff',
             font: { weight: 'bold', size: 12 },
@@ -3043,6 +3042,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 });
+
 
 
 
