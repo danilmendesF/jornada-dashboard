@@ -401,7 +401,7 @@ function initAllSearchableSelects() {
   const ids = [
     'filterPlayer', 'filterDeck', 'filterFormato', 'filterLocal', 'filterColecao',
     'quickLogPlayer', 'quickLogDeck', 'quickLogDeckAdv', 'quickLogColecao',
-    'matchupPlayer', 'matchupSelectMyDeck', 'matchupSelectOppDeck',
+    'matchupPlayer', 'matchupSelectMyDeck', 'matchupSelectOppDeck', 'matchupSortOrder',
     'formMatchPlayer', 'formMatchDeck', 'formMatchDeckAdv', 'formDeckPlayer', 'formMatchColecao'
   ];
   ids.forEach(id => {
