@@ -1034,7 +1034,7 @@ function renderDeckWR() {
       maintainAspectRatio: false,
       plugins: {
           legend: { display: false },
-          datalabels: { display: true, color: '#fff', font: { weight: 'bold', size: 11 }, anchor: 'center', align: 'center', textStrokeColor: '#000000', textStrokeWidth: 3, formatter: v => Math.round(v) + '%' },
+          datalabels: { display: true, color: '#fff', font: { weight: 'bold', size: 10 }, anchor: 'center', align: 'center', textStrokeColor: '#000000', textStrokeWidth: 2, formatter: v => Math.round(v) + '%' },
           tooltip: {
           callbacks: {
             label: ctx => {
@@ -1086,7 +1086,7 @@ function renderPlayerPerf() {
       afterDatasetsDraw(chart) {
         const { ctx, scales: { x, y } } = chart;
         ctx.save();
-        ctx.font = 'bold 11px "Outfit", "Inter", sans-serif';
+        ctx.font = 'bold 10px "Outfit", "Inter", sans-serif';
         ctx.fillStyle = '#38d9f5';
         ctx.textBaseline = 'middle';
         
@@ -1122,9 +1122,9 @@ function renderPlayerPerf() {
               return context.dataset.data[context.dataIndex] > 0;
             },
             textStrokeColor: '#000000',
-            textStrokeWidth: 3,
+            textStrokeWidth: 2,
             color: '#fff',
-            font: { weight: 'bold', size: 11 },
+            font: { weight: 'bold', size: 9.5 },
             formatter: Math.round
           },
           tooltip: {
@@ -1291,9 +1291,9 @@ function renderResultPie() {
             return ctx.dataset.data[ctx.dataIndex] > 0;
           },
           color: '#fff',
-          font: { weight: 'bold', size: 11 },
+          font: { weight: 'bold', size: 10 },
           textStrokeColor: '#000000',
-          textStrokeWidth: 3,
+          textStrokeWidth: 2,
           formatter: (val, ctx) => {
             const suffixes = ['V', 'E', 'D'];
             return `${val}${suffixes[ctx.dataIndex] || ''}`;
@@ -1345,11 +1345,11 @@ function renderLocal() {
         datalabels: {
           display: function(ctx) { return ctx.dataset.data[ctx.dataIndex] > 0; },
           color: '#fff',
-          font: { weight: 'bold', size: 11 },
+          font: { weight: 'bold', size: 9.5 },
           anchor: 'end',
           align: 'right',
           textStrokeColor: '#000000',
-          textStrokeWidth: 3,
+          textStrokeWidth: 2,
           formatter: Math.round
         }
       },
@@ -1393,9 +1393,9 @@ function renderFormato() {
             return (total > 0 && (val / total) >= 0.05) ? 'auto' : false;
           },
           color: '#fff',
-          font: { weight: 'bold', size: 13 },
+          font: { weight: 'bold', size: 10 },
           textStrokeColor: '#000000',
-          textStrokeWidth: 3,
+          textStrokeWidth: 2,
           formatter: Math.round
         } }
     }
@@ -1434,11 +1434,11 @@ function renderDeckCount() {
         datalabels: {
           display: function(ctx) { return ctx.dataset.data[ctx.dataIndex] > 0; },
           color: '#fff',
-          font: { weight: 'bold', size: 11 },
+          font: { weight: 'bold', size: 9.5 },
           anchor: 'center',
           align: 'center',
           textStrokeColor: '#000000',
-          textStrokeWidth: 3,
+          textStrokeWidth: 2,
           formatter: Math.round
         }
       },
@@ -1496,7 +1496,7 @@ function renderStart() {
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: { legend: { position: 'bottom' }, datalabels: { display: function(ctx) { return ctx.dataset.data[ctx.dataIndex] > 0; }, color: '#fff', font: { weight: 'bold', size: 12 }, textStrokeColor: '#000000', textStrokeWidth: 3, formatter: Math.round } },
+      plugins: { legend: { position: 'bottom' }, datalabels: { display: function(ctx) { return ctx.dataset.data[ctx.dataIndex] > 0; }, color: '#fff', font: { weight: 'bold', size: 10 }, textStrokeColor: '#000000', textStrokeWidth: 2, formatter: Math.round } },
       scales: {
         y: { grid: { color:'rgba(255,255,255,0.05)' } },
         x: { grid: { color:'rgba(255,255,255,0.03)' } }
@@ -1541,7 +1541,7 @@ function renderBrick() {
       afterDatasetsDraw(chart) {
         const { ctx, scales: { x, y } } = chart;
         ctx.save();
-        ctx.font = 'bold 11px "Outfit", "Inter", sans-serif';
+        ctx.font = 'bold 10px "Outfit", "Inter", sans-serif';
         ctx.fillStyle = '#94a3b8';
         ctx.textBaseline = 'middle';
         
@@ -1580,9 +1580,9 @@ function renderBrick() {
               return context.dataset.data[context.dataIndex] > 0;
             },
             color: '#fff',
-            font: { weight: 'bold', size: 11 },
+            font: { weight: 'bold', size: 9.5 },
             textStrokeColor: '#000000',
-            textStrokeWidth: 3,
+            textStrokeWidth: 2,
             anchor: 'center',
             align: 'center',
             formatter: (value) => value + '%'
