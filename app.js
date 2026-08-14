@@ -1081,6 +1081,25 @@ function renderPlayerPerf() {
     const losses = sortedStats.map(s => s.losses);
     const maxTotal = Math.max(...sortedStats.map(s => s.total), 1);
 
+    const playerPerfWRPlugin = {
+      id: 'playerPerfWRLabel',
+      afterDatasetsDraw(chart) {
+        const { ctx, scales: { x, y } } = chart;
+        ctx.save();
+        ctx.font = 'bold 11px "Outfit", "Inter", sans-serif';
+        ctx.fillStyle = '#38d9f5';
+        ctx.textBaseline = 'middle';
+        
+        sortedStats.forEach((stat, index) => {
+          if (stat.total === 0) return;
+          const yPos = y.getPixelForTick(index);
+          const xPos = x.getPixelForValue(stat.total);
+          ctx.fillText(` ${stat.wr}% WR`, xPos + 4, yPos);
+        });
+        ctx.restore();
+      }
+    };
+
     charts['playerPerf'] = new Chart(document.getElementById('chartPlayerPerf'), {
       type: 'bar',
       data: {
@@ -1095,14 +1114,15 @@ function renderPlayerPerf() {
         indexAxis: 'y',
         responsive: true,
         maintainAspectRatio: false,
+        layout: { padding: { right: 60 } },
         plugins: {
           legend: { position: 'bottom' },
           datalabels: {
             display: function(context) {
-                return context.dataset.data[context.dataIndex] > 0;
-              },
-              textStrokeColor: '#0f172a',
-              textStrokeWidth: 3,
+              return context.dataset.data[context.dataIndex] > 0;
+            },
+            textStrokeColor: '#0f172a',
+            textStrokeWidth: 3,
             color: '#fff',
             font: { weight: 'bold', size: 12 },
             formatter: Math.round
@@ -1113,7 +1133,7 @@ function renderPlayerPerf() {
                 const stat = sortedStats[ctx.dataIndex];
                 const dsLabel = ctx.dataset.label;
                 const val = ctx.parsed.x;
-                return ` ${dsLabel}: ${val} (Total: ${stat.total} jogos)`;
+                return ` ${dsLabel}: ${val} (Total: ${stat.total} jogos | WR: ${stat.wr}%)`;
               }
             }
           }
@@ -1124,28 +1144,10 @@ function renderPlayerPerf() {
             stacked: true,
             grid: { color: 'rgba(255,255,255,0.03)' },
             ticks: { autoSkip: false }
-          },
-          y1: {
-            position: 'right',
-            grid: { display: false },
-            border: { display: false },
-            title: {
-              display: true,
-              text: 'Taxa de Vitória (WR)',
-              color: '#8890b0',
-              font: { weight: 'bold', size: 10 }
-            },
-            ticks: {
-              autoSkip: false,
-              color: '#38d9f5',
-              font: { weight: 'bold', size: 11 },
-              callback: function(value, index) {
-                return sortedStats[index].wr + '% WR';
-              }
-            }
           }
         }
-      }
+      },
+      plugins: [playerPerfWRPlugin]
     });
 }
 
@@ -1313,38 +1315,47 @@ function renderResultPie() {
 function renderLocal() {
   destroyChart('local');
   const byLocal = groupBy(filtered, 'Local');
-  const labels  = Object.keys(byLocal).sort((a,b) => byLocal[b].length - byLocal[a].length);
-  const counts  = labels.map(l => byLocal[l].length);
+  const sorted  = Object.entries(byLocal).sort((a,b) => b[1].length - a[1].length);
+  const labels  = sorted.map(([k]) => k);
+  const counts  = sorted.map(([,v]) => v.length);
   const bgColors= labels.map((_,i) => PALETTE[i % PALETTE.length]);
 
   charts['local'] = new Chart(document.getElementById('chartLocal'), {
-    type: 'doughnut',
+    type: 'bar',
     data: {
       labels,
       datasets: [{
+        label: 'Partidas',
         data: counts,
-        backgroundColor: bgColors.map(c=>c+'cc'),
+        backgroundColor: bgColors.map(c => c + 'cc'),
         borderColor: bgColors,
         borderWidth: 2,
-        hoverOffset: 8,
+        borderRadius: 6,
+        borderSkipped: false,
       }]
     },
     options: {
+      indexAxis: 'y',
       responsive: true,
       maintainAspectRatio: false,
-      cutout: '55%',
-      plugins: { legend: { position: 'bottom' }, datalabels: {
-          display: function(ctx) {
-            const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
-            const val = ctx.dataset.data[ctx.dataIndex];
-            return (total > 0 && (val / total) >= 0.05) ? 'auto' : false;
-          },
+      layout: { padding: { right: 35 } },
+      plugins: {
+        legend: { display: false },
+        datalabels: {
+          display: function(ctx) { return ctx.dataset.data[ctx.dataIndex] > 0; },
           color: '#fff',
-          font: { weight: 'bold', size: 13 },
+          font: { weight: 'bold', size: 12 },
+          anchor: 'end',
+          align: 'right',
           textStrokeColor: '#0f172a',
           textStrokeWidth: 3,
           formatter: Math.round
-        } }
+        }
+      },
+      scales: {
+        x: { grid: { color: 'rgba(255,255,255,0.05)' } },
+        y: { grid: { color: 'rgba(255,255,255,0.03)' }, ticks: { autoSkip: false } }
+      }
     }
   });
 }
@@ -1523,6 +1534,7 @@ function renderBrick() {
         indexAxis: 'y',
         responsive: true,
         maintainAspectRatio: false,
+        layout: { padding: { right: 90 } },
         plugins: {
           legend: { display: false },
           datalabels: {
@@ -1533,8 +1545,8 @@ function renderBrick() {
             font: { weight: 'bold', size: 12 },
             textStrokeColor: '#0f172a',
             textStrokeWidth: 3,
-            anchor: 'center',
-            align: 'center',
+            anchor: 'end',
+            align: 'right',
             formatter: (value, ctx) => {
               const stat = top10[ctx.dataIndex];
               return `${value}% (${stat.total} jogos)`;
