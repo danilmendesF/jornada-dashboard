@@ -18,7 +18,7 @@
       rel="stylesheet"
     />
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <link rel="stylesheet" href="dist/style.min.css?v=1.2.3" />
+    <link rel="stylesheet" href="dist/style.min.css?v=1.2.4" />
     <script>
       (function () {
         try {
@@ -213,7 +213,7 @@
               font-family: &quot;Outfit&quot;, sans-serif;
             "
           >
-            v<span id="appVersionAuth">1.2.3</span>
+            v<span id="appVersionAuth">1.2.4</span>
           </div>
         </div>
       </div>
@@ -257,7 +257,13 @@
         </div>
       </header>
       <section class="filters-bar">
-        <div class="filters-inner">
+        <button id="mobileFilterToggle" class="mobile-filter-toggle">
+          <div style="display: flex; align-items: center; gap: 0.4rem;">
+            <i class="fas fa-filter"></i> <span>Filtros</span>
+          </div>
+          <i class="fas fa-chevron-down toggle-icon"></i>
+        </button>
+        <div class="filters-inner" id="filtersInner">
           <div class="filter-group">
             <label class="filter-label">Player (Multi-Seleção)</label>
             <div class="multi-deck-wrap" id="multiPlayerWrap">
@@ -2374,7 +2380,7 @@
         </div>
       </div>
     </div>
-    <script src="dist/app.min.js?v=1.2.3"></script>
+    <script src="dist/app.min.js?v=1.2.4"></script>
     <script>
       // Mobile Hamburger Menu Toggle
       const mobileBtn = document.getElementById('mobileMenuBtn');
@@ -2407,7 +2413,7 @@
       <div class="version-reload-text">Nova versão detectada!</div>
       <div class="version-reload-sub">Atualizando o painel para sincronizar seus dados...</div>
     </div>
-    <div class="app-version-footer">v<span id="appVersion">1.2.3</span></div>
+    <div class="app-version-footer">v<span id="appVersion">1.2.4</span></div>
   </body>
 
 

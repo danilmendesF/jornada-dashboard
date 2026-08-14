@@ -3011,3 +3011,19 @@ document.addEventListener('DOMContentLoaded', initMultiConfFilter);
 
 
 
+
+// =========================================================================
+// MOBILE FILTER TOGGLE
+// =========================================================================
+document.addEventListener("DOMContentLoaded", () => {
+  const mobileFilterToggle = document.getElementById("mobileFilterToggle");
+  const filtersInner = document.getElementById("filtersInner");
+  
+  if (mobileFilterToggle && filtersInner) {
+    mobileFilterToggle.addEventListener("click", () => {
+      mobileFilterToggle.classList.toggle("open");
+      filtersInner.classList.toggle("expanded");
+    });
+  }
+});
+
