@@ -70,7 +70,7 @@ window.toggleQuickLogPill = function(gameNum, field) {
 };
 
 window.quickLogMatch = function(resultado) {
-  const player   = document.getElementById('quickLogPlayer')?.value;
+  const player   = document.getElementById('quickLogPlayer')?.value || (typeof getActivePlayerName === 'function' ? getActivePlayerName() : '') || window.currentUser?.name || '';
   const deckName = document.getElementById('quickLogDeck')?.value;
   const advName  = document.getElementById('quickLogAdvName')?.value.trim();
   const deckAdv  = document.getElementById('quickLogDeckAdv')?.value;
@@ -86,7 +86,11 @@ window.quickLogMatch = function(resultado) {
   const placar = document.getElementById('quickLogPlacar')?.value || (resultado === 'Vitória' ? '1-0' : resultado === 'Empate' ? '0-0' : '0-1');
 
   if (!player || !deckName || !advName || !deckAdv || !colecao) {
-    if (typeof showToast === 'function') showToast('⚠️ Preencha Player, Meu Deck, Oponente, Deck Adv e Coleção!');
+    if (typeof showToast === 'function') showToast('⚠️ Preencha Meu Deck, Oponente, Deck Adv e Coleção!');
+    return;
+  }
+  if (advName && player && advName.toLowerCase() === player.toLowerCase()) {
+    if (typeof showToast === 'function') showToast('⚠️ O adversário não pode ser você mesmo (' + player + ').');
     return;
   }
 

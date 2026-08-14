@@ -1810,18 +1810,11 @@ function showToast(msg) {
 
 // ── QUICK LOG — Trava #quickLogPlayer ao jogador autenticado ──────────────────
 function populateQuickLogDropdowns() {
-  const pSel = document.getElementById('quickLogPlayer');
-  if (pSel) {
-    const activeName = typeof getActivePlayerName === 'function' ? getActivePlayerName() : null;
-    if (activeName) {
-      pSel.innerHTML = `<option value="${activeName}">👤 ${activeName}</option>`;
-      pSel.value = activeName;
-      pSel.selectedIndex = 0;
-    } else {
-      pSel.innerHTML = `<option value="">🔑 Faça Login para Registrar Partida</option>`;
-    }
-    if (pSel.syncSearchableSelect) pSel.syncSearchableSelect();
-  }
+  const activeName = (typeof getActivePlayerName === 'function' ? getActivePlayerName() : null) || window.currentUser?.name || '';
+  const pInput = document.getElementById('quickLogPlayer');
+  const pDisplay = document.getElementById('quickLogPlayerDisplay');
+  if (pInput) pInput.value = activeName;
+  if (pDisplay) pDisplay.textContent = activeName ? `${activeName}` : 'Treinador não identificado';
 
   populateLocalSelects();
   populateColecaoSelects();
@@ -1962,7 +1955,7 @@ window.toggleQuickLogPill = function(gameNum, field) {
 };
 
 window.quickLogMatch = function(resultado) {
-  const player   = document.getElementById('quickLogPlayer')?.value;
+  const player   = document.getElementById('quickLogPlayer')?.value || (typeof getActivePlayerName === 'function' ? getActivePlayerName() : '') || window.currentUser?.name || '';
   const deckName = document.getElementById('quickLogDeck')?.value;
   const advName  = document.getElementById('quickLogAdvName')?.value.trim() || 'Oponente';
   const deckAdv  = document.getElementById('quickLogDeckAdv')?.value;
@@ -1972,7 +1965,11 @@ window.quickLogMatch = function(resultado) {
   updatePlacarDropdown('quickLogFormato', 'quickLogPlacar', null, resultado);
   const placarInput = document.getElementById('quickLogPlacar')?.value || (formato === 'MD1' ? '1-0' : '2-0');
 
-  if (!player)   { showToast('⚠️ Selecione seu player.'); return; }
+  if (!player)   { showToast('⚠️ Treinador não autenticado. Faça login para registrar.'); return; }
+  if (advName && player && advName.toLowerCase() === player.toLowerCase()) {
+    showToast('⚠️ O adversário não pode ser você mesmo (' + player + ').');
+    return;
+  }
   if (!deckName) { showToast('⚠️ Selecione seu deck.'); return; }
   if (!deckAdv)  { showToast('⚠️ Selecione o deck do oponente.'); return; }
   if (!formato)  { showToast('⚠️ Selecione o formato (MD1 ou MD3).'); return; }

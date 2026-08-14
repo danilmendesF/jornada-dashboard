@@ -400,7 +400,7 @@ function makeSearchableSelect(selectEl) {
 function initAllSearchableSelects() {
   const ids = [
     'filterPlayer', 'filterDeck', 'filterFormato', 'filterLocal', 'filterColecao',
-    'quickLogPlayer', 'quickLogDeck', 'quickLogDeckAdv', 'quickLogColecao',
+    'quickLogDeck', 'quickLogDeckAdv', 'quickLogColecao',
     'matchupPlayer', 'matchupSelectMyDeck', 'matchupSelectOppDeck', 'matchupSortOrder',
     'formMatchDeck', 'formMatchDeckAdv', 'formDeckPlayer', 'formMatchColecao'
   ];
