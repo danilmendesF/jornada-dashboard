@@ -1037,7 +1037,7 @@ function renderDeckWR() {
         tooltip: {
           callbacks: {
             label: ctx => {
-              const stat = top7[ctx.dataIndex];
+              const stat = top10[ctx.dataIndex];
               return ` ${stat.wr}%  (${stat.wins}V / ${stat.tot} jogos)`;
             }
           }
@@ -1072,13 +1072,14 @@ function renderPlayerPerf() {
     const combined = baseLabels.map((l, i) => ({ label: l, stat: playerStats[i] }));
     combined.sort((a, b) => b.stat.wins - a.stat.wins || b.stat.tot - a.stat.tot);
   
-    const labels = combined.map(c => c.label + ' (WR: ' + c.stat.wr + '%)');
+    const labels = combined.map(c => c.label);
     const sortedStats = combined.map(c => c.stat);
   
     const wins   = sortedStats.map(s => s.wins);
     const draws  = sortedStats.map(s => s.draws);
     const losses = sortedStats.map(s => s.losses);
-  
+    const maxTotal = Math.max(...sortedStats.map(s => s.total), 1);
+
     charts['playerPerf'] = new Chart(document.getElementById('chartPlayerPerf'), {
       type: 'bar',
       data: {
@@ -1096,7 +1097,10 @@ function renderPlayerPerf() {
         plugins: {
           legend: { position: 'bottom' },
           datalabels: {
-            display: function(context) { return context.dataset.data[context.dataIndex] > 0; },
+            display: function(context) {
+              const val = context.dataset.data[context.dataIndex];
+              return val > 0 && (val / maxTotal) > 0.04;
+            },
             color: '#fff',
             font: { weight: 'bold', size: 12 },
             formatter: Math.round
@@ -1118,6 +1122,19 @@ function renderPlayerPerf() {
             stacked: true,
             grid: { color: 'rgba(255,255,255,0.03)' },
             ticks: { autoSkip: false }
+          },
+          y1: {
+            position: 'right',
+            grid: { display: false },
+            border: { display: false },
+            ticks: {
+              autoSkip: false,
+              color: '#8890b0',
+              font: { weight: 'bold', size: 11 },
+              callback: function(value, index) {
+                return sortedStats[index].wr + '%';
+              }
+            }
           }
         }
       }
@@ -1467,7 +1484,10 @@ function renderBrick() {
         plugins: {
           legend: { display: false }, // Sem legenda porque � s� 1 cor
           datalabels: {
-            display: function(context) { return context.dataset.data[context.dataIndex] > 0; },
+            display: function(context) {
+              const val = context.dataset.data[context.dataIndex];
+              return val > 0 && (val / maxTotal) > 0.04;
+            },
             color: '#fff',
             font: { weight: 'bold', size: 12 },
             formatter: (value) => value + '%'
@@ -3023,6 +3043,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 });
+
 
 
 
