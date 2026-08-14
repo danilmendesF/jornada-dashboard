@@ -1034,7 +1034,7 @@ function renderDeckWR() {
       maintainAspectRatio: false,
       plugins: {
           legend: { display: false },
-          datalabels: { display: true, color: '#fff', font: { weight: 'bold', size: 12 }, anchor: 'center', align: 'center', textStrokeColor: '#0f172a', textStrokeWidth: 3, formatter: v => Math.round(v) + '%' },
+          datalabels: { display: true, color: '#fff', font: { weight: 'bold', size: 11 }, anchor: 'center', align: 'center', textStrokeColor: '#000000', textStrokeWidth: 3, formatter: v => Math.round(v) + '%' },
           tooltip: {
           callbacks: {
             label: ctx => {
@@ -1121,10 +1121,10 @@ function renderPlayerPerf() {
             display: function(context) {
               return context.dataset.data[context.dataIndex] > 0;
             },
-            textStrokeColor: '#0f172a',
+            textStrokeColor: '#000000',
             textStrokeWidth: 3,
             color: '#fff',
-            font: { weight: 'bold', size: 12 },
+            font: { weight: 'bold', size: 11 },
             formatter: Math.round
           },
           tooltip: {
@@ -1285,20 +1285,21 @@ function renderResultPie() {
       maintainAspectRatio: false,
       cutout: '65%',
       plugins: {
-          legend: { position: 'bottom' },
-          datalabels: {
+        legend: { position: 'bottom' },
+        datalabels: {
           display: function(ctx) {
-            const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
-            const val = ctx.dataset.data[ctx.dataIndex];
-            return (total > 0 && (val / total) >= 0.05) ? 'auto' : false;
+            return ctx.dataset.data[ctx.dataIndex] > 0;
           },
           color: '#fff',
-          font: { weight: 'bold', size: 13 },
-          textStrokeColor: '#0f172a',
+          font: { weight: 'bold', size: 11 },
+          textStrokeColor: '#000000',
           textStrokeWidth: 3,
-          formatter: Math.round
+          formatter: (val, ctx) => {
+            const suffixes = ['V', 'E', 'D'];
+            return `${val}${suffixes[ctx.dataIndex] || ''}`;
+          }
         },
-          tooltip: {
+        tooltip: {
           callbacks: {
             label: ctx => {
               const total = ctx.dataset.data.reduce((a,b)=>a+b,0);
@@ -1344,17 +1345,20 @@ function renderLocal() {
         datalabels: {
           display: function(ctx) { return ctx.dataset.data[ctx.dataIndex] > 0; },
           color: '#fff',
-          font: { weight: 'bold', size: 12 },
+          font: { weight: 'bold', size: 11 },
           anchor: 'end',
           align: 'right',
-          textStrokeColor: '#0f172a',
+          textStrokeColor: '#000000',
           textStrokeWidth: 3,
           formatter: Math.round
         }
       },
       scales: {
         x: { grid: { color: 'rgba(255,255,255,0.05)' } },
-        y: { grid: { color: 'rgba(255,255,255,0.03)' }, ticks: { autoSkip: false } }
+        y: {
+          grid: { color: 'rgba(255,255,255,0.03)' },
+          ticks: { autoSkip: false, font: { size: 11 } }
+        }
       }
     }
   });
@@ -1390,7 +1394,7 @@ function renderFormato() {
           },
           color: '#fff',
           font: { weight: 'bold', size: 13 },
-          textStrokeColor: '#0f172a',
+          textStrokeColor: '#000000',
           textStrokeWidth: 3,
           formatter: Math.round
         } }
@@ -1425,10 +1429,26 @@ function renderDeckCount() {
       indexAxis: 'y',
       responsive: true,
       maintainAspectRatio: false,
-      layout: { padding: { right: 30 } }, plugins: { legend: { display: false }, datalabels: { display: function(ctx) { return ctx.dataset.data[ctx.dataIndex] > 0; }, color: '#fff', font: { weight: 'bold', size: 12 }, anchor: 'end', align: 'right', textStrokeColor: '#0f172a', textStrokeWidth: 3, formatter: Math.round } },
+      layout: { padding: { right: 35 } },
+      plugins: {
+        legend: { display: false },
+        datalabels: {
+          display: function(ctx) { return ctx.dataset.data[ctx.dataIndex] > 0; },
+          color: '#fff',
+          font: { weight: 'bold', size: 11 },
+          anchor: 'end',
+          align: 'right',
+          textStrokeColor: '#000000',
+          textStrokeWidth: 3,
+          formatter: Math.round
+        }
+      },
       scales: {
         x: { grid: { color: 'rgba(255,255,255,0.05)' } },
-        y: { grid: { color: 'rgba(255,255,255,0.03)' } }
+        y: {
+          grid: { color: 'rgba(255,255,255,0.03)' },
+          ticks: { autoSkip: false, font: { size: 11 } }
+        }
       }
     }
   });
@@ -1477,7 +1497,7 @@ function renderStart() {
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: { legend: { position: 'bottom' }, datalabels: { display: function(ctx) { return ctx.dataset.data[ctx.dataIndex] > 0; }, color: '#fff', font: { weight: 'bold', size: 12 }, textStrokeColor: '#0f172a', textStrokeWidth: 3, formatter: Math.round } },
+      plugins: { legend: { position: 'bottom' }, datalabels: { display: function(ctx) { return ctx.dataset.data[ctx.dataIndex] > 0; }, color: '#fff', font: { weight: 'bold', size: 12 }, textStrokeColor: '#000000', textStrokeWidth: 3, formatter: Math.round } },
       scales: {
         y: { grid: { color:'rgba(255,255,255,0.05)' } },
         x: { grid: { color:'rgba(255,255,255,0.03)' } }
@@ -1534,7 +1554,7 @@ function renderBrick() {
         indexAxis: 'y',
         responsive: true,
         maintainAspectRatio: false,
-        layout: { padding: { right: 90 } },
+        layout: { padding: { right: 85 } },
         plugins: {
           legend: { display: false },
           datalabels: {
@@ -1542,8 +1562,8 @@ function renderBrick() {
               return context.dataset.data[context.dataIndex] > 0;
             },
             color: '#fff',
-            font: { weight: 'bold', size: 12 },
-            textStrokeColor: '#0f172a',
+            font: { weight: 'bold', size: 11 },
+            textStrokeColor: '#000000',
             textStrokeWidth: 3,
             anchor: 'end',
             align: 'right',
@@ -1563,7 +1583,10 @@ function renderBrick() {
         },
         scales: {
           x: { grid: { color: 'rgba(255,255,255,0.05)' }, max: 100 },
-          y: { grid: { color: 'rgba(255,255,255,0.03)' }, ticks: { autoSkip: false } }
+          y: {
+            grid: { color: 'rgba(255,255,255,0.03)' },
+            ticks: { autoSkip: false, font: { size: 11 } }
+          }
         }
       }
     });
