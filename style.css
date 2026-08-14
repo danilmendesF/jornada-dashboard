@@ -283,7 +283,7 @@ body::after {
   border-bottom: 1px solid var(--border);
   padding: 0.9rem 2rem;
   position: sticky;
-  top: 0;
+  top: 81px; /* Height of the header */
   z-index: 50;
 }
 
@@ -1205,7 +1205,10 @@ tbody tr:last-child td { border-bottom: none; }
   .last-update { width: 100%; text-align: left; margin-top: 0.2rem; }
 
   /* Filters Grid on Mobile */
-  .filters-bar { padding: 0.8rem 1rem; }
+  .filters-bar { 
+    padding: 0.8rem 1rem;
+    top: 63px; /* Height of the mobile header */
+  }
   
   .mobile-filter-toggle {
     display: flex;
