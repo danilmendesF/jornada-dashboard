@@ -1429,15 +1429,14 @@ function renderDeckCount() {
       indexAxis: 'y',
       responsive: true,
       maintainAspectRatio: false,
-      layout: { padding: { right: 35 } },
       plugins: {
         legend: { display: false },
         datalabels: {
           display: function(ctx) { return ctx.dataset.data[ctx.dataIndex] > 0; },
           color: '#fff',
           font: { weight: 'bold', size: 11 },
-          anchor: 'end',
-          align: 'right',
+          anchor: 'center',
+          align: 'center',
           textStrokeColor: '#000000',
           textStrokeWidth: 3,
           formatter: Math.round
@@ -1527,7 +1526,7 @@ function renderBrick() {
       return { deck, pct, total: totalGames };
     });
     
-    // Filtra decks com pelo menos 1 jogo para evitar divis�o por zero se houver sujeira
+    // Filtra decks com pelo menos 1 jogo para evitar divisão por zero se houver sujeira
     brickStats = brickStats.filter(s => s.total > 0);
     // Ordena decrescente por % de brick e desempata por total de jogos
     brickStats.sort((a, b) => b.pct - a.pct || b.total - a.total);
@@ -1536,6 +1535,25 @@ function renderBrick() {
   
     const labels = top10.map(s => s.deck);
     const dataPct = top10.map(s => s.pct);
+
+    const brickTotalPlugin = {
+      id: 'brickTotalLabel',
+      afterDatasetsDraw(chart) {
+        const { ctx, scales: { x, y } } = chart;
+        ctx.save();
+        ctx.font = 'bold 11px "Outfit", "Inter", sans-serif';
+        ctx.fillStyle = '#94a3b8';
+        ctx.textBaseline = 'middle';
+        
+        top10.forEach((stat, index) => {
+          if (stat.pct === 0) return;
+          const yPos = y.getPixelForTick(index);
+          const xPos = x.getPixelForValue(stat.pct);
+          ctx.fillText(` ${stat.total} jogos`, xPos + 4, yPos);
+        });
+        ctx.restore();
+      }
+    };
   
     charts['brick'] = new Chart(document.getElementById('chartBrick'), {
       type: 'bar',
@@ -1554,7 +1572,7 @@ function renderBrick() {
         indexAxis: 'y',
         responsive: true,
         maintainAspectRatio: false,
-        layout: { padding: { right: 85 } },
+        layout: { padding: { right: 65 } },
         plugins: {
           legend: { display: false },
           datalabels: {
@@ -1565,18 +1583,15 @@ function renderBrick() {
             font: { weight: 'bold', size: 11 },
             textStrokeColor: '#000000',
             textStrokeWidth: 3,
-            anchor: 'end',
-            align: 'right',
-            formatter: (value, ctx) => {
-              const stat = top10[ctx.dataIndex];
-              return `${value}% (${stat.total} jogos)`;
-            }
+            anchor: 'center',
+            align: 'center',
+            formatter: (value) => value + '%'
           },
           tooltip: {
             callbacks: {
               label: ctx => {
                 const stat = top10[ctx.dataIndex];
-                return ` Brick: ${stat.pct}% (${stat.brickedGames || ''} / ${stat.total} jogos)`;
+                return ` Brick: ${stat.pct}% (${stat.total} jogos)`;
               }
             }
           }
@@ -1588,7 +1603,8 @@ function renderBrick() {
             ticks: { autoSkip: false, font: { size: 11 } }
           }
         }
-      }
+      },
+      plugins: [brickTotalPlugin]
     });
 }
 
