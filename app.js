@@ -1084,7 +1084,7 @@ function renderPlayerPerf() {
       data: {
         labels,
         datasets: [
-          { label: 'Vit�rias', data: wins,   backgroundColor: WIN_COLOR  + 'bb', borderColor: WIN_COLOR,   borderWidth: 2, borderRadius: 6 },
+          { label: 'Vit�rias', data: wins,   backgroundColor: WIN_COLOR  + 'bb', borderColor: WIN_COLOR,   borderWidth: 2, borderRadius: 6 },
           { label: 'Empates',  data: draws,  backgroundColor: DRAW_COLOR + 'bb', borderColor: DRAW_COLOR,  borderWidth: 2, borderRadius: 6 },
           { label: 'Derrotas', data: losses, backgroundColor: LOSS_COLOR + 'bb', borderColor: LOSS_COLOR,  borderWidth: 2, borderRadius: 6 },
         ]
@@ -1122,30 +1122,8 @@ function renderPlayerPerf() {
         }
       }
     });
-              const dsLabel = ctx.dataset.label;
-              const val = ctx.parsed.y;
-              return ` ${dsLabel}: ${val} (Total: ${stat.total} jogos | WR: ${stat.wr}%)`;
-            }
-          }
-        }
-      },
-      scales: {
-        y: { stacked: false, grid: { color: 'rgba(255,255,255,0.05)' } },
-        x: {
-          grid: { color: 'rgba(255,255,255,0.03)' },
-          ticks: {
-            autoSkip: false,
-            maxRotation: 45,
-            minRotation: 0,
-            color: '#a0aec0'
-          }
-        }
-      }
-    }
-  });
 }
 
-// ── 9b. INDIVIDUAL PLAYER SUBTYPE / VARIANT BREAKDOWN ────────────────────────
 function renderPlayerSubtypeBreakdown() {
   const sectionEl = document.getElementById('playerSubtypeSection');
   const titleEl   = document.getElementById('playerSubtypeTitle');
@@ -1459,7 +1437,7 @@ function renderBrick() {
       return { deck, pct, total: totalGames };
     });
     
-    // Filtra decks com pelo menos 1 jogo para evitar divis�o por zero se houver sujeira
+    // Filtra decks com pelo menos 1 jogo para evitar divis�o por zero se houver sujeira
     brickStats = brickStats.filter(s => s.total > 0);
     // Ordena decrescente por % de brick e desempata por total de jogos
     brickStats.sort((a, b) => b.pct - a.pct || b.total - a.total);
@@ -1487,7 +1465,7 @@ function renderBrick() {
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
-          legend: { display: false }, // Sem legenda porque � s� 1 cor
+          legend: { display: false }, // Sem legenda porque � s� 1 cor
           datalabels: {
             display: function(context) { return context.dataset.data[context.dataIndex] > 0; },
             color: '#fff',
@@ -1509,28 +1487,6 @@ function renderBrick() {
         }
       }
     });
-              const rows  = byDeck[deck];
-              const isBrick = ctx.datasetIndex === 1;
-              const count = rows.filter(r => isBrick
-                ? (r.Brick && r.Brick !== 'Nenhum')
-                : (!r.Brick || r.Brick === 'Nenhum')
-              ).length;
-              return ` ${ctx.dataset.label}: ${ctx.parsed.y}%  (${count}/${rows.length} partidas)`;
-            }
-          }
-        }
-      },
-      scales: {
-        x: { stacked: true, grid: { color: 'rgba(255,255,255,0.03)' } },
-        y: {
-          stacked: true,
-          min: 0, max: 100,
-          grid: { color: 'rgba(255,255,255,0.05)' },
-          ticks: { callback: v => v + '%' }
-        }
-      }
-    }
-  });
 }
 
 // ── 17. TABLE & PAGINATION ───────────────────────────────────────────────────
@@ -3067,6 +3023,8 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 });
+
+
 
 
 
