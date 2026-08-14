@@ -1033,8 +1033,9 @@ function renderDeckWR() {
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
-        legend: { display: false },
-        tooltip: {
+          legend: { display: false },
+          datalabels: { display: true, color: '#fff', font: { weight: 'bold', size: 12 }, anchor: 'end', align: 'left', formatter: v => Math.round(v) + '%' },
+          tooltip: {
           callbacks: {
             label: ctx => {
               const stat = top10[ctx.dataIndex];
@@ -1098,9 +1099,10 @@ function renderPlayerPerf() {
           legend: { position: 'bottom' },
           datalabels: {
             display: function(context) {
-              const val = context.dataset.data[context.dataIndex];
-              return val > 0 && (val / maxTotal) > 0.04;
-            },
+                return context.dataset.data[context.dataIndex] > 0;
+              },
+              textStrokeColor: '#0f172a',
+              textStrokeWidth: 3,
             color: '#fff',
             font: { weight: 'bold', size: 12 },
             formatter: Math.round
@@ -1275,8 +1277,9 @@ function renderResultPie() {
       maintainAspectRatio: false,
       cutout: '65%',
       plugins: {
-        legend: { position: 'bottom' },
-        tooltip: {
+          legend: { position: 'bottom' },
+          datalabels: { display: true, color: '#fff', font: { weight: 'bold', size: 14 }, textStrokeColor: '#0f172a', textStrokeWidth: 2, formatter: Math.round },
+          tooltip: {
           callbacks: {
             label: ctx => {
               const total = ctx.dataset.data.reduce((a,b)=>a+b,0);
@@ -1313,7 +1316,7 @@ function renderLocal() {
       responsive: true,
       maintainAspectRatio: false,
       cutout: '55%',
-      plugins: { legend: { position: 'bottom' } }
+      plugins: { legend: { position: 'bottom' }, datalabels: { display: true, color: '#fff', font: { weight: 'bold', size: 14 }, textStrokeColor: '#0f172a', textStrokeWidth: 2, formatter: Math.round } }
     }
   });
 }
@@ -1340,7 +1343,7 @@ function renderFormato() {
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: { legend: { position: 'bottom' } }
+      plugins: { legend: { position: 'bottom' }, datalabels: { display: true, color: '#fff', font: { weight: 'bold', size: 14 }, textStrokeColor: '#0f172a', textStrokeWidth: 2, formatter: Math.round } }
     }
   });
 }
@@ -1372,7 +1375,7 @@ function renderDeckCount() {
       indexAxis: 'y',
       responsive: true,
       maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
+      plugins: { legend: { display: false }, datalabels: { display: true, color: '#fff', font: { weight: 'bold', size: 12 }, anchor: 'end', align: 'left', formatter: Math.round } },
       scales: {
         x: { grid: { color: 'rgba(255,255,255,0.05)' } },
         y: { grid: { color: 'rgba(255,255,255,0.03)' } }
@@ -1424,7 +1427,7 @@ function renderStart() {
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: { legend: { position:'bottom' } },
+      plugins: { legend: { position: 'bottom' }, datalabels: { display: function(ctx) { return ctx.dataset.data[ctx.dataIndex] > 0; }, color: '#fff', font: { weight: 'bold', size: 12 }, textStrokeColor: '#0f172a', textStrokeWidth: 2, formatter: Math.round } },
       scales: {
         y: { grid: { color:'rgba(255,255,255,0.05)' } },
         x: { grid: { color:'rgba(255,255,255,0.03)' } }
@@ -1491,6 +1494,8 @@ function renderBrick() {
             font: { weight: 'bold', size: 12 },
             formatter: (value) => value + '%'
           },
+              anchor: 'end',
+              align: 'left',
           tooltip: {
             callbacks: {
               label: ctx => {
