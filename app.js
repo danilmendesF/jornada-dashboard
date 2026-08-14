@@ -1346,8 +1346,8 @@ function renderLocal() {
           display: function(ctx) { return ctx.dataset.data[ctx.dataIndex] > 0; },
           color: '#fff',
           font: { weight: 'bold', size: 9.5 },
-          anchor: 'end',
-          align: 'right',
+          anchor: 'center',
+          align: 'center',
           textStrokeColor: '#000000',
           textStrokeWidth: 2,
           formatter: Math.round
