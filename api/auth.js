@@ -13,24 +13,34 @@ function log(level, message, context = {}) {
   if (level === 'error') console.error(JSON.stringify(payload));
   else console.log(JSON.stringify(payload));
 }
-// Secret key for JWT signing (uses ENV or fallback hash)
-const JWT_SECRET = process.env.JWT_SECRET || 'jornada_tcg_jwt_secret_2026_key';
+export function getJwtSecret() {
+  const secret = process.env.JWT_SECRET;
+  if (!secret || typeof secret !== 'string' || secret.trim().length === 0) {
+    log('error', '[Serverless Auth] FATAL: JWT_SECRET environment variable is missing or empty.');
+    return null;
+  }
+  return secret.trim();
+}
+
 const REDIS_URL = process.env.REDIS_URL;
 
 // Helper: HMAC SHA-256 Signature for lightweight JWT
-function signJwt(payload) {
+export function signJwt(payload) {
+  const secret = getJwtSecret();
+  if (!secret) return null;
   const header = Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url');
   const body = Buffer.from(JSON.stringify(payload)).toString('base64url');
-  const signature = crypto.createHmac('sha256', JWT_SECRET).update(`${header}.${body}`).digest('base64url');
+  const signature = crypto.createHmac('sha256', secret).update(`${header}.${body}`).digest('base64url');
   return `${header}.${body}.${signature}`;
 }
 
-function verifyJwt(token) {
-  if (!token || typeof token !== 'string') return null;
+export function verifyJwt(token) {
+  const secret = getJwtSecret();
+  if (!secret || !token || typeof token !== 'string') return null;
   const parts = token.split('.');
   if (parts.length !== 3) return null;
   const [header, body, signature] = parts;
-  const expected = crypto.createHmac('sha256', JWT_SECRET).update(`${header}.${body}`).digest('base64url');
+  const expected = crypto.createHmac('sha256', secret).update(`${header}.${body}`).digest('base64url');
   if (signature !== expected) return null;
   try {
     return JSON.parse(Buffer.from(body, 'base64url').toString('utf8'));

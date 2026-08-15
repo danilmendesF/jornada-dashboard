@@ -44,6 +44,20 @@ window.getSyncHeaders = function() {
   return headers;
 };
 
+function canonicalMatchString(match) {
+  if (!match || typeof match !== 'object') return '';
+  const keys = Object.keys(match).sort();
+  const sortedObj = {};
+  keys.forEach(k => {
+    // Avoid non-deterministic circular or function values
+    if (typeof match[k] !== 'function') {
+      sortedObj[k] = match[k];
+    }
+  });
+  return JSON.stringify(sortedObj);
+}
+window.canonicalMatchString = canonicalMatchString;
+
 function deterministicMergeMatches(listA, listB, deletedIdsSet = new Set()) {
   const map = new Map();
   const delSet = deletedIdsSet instanceof Set ? deletedIdsSet : new Set(deletedIdsSet || []);
@@ -56,7 +70,16 @@ function deterministicMergeMatches(listA, listB, deletedIdsSet = new Set()) {
       const existing = map.get(m.id);
       const tsA = Date.parse(m.updatedAt || m.createdAt) || 0;
       const tsB = Date.parse(existing.updatedAt || existing.createdAt) || 0;
-      if (tsA > tsB) map.set(m.id, m);
+      if (tsA > tsB) {
+        map.set(m.id, m);
+      } else if (tsA === tsB) {
+        // Deterministic Canonical Lexicographical Tie-breaker (Commutativity guarantee)
+        const strA = canonicalMatchString(m);
+        const strB = canonicalMatchString(existing);
+        if (strA.localeCompare(strB) > 0) {
+          map.set(m.id, m);
+        }
+      }
     }
   });
 

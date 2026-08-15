@@ -10,21 +10,31 @@ function log(level, message, context = {}) {
   if (level === 'error') console.error(JSON.stringify(payload));
   else console.log(JSON.stringify(payload));
 }
-const JWT_SECRET = process.env.JWT_SECRET || 'jornada_tcg_jwt_secret_2026_key';
+export function getJwtSecret() {
+  const secret = process.env.JWT_SECRET;
+  if (!secret || typeof secret !== 'string' || secret.trim().length === 0) {
+    log('error', '[Serverless Sync] FATAL: JWT_SECRET environment variable is missing or empty.');
+    return null;
+  }
+  return secret.trim();
+}
 
 export function createJwt(payload) {
+  const secret = getJwtSecret();
+  if (!secret) return null;
   const header = Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url');
   const body = Buffer.from(JSON.stringify(payload)).toString('base64url');
-  const signature = crypto.createHmac('sha256', JWT_SECRET).update(`${header}.${body}`).digest('base64url');
+  const signature = crypto.createHmac('sha256', secret).update(`${header}.${body}`).digest('base64url');
   return `${header}.${body}.${signature}`;
 }
 
 export function verifyJwt(token) {
-  if (!token || typeof token !== 'string') return null;
+  const secret = getJwtSecret();
+  if (!secret || !token || typeof token !== 'string') return null;
   const parts = token.split('.');
   if (parts.length !== 3) return null;
   const [header, body, signature] = parts;
-  const expected = crypto.createHmac('sha256', JWT_SECRET).update(`${header}.${body}`).digest('base64url');
+  const expected = crypto.createHmac('sha256', secret).update(`${header}.${body}`).digest('base64url');
   if (signature !== expected) return null;
   try {
     return JSON.parse(Buffer.from(body, 'base64url').toString('utf8'));
@@ -57,7 +67,9 @@ export default async function handler(req, res) {
     userPayload = verifyJwt(bearerToken);
   }
 
-  // ── SECURITY GATE: POST mutations require valid JWT authentication ──────────
+  let activeToken = queryToken || 'team_default_sync';
+
+  // ── SECURITY & AUTHORIZATION GATE ──────────────────────────────────────────
   if (req.method === 'POST') {
     if (!bearerToken) {
       log('warn', '[Serverless Sync] Rejected POST without Authorization Bearer header');
@@ -66,6 +78,19 @@ export default async function handler(req, res) {
     if (!userPayload) {
       log('warn', '[Serverless Sync] Rejected POST with invalid/expired JWT');
       return res.status(403).json({ error: 'Token JWT inválido ou expirado. Faça login novamente.' });
+    }
+
+    // Authorization Policy: Check if user has permission to mutate activeToken namespace
+    const allowedTokens = userPayload.allowedSyncTokens || (userPayload.teamId ? [userPayload.teamId] : ['team_default_sync']);
+    const isAdmin = userPayload.role === 'admin';
+    const isDefaultTeam = activeToken === 'team_default_sync';
+
+    if (!isAdmin && !isDefaultTeam && !allowedTokens.includes(activeToken)) {
+      log('warn', '[Serverless Sync] Unauthorized mutation attempt for foreign sync namespace', {
+        user: userPayload.email || userPayload.name,
+        attemptedToken: activeToken
+      });
+      return res.status(403).json({ error: 'Acesso negado: você não tem autorização para modificar este time/namespace.' });
     }
 
     // Payload size and schema sanity check
@@ -78,12 +103,10 @@ export default async function handler(req, res) {
     }
   }
 
-  let activeToken = queryToken || 'team_default_sync';
-
   const redisUrl = process.env.REDIS_URL;
   const key = `jornada_sync_${activeToken.replace(/[^a-zA-Z0-9_-]/g, '')}`;
 
-  log('info', `[Serverless Sync] ${req.method} | Authorized Request`, { user: userPayload?.username || 'viewer' });
+  log('info', `[Serverless Sync] ${req.method} | Authorized Request`, { user: userPayload?.username || userPayload?.name || 'viewer' });
 
   // ── FALLBACK: No Redis URL configured → proxy to keyvalue.xyz ───────────────
   if (!redisUrl) {

@@ -1,7 +1,11 @@
-import { describe, it, expect, vi } from 'vitest';
-import syncHandler, { createJwt, verifyJwt } from '../api/sync.js';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import syncHandler, { createJwt, verifyJwt, getJwtSecret } from '../api/sync.js';
 
 describe('Serverless Security - api/sync.js', () => {
+  beforeEach(() => {
+    process.env.JWT_SECRET = 'test_jwt_secret_key_for_vitest_runner';
+  });
+
   it('deve gerar e verificar tokens JWT válidos com HMAC-SHA256', () => {
     const payload = { username: 'Danilo', role: 'admin' };
     const token = createJwt(payload);
