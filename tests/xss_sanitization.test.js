@@ -9,15 +9,19 @@ const __dirname = path.dirname(__filename);
 
 const utilCode = fs.readFileSync(path.resolve(__dirname, '../js/util.js'), 'utf-8');
 const tableCode = fs.readFileSync(path.resolve(__dirname, '../js/table.js'), 'utf-8');
+const matchupCode = fs.readFileSync(path.resolve(__dirname, '../js/matchup.js'), 'utf-8');
+const md3Code = fs.readFileSync(path.resolve(__dirname, '../js/md3.js'), 'utf-8');
 
-describe('Frontend XSS Sanitization & DOM Security (SEC-005 / SPEC-007)', () => {
+describe('Universal Frontend XSS Sanitization (SEC-005 / SEC-NEW-001 / SPEC-007)', () => {
   beforeEach(() => {
-    const dom = new JSDOM('<!doctype html><html><body><table><tbody id="tableBody"></tbody></table><div id="paginationInfo"></div></body></html>', { url: 'http://localhost' });
+    const dom = new JSDOM('<!doctype html><html><body><table><tbody id="tableBody"></tbody></table><div id="paginationInfo"></div><div id="matchupDetail"></div><div id="md3Grid"></div><div id="md3Toggle"></div></body></html>', { url: 'http://localhost' });
     global.window = dom.window;
     global.document = dom.window.document;
 
     new Function(utilCode)();
     new Function(tableCode)();
+    new Function(matchupCode)();
+    new Function(md3Code)();
   });
 
   it('deve escapar caracteres perigosos via escapeHtml', () => {
@@ -50,5 +54,20 @@ describe('Frontend XSS Sanitization & DOM Security (SEC-005 / SPEC-007)', () => 
     expect(tbody.innerHTML).toContain('&lt;script&gt;alert(2)&lt;/script&gt;');
     expect(tbody.querySelectorAll('script').length).toBe(0);
     expect(tbody.querySelectorAll('img').length).toBe(0);
+  });
+
+  it('deve renderizar resumo de matchup de deck malicioso de forma sanitizada', () => {
+    window.filtered = [
+      {
+        Deck: '<script>alert("deck_xss")</script>',
+        DeckAdv: '<img src=x onerror=alert("opp_xss")>',
+        Resultado: 'Vitória'
+      }
+    ];
+
+    window.showDeckMatchupOverview('<script>alert("deck_xss")</script>');
+    const detail = document.getElementById('matchupDetail');
+    expect(detail.innerHTML).toContain('&lt;script&gt;alert("deck_xss")&lt;/script&gt;');
+    expect(detail.querySelectorAll('script').length).toBe(0);
   });
 });

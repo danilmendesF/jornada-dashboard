@@ -51,7 +51,7 @@ window.showDeckMatchupOverview = function(myDeck, mode = 'desc') {
   container.innerHTML = `
     <div style="background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 1rem; margin-top: 1rem;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem;">
-        <h3 style="margin:0; font-size:1.1rem; color:var(--accent2);">⚔️ Resumo de Matchups: ${myDeck}</h3>
+        <h3 style="margin:0; font-size:1.1rem; color:var(--accent2);">⚔️ Resumo de Matchups: ${(typeof escapeHtml === "function" ? escapeHtml(myDeck) : myDeck)}</h3>
         <span class="badge ${totalStats.wr >= 50 ? 'res-win' : 'res-loss'}">${totalStats.wr}% WR (${totalStats.total} jogos)</span>
       </div>
       <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 0.6rem;">

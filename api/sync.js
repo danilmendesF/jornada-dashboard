@@ -80,6 +80,7 @@ export function verifyJwt(token) {
 }
 
 export default async function handler(req, res) {
+  const REDIS_URL = process.env.REDIS_URL;
   const requestId = getRequestId(req);
   res.setHeader('X-Request-ID', requestId);
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -125,14 +126,35 @@ export default async function handler(req, res) {
       });
     }
 
+    // Active User Check in Redis (ADR 0009: Session Revocation / Deleted Account Rejection)
+    if (REDIS_URL && userPayload.email) {
+      let verifyClient = null;
+      try {
+        verifyClient = createClient({ url: REDIS_URL });
+        await verifyClient.connect();
+        const userRecord = await verifyClient.get(`user_${userPayload.email.toLowerCase().trim()}`);
+        if (!userRecord && !isAdmin) {
+          log('warn', 'POST /api/sync rejected: user account is deleted/revoked in Redis', { requestId, user: userPayload.email });
+          return res.status(401).json({
+            error: 'Sessão revogada ou conta inexistente. Faça login novamente.'
+          });
+        }
+      } catch (e) {
+        log('warn', 'Redis user active check fallback mode', { requestId, error: e.message });
+      } finally {
+        if (verifyClient && verifyClient.isOpen) {
+          await verifyClient.disconnect();
+        }
+      }
+    }
+
     const body = req.body;
     if (!body || typeof body !== 'object' || (!Array.isArray(body.manualMatches) && !Array.isArray(body.decks))) {
       return res.status(400).json({ error: 'Estrutura de payload inválida para sincronização.' });
     }
   }
 
-  const REDIS_URL = process.env.REDIS_URL;
-  if (!REDIS_URL) {
+    if (!REDIS_URL) {
     if (req.method === 'GET') {
       return res.status(200).json({
         message: 'Modo Offline: REDIS_URL não configurado na Vercel.',

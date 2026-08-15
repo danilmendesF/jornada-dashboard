@@ -98,23 +98,46 @@ function verifyPassword(password, storedHash, storedSalt) {
 }
 
 // Helper: Distributed Redis Rate Limiter (ADR 0005: Fail-Open on Redis Error)
-export async function checkRateLimit(redis, clientIp, action, limit = 10, windowSec = 900) {
-  if (!redis || !clientIp) return { allowed: true, remaining: limit };
-  const key = `ratelimit_auth_${clientIp.replace(/[^a-zA-Z0-9:._-]/g, '')}_${action}`;
-  try {
-    const current = await redis.incr(key);
-    if (current === 1) {
-      await redis.expire(key, windowSec);
+export async function checkRateLimit(redis, clientIp, email, action, ipLimit = 10, accountLimit = 5, windowSec = 900) {
+  if (!redis) return { allowed: true, remaining: ipLimit };
+
+  // 1. IP-based Rate Limiting (ADR 0005)
+  if (clientIp) {
+    const ipKey = `ratelimit_auth_ip_${clientIp.replace(/[^a-zA-Z0-9:._-]/g, '')}_${action}`;
+    try {
+      const currentIp = await redis.incr(ipKey);
+      if (currentIp === 1) {
+        await redis.expire(ipKey, windowSec);
+      }
+      if (currentIp > ipLimit) {
+        return { allowed: false, remaining: 0, retryAfter: windowSec, reason: 'ip' };
+      }
+    } catch (err) {
+      log('warn', 'Redis IP rate limit fail-open exception', { error: err.message });
+      return { allowed: true, remaining: ipLimit };
     }
-    if (current > limit) {
-      return { allowed: false, remaining: 0, retryAfter: windowSec };
-    }
-    return { allowed: true, remaining: limit - current };
-  } catch (err) {
-    // Fail-Open strategy (ADR 0005) to ensure tournament availability
-    log('warn', 'Redis rate limit fail-open exception', { error: err.message });
-    return { allowed: true, remaining: limit };
   }
+
+  // 2. Account/Email-based Rate Limiting (ADR 0008)
+  if (email && typeof email === 'string') {
+    const normalizedEmail = email.toLowerCase().trim();
+    const emailHash = crypto.createHash('sha256').update(normalizedEmail).digest('hex').slice(0, 32);
+    const accKey = `ratelimit_auth_acc_${emailHash}_${action}`;
+    try {
+      const currentAcc = await redis.incr(accKey);
+      if (currentAcc === 1) {
+        await redis.expire(accKey, windowSec);
+      }
+      if (currentAcc > accountLimit) {
+        return { allowed: false, remaining: 0, retryAfter: windowSec, reason: 'account' };
+      }
+    } catch (err) {
+      log('warn', 'Redis Account rate limit fail-open exception', { error: err.message });
+      return { allowed: true, remaining: accountLimit };
+    }
+  }
+
+  return { allowed: true, remaining: ipLimit };
 }
 
 export default async function handler(req, res) {
@@ -144,7 +167,7 @@ export default async function handler(req, res) {
 
     // Rate Limiting on sensitive actions (register & login)
     if (req.method === 'POST' && (action === 'register' || action === 'login')) {
-      const rateResult = await checkRateLimit(redis, clientIp, action, 10, 900);
+      const rateResult = await checkRateLimit(redis, clientIp, req.body?.email, action, 10, 5, 900);
       if (!rateResult.allowed) {
         log('warn', 'Rate limit exceeded for auth endpoint', { requestId, clientIp, action });
         res.setHeader('Retry-After', String(rateResult.retryAfter || 900));

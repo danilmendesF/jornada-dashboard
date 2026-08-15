@@ -235,7 +235,7 @@ window.openUnifyArchetypesModal = function() {
   if (fromSel && typeof loadDecks === 'function') {
     const decks = loadDecks();
     const uniqueArchetypes = Array.from(new Set(decks.map(d => d.arquetipo || d.name))).sort();
-    fromSel.innerHTML = uniqueArchetypes.map(a => `<option value="${a}">${a}</option>`).join('');
+    fromSel.innerHTML = uniqueArchetypes.map(a => `<option value="${(typeof escapeHtml === 'function' ? escapeHtml(a) : a)}">${(typeof escapeHtml === 'function' ? escapeHtml(a) : a)}</option>`).join('');
   }
   showModal('modalUnifyArchetypes');
 };

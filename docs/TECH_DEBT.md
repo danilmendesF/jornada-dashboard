@@ -25,3 +25,8 @@
 | **`TD-001`** | **P3** | Validador Ajv em Runtime | Integrar o validador Ajv diretamente nas rotas Serverless da Vercel para validar requests com JSON Schema antes de processar. |
 | **`TD-002`** | **P3** | Multi-Team Public SaaS Isolation | Caso o Jornada Dashboard seja oferecido para times externos, implementar isolamento estrito de permissao por usuario (`match.Player === user.name`). |
 | **`TD-003`** | **P3** | Service Worker Offline Cache | Expandir a aplicacao para PWA instalavel com Service Worker para cache estatico de assets. |
+
+### AR-006: Exclusão Administrativa Desvinculada de Partidas Coletivas
+- **Status:** ACEITO
+- **Severidade:** P3
+- **Justificativa:** Partidas históricas em torneios coletivos pertencem ao histórico esportivo da equipe. A exclusão de um jogador desassocia a credencial de login e o claim de nome (`player_claim_`), mantendo os registros de partidas anonimizados para preservar o cálculo de matchup e win-rate do time.
