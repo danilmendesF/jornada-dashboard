@@ -1,0 +1,44 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "JWTClaims",
+  "description": "Schema dos claims assinados no token de autenticacao JWT",
+  "type": "object",
+  "required": [
+    "id",
+    "email"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "email": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "linkedPlayer": {
+      "type": "string"
+    },
+    "teamId": {
+      "type": "string"
+    },
+    "allowedSyncTokens": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "role": {
+      "type": "string",
+      "enum": [
+        "admin",
+        "player",
+        "member"
+      ]
+    },
+    "iat": {
+      "type": "integer"
+    }
+  }
+}

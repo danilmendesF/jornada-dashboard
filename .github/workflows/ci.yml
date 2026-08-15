@@ -1,4 +1,4 @@
-name: CI Quality Gate & SDD Validator
+name: CI Quality Gate & SDD 2.0 Validator
 
 on:
   push:
@@ -23,8 +23,11 @@ jobs:
     - name: Install Dependencies
       run: npm ci
 
-    - name: Run Vitest Unit Tests
+    - name: Run Vitest Test Matrix (Unit, Security, Merge & Contracts)
       run: npx vitest run
 
-    - name: Run SDD Governance Gate & Bundle Build
+    - name: Run Deep Drift Detector
+      run: node scripts/drift_check.cjs
+
+    - name: Run SDD 2.0 Governance Gate & Bundle Build
       run: node scripts/validate_sdd.cjs

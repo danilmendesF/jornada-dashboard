@@ -1,0 +1,47 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "SyncPayload",
+  "description": "Schema para o payload de sincronizacao e backup em nuvem do Jornada TCG Team",
+  "type": "object",
+  "required": [
+    "manualMatches"
+  ],
+  "properties": {
+    "manualMatches": {
+      "type": "array"
+    },
+    "decks": {
+      "type": "array"
+    },
+    "players": {
+      "type": "array"
+    },
+    "edits": {
+      "type": "object"
+    },
+    "deletedIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "deletedDecks": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "deletedPlayers": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "archetypeUnifications": {
+      "type": "array"
+    },
+    "updatedAt": {
+      "type": "string"
+    }
+  }
+}

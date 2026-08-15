@@ -1,6 +1,6 @@
 {
   "name": "jornada-dashboard",
-  "version": "1.9.4",
+  "version": "2.0.0",
   "type": "module",
   "dependencies": {
     "redis": "^4.6.10"
@@ -9,7 +9,9 @@
     "test": "vitest",
     "coverage": "vitest run --coverage",
     "validate:sdd": "node scripts/validate_sdd.cjs",
-    "drift:check": "node scripts/drift_check.cjs"
+    "drift:check": "node scripts/drift_check.cjs",
+    "build": "node scripts/build_bundle.cjs",
+    "validate:lifecycle": "node scripts/validate_spec_lifecycle.cjs"
   },
   "devDependencies": {
     "@vitest/coverage-v8": "^4.1.10",

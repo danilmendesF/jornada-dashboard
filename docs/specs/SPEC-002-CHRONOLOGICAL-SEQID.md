@@ -1,14 +1,18 @@
-# SPEC-002: Sequenciamento Cronologico Absoluto (seqID)
-
-**Status:** NORMATIVE / VERIFIED  
-
+---
+id: SPEC-002
+title: Sequenciamento Cronologico e seqID
+status: VERIFIED
+version: 1.1.0
+tested_by: tests/app.test.js
+updated_at: 2026-08-15
 ---
 
-## 1. Regra de Parsing de Datas (`getMatchTimestamp`)
-1. **Camada 1:** `createdAt` em formato ISO string valido (> 1000000000000).
-2. **Camada 2:** 13 primeiros digitos numericos do `id` (> 1000000000000).
-3. **Camada 3:** String `Data` (`YYYY-MM-DD` as 12:00:00Z) com desempate por `seqID`.
+# SPEC-002: Sequenciamento Cronologico e seqID
+
+## 1. Requisitos de Negocio
+- Toda partida cadastrada no sistema deve possuir um indice sequencial visual `seqID` iniciando em 1.
+- A ordenacao e primariamente cronologica ascendente por data (`Data` / `createdAt`).
 
 ## 2. Invariantes
-- Todas as partidas possuem `seqID` contiguo unico no intervalo `1..N`.
-- A ordenacao padrao na tabela e decrescente (`seqID desc`), exibindo o maior ID no topo da Pagina 1.
+- `match.id` e o identificador persistente e unico global.
+- `seqID` e recalculado dinamicamente no carregamento e merge para garantir sequencia continua 1..N.

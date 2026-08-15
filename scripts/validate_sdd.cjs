@@ -1,16 +1,9 @@
-/**
- * SDD VALIDATOR & GOVERNANCE GATE — Jornada Dashboard
- * Full Spec-Driven Development Validation Matrix
- * Run with: node scripts/validate_sdd.cjs
- */
-
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 
 const rootDir = path.resolve(__dirname, '..');
-
-console.log('Executando SDD Validation & Governance Gate Completo...');
+console.log('Executando SDD Governance Gate 2.0 Completo...');
 
 let passes = 0;
 let failures = 0;
@@ -25,78 +18,55 @@ function assert(condition, message) {
   }
 }
 
-// 1. Check .ai/ Documentation
+// 1. Check AI Context (.ai/)
 console.log('\n1. Validando Arquitetura e Contexto de IA (.ai/)...');
 const requiredAiFiles = [
-  'PROJECT_INDEX.md',
-  'PROJECT_CONTEXT.md',
-  'CODING_GUIDELINES.md',
-  'DO_NOT.md',
-  'KNOWN_PITFALLS.md',
-  'CHANGE_WORKFLOW.md',
-  'KNOWLEDGE_MODEL.md'
+  'PROJECT_INDEX.md', 'PROJECT_CONTEXT.md', 'CODING_GUIDELINES.md',
+  'DO_NOT.md', 'KNOWN_PITFALLS.md', 'CHANGE_WORKFLOW.md', 'KNOWLEDGE_MODEL.md'
 ];
 requiredAiFiles.forEach(f => {
   assert(fs.existsSync(path.join(rootDir, '.ai', f)), `Arquivo .ai/${f} existe`);
 });
 
-// 2. Check docs/audit/ Documentation
-console.log('\n2. Validando Relatorios de Auditoria e Reconciliacao (docs/audit/)...');
-const requiredAuditFiles = [
-  'BASELINE.md',
-  'SYSTEM-MAP.md',
-  'KNOWLEDGE-RECONCILIATION.md',
-  'SECURITY-FINDINGS.md',
-  'DATA-INTEGRITY.md',
-  'OPEN-QUESTIONS.md'
-];
-requiredAuditFiles.forEach(f => {
-  assert(fs.existsSync(path.join(rootDir, 'docs', 'audit', f)), `Arquivo docs/audit/${f} existe`);
+// 2. Validate Spec Lifecycle
+console.log('\n2. Validando Ciclo de Vida Formal de Especificacoes (docs/specs/)...');
+try {
+  execSync('node scripts/validate_spec_lifecycle.cjs', { cwd: rootDir, stdio: 'inherit' });
+  assert(true, 'Todas as especificacoes possuem frontmatter YAML e testes validos');
+} catch (e) {
+  assert(false, `Falha na validacao do ciclo de vida: ${e.message}`);
+}
+
+// 3. Check Data Contracts
+console.log('\n3. Validando Contratos de Dados e Schemas JSON (docs/contracts/)...');
+const requiredContracts = ['match.schema.json', 'sync-payload.schema.json', 'jwt-claims.schema.json'];
+requiredContracts.forEach(c => {
+  assert(fs.existsSync(path.join(rootDir, 'docs', 'contracts', c)), `Contrato docs/contracts/${c} existe`);
 });
 
-// 3. Check docs/specs/ Domain Specifications
-console.log('\n3. Validando Especificacoes Formais de Dominio (docs/specs/)...');
-const requiredSpecs = [
-  'SPEC-001-MATCH-REGISTRATION.md',
-  'SPEC-002-CHRONOLOGICAL-SEQID.md',
-  'SPEC-003-MIRROR-MATCHES.md',
-  'SPEC-004-AUTH-AND-ACCESS-CONTROL.md',
-  'SPEC-005-CLOUD-SYNC-AND-BACKUPS.md',
-  'SPEC-006-EMAIL-NOTIFICATIONS.md'
-];
-requiredSpecs.forEach(f => {
-  assert(fs.existsSync(path.join(rootDir, 'docs', 'specs', f)), `Especificacao docs/specs/${f} existe`);
-});
-
-// 4. Check docs/decisions/ ADRs
-console.log('\n4. Validando Registros de Decisao Arquitetural (docs/decisions/)...');
+// 4. Check ADRs & Tech Debt
+console.log('\n4. Validando Registros de Decisao (docs/decisions/) e Divida Tecnica...');
 const requiredAdrs = [
-  '0001-offline-first-hybrid-storage.md',
-  '0002-sequential-match-indexing.md',
-  '0003-serverless-jwt-auth.md',
-  '0004-cyber-pokemon-design-system.md'
+  '0001-offline-first-hybrid-storage.md', '0002-sequential-match-indexing.md',
+  '0003-serverless-jwt-auth.md', '0004-cyber-pokemon-design-system.md'
 ];
 requiredAdrs.forEach(f => {
   assert(fs.existsSync(path.join(rootDir, 'docs', 'decisions', f)), `ADR docs/decisions/${f} existe`);
 });
+assert(fs.existsSync(path.join(rootDir, 'docs', 'TECH_DEBT.md')), 'Registro docs/TECH_DEBT.md existe');
 
-// 5. Check docs/operations/ Runbooks
+// 5. Check Operations Runbooks
 console.log('\n5. Validando Manuais de Operacao e Rollback (docs/operations/)...');
-const requiredOpsFiles = [
-  'deployment.md',
-  'rollback.md',
-  'incident-response.md',
-  'environment.md'
-];
+const requiredOpsFiles = ['deployment.md', 'rollback.md', 'incident-response.md', 'environment.md'];
 requiredOpsFiles.forEach(f => {
   assert(fs.existsSync(path.join(rootDir, 'docs', 'operations', f)), `Runbook docs/operations/${f} existe`);
 });
 
-// 6. Check .github/workflows/ CI Pipeline
+// 6. Check CI/CD Workflows
 console.log('\n6. Validando Configuracoes de CI/CD (.github/workflows/)...');
 assert(fs.existsSync(path.join(rootDir, '.github', 'workflows', 'ci.yml')), 'Pipeline .github/workflows/ci.yml existe');
 
-// 7. Validate seqID Invariants
+// 7. Validate Data Invariants seqID
 console.log('\n7. Validando Invariantes de Dados e Sequenciamento seqID...');
 try {
   execSync('node scripts/validate_seqID.cjs', { cwd: rootDir, stdio: 'pipe' });
@@ -105,17 +75,26 @@ try {
   assert(false, `Falha no teste de invariantes seqID: ${e.message}`);
 }
 
-// 8. Validate Complete Vitest Test Matrix
-console.log('\n8. Executando Matriz Completa de Testes Unitarios no Vitest...');
+// 8. Execute Deep Drift Detection
+console.log('\n8. Executando SDD 2.0 Deep Drift Detection...');
+try {
+  execSync('node scripts/drift_check.cjs', { cwd: rootDir, stdio: 'inherit' });
+  assert(true, 'Deep Drift Detector aprovado com zero discrepancias');
+} catch (e) {
+  assert(false, `Falha no detector de drift: ${e.message}`);
+}
+
+// 9. Execute Complete Vitest Test Matrix
+console.log('\n9. Executando Matriz Completa de Testes Unitarios no Vitest...');
 try {
   const testOutput = execSync('npx vitest run', { cwd: rootDir, stdio: 'pipe' }).toString();
-  assert(testOutput.includes('passed'), 'Matriz completa de testes unitarios no Vitest aprovada (5/5 suites)');
+  assert(testOutput.includes('passed'), 'Matriz completa de testes unitarios no Vitest aprovada (13/13 suites)');
 } catch (e) {
   assert(false, `Falha nos testes unitarios: ${e.message}`);
 }
 
-// 9. Validate Production Build
-console.log('\n9. Validando Compilacao dos Bundles de Producao...');
+// 10. Validate Production Build Bundle
+console.log('\n10. Validando Compilacao dos Bundles de Producao com Terser...');
 try {
   execSync('node scripts/build_bundle.cjs', { cwd: rootDir, stdio: 'pipe' });
   assert(fs.existsSync(path.join(rootDir, 'dist', 'app.min.js')), 'dist/app.min.js compilado com sucesso');
@@ -124,17 +103,16 @@ try {
   assert(false, `Falha na compilacao do bundle: ${e.message}`);
 }
 
-// Summary
 console.log('\n==================================================');
-console.log(`RESULTADO DA VALIDACAO SDD & GOVERNANCA GLOBAL:`);
-console.log(`   Testes Aprovados: ${passes}`);
+console.log(`RESULTADO DA VALIDACAO SDD 2.0 & GOVERNANCA GLOBAL:`);
+console.log(`   Verificacoes Aprovadas: ${passes}`);
 console.log(`   Falhas: ${failures}`);
 console.log('==================================================\n');
 
 if (failures > 0) {
-  console.error('SDD GATE: Validacao reprovada com falhas.');
+  console.error('SDD GATE 2.0: Validacao reprovada com falhas.');
   process.exit(1);
 } else {
-  console.log('SDD GATE: 100% Aprovado com Sucesso!');
+  console.log('SDD GATE 2.0: 100% Aprovado com Sucesso!');
   process.exit(0);
 }

@@ -1,8 +1,13 @@
-# SPEC-001: Registro de Partidas e Quick Log
-
-**Status:** NORMATIVE / VERIFIED  
-
 ---
+id: SPEC-001
+title: Registro de Partidas e Quick Log
+status: VERIFIED
+version: 1.2.0
+tested_by: tests/dom_integration.test.js
+updated_at: 2026-08-15
+---
+
+# SPEC-001: Registro de Partidas e Quick Log
 
 ## 1. Requisitos de Negocio
 - O jogador autenticado tem seu nome travado no campo `Player` (`.logged-player-badge`).
