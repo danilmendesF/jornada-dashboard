@@ -14,6 +14,19 @@ const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const FROM_EMAIL = process.env.FROM_EMAIL || 'Jornada TCG Team <nao-responda@jornadatcgteam.com.br>';
 const DEFAULT_APP_URL = process.env.APP_URL || 'https://www.jornadatcgteam.com.br';
 
+export const EMAIL_THEME = {
+  bgOuter: '#060913',
+  bgCard: '#0d1225',
+  bgCardAlt: '#11172e',
+  accentCyan: '#00c8f8',
+  accentPurple: '#7c3aed',
+  gold: '#f5c842',
+  textPrimary: '#ffffff',
+  textSecondary: '#94a3b8',
+  textMuted: '#64748b',
+  border: '#1e293b'
+};
+
 /**
  * Generates the professional Welcome HTML Email template in Jornada TCG Dark & Pokémon theme
  * @param {string} playerName - Trainer's name

@@ -44,6 +44,38 @@ window.getSyncHeaders = function() {
   return headers;
 };
 
+function deterministicMergeMatches(listA, listB, deletedIdsSet = new Set()) {
+  const map = new Map();
+  const delSet = deletedIdsSet instanceof Set ? deletedIdsSet : new Set(deletedIdsSet || []);
+
+  [...(listA || []), ...(listB || [])].forEach(m => {
+    if (!m || !m.id || delSet.has(m.id)) return;
+    if (!map.has(m.id)) {
+      map.set(m.id, m);
+    } else {
+      const existing = map.get(m.id);
+      const tsA = Date.parse(m.updatedAt || m.createdAt) || 0;
+      const tsB = Date.parse(existing.updatedAt || existing.createdAt) || 0;
+      if (tsA > tsB) map.set(m.id, m);
+    }
+  });
+
+  const merged = Array.from(map.values());
+  if (typeof ensureMatchSequence === 'function') {
+    return ensureMatchSequence(merged);
+  }
+
+  merged.sort((a, b) => {
+    const tsA = (typeof getMatchTimestamp === 'function' ? getMatchTimestamp(a) : (Date.parse(a.Data || a.createdAt) || 0));
+    const tsB = (typeof getMatchTimestamp === 'function' ? getMatchTimestamp(b) : (Date.parse(b.Data || b.createdAt) || 0));
+    if (tsA !== tsB) return tsA - tsB;
+    return String(a.id || '').localeCompare(String(b.id || ''));
+  });
+
+  return merged;
+}
+window.deterministicMergeMatches = deterministicMergeMatches;
+
 window.pullFromCloud = async function(quiet = false) {
   const url = getSyncUrl();
   if (!url) return;
@@ -57,7 +89,12 @@ window.pullFromCloud = async function(quiet = false) {
 
     if (data && typeof data === 'object') {
       if (Array.isArray(data.manualMatches) && typeof saveManual === 'function') {
-        saveManual(data.manualMatches);
+        const localManual = typeof loadManual === 'function' ? loadManual() : [];
+        const localDeleted = typeof loadDeleted === 'function' ? loadDeleted() : new Set();
+        const remoteDeleted = Array.isArray(data.deletedIds) ? new Set(data.deletedIds) : new Set();
+        const combinedDeleted = new Set([...localDeleted, ...remoteDeleted]);
+        const mergedMatches = deterministicMergeMatches(localManual, data.manualMatches, combinedDeleted);
+        saveManual(mergedMatches);
       }
       if (Array.isArray(data.decks) && typeof saveDecks === 'function') {
         saveDecks(data.decks);

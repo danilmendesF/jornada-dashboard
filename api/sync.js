@@ -12,7 +12,14 @@ function log(level, message, context = {}) {
 }
 const JWT_SECRET = process.env.JWT_SECRET || 'jornada_tcg_jwt_secret_2026_key';
 
-function verifyJwt(token) {
+export function createJwt(payload) {
+  const header = Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url');
+  const body = Buffer.from(JSON.stringify(payload)).toString('base64url');
+  const signature = crypto.createHmac('sha256', JWT_SECRET).update(`${header}.${body}`).digest('base64url');
+  return `${header}.${body}.${signature}`;
+}
+
+export function verifyJwt(token) {
   if (!token || typeof token !== 'string') return null;
   const parts = token.split('.');
   if (parts.length !== 3) return null;
@@ -43,23 +50,40 @@ export default async function handler(req, res) {
 
   const authHeader = req.headers.authorization || '';
   const bearerToken = authHeader.replace('Bearer ', '').trim();
-  const queryToken = req.query.token;
+  const queryToken = req.query?.token;
 
   let userPayload = null;
   if (bearerToken) {
     userPayload = verifyJwt(bearerToken);
   }
 
-  let activeToken = queryToken || 'team_default_sync';
+  // ── SECURITY GATE: POST mutations require valid JWT authentication ──────────
+  if (req.method === 'POST') {
+    if (!bearerToken) {
+      log('warn', '[Serverless Sync] Rejected POST without Authorization Bearer header');
+      return res.status(401).json({ error: 'Autenticação obrigatória (Token Bearer ausente).' });
+    }
+    if (!userPayload) {
+      log('warn', '[Serverless Sync] Rejected POST with invalid/expired JWT');
+      return res.status(403).json({ error: 'Token JWT inválido ou expirado. Faça login novamente.' });
+    }
 
-  if (!activeToken) {
-    return res.status(401).json({ error: 'Autenticação necessária (Token JWT ou Sync Token ausente).' });
+    // Payload size and schema sanity check
+    const rawBody = JSON.stringify(req.body || {});
+    if (rawBody.length > 2097152) { // 2MB limit
+      return res.status(413).json({ error: 'Payload excede o limite de tamanho permitido (2MB).' });
+    }
+    if (!req.body || typeof req.body !== 'object' || (req.body.manualMatches && !Array.isArray(req.body.manualMatches))) {
+      return res.status(400).json({ error: 'Estrutura de payload inválida.' });
+    }
   }
+
+  let activeToken = queryToken || 'team_default_sync';
 
   const redisUrl = process.env.REDIS_URL;
   const key = `jornada_sync_${activeToken.replace(/[^a-zA-Z0-9_-]/g, '')}`;
 
-  log('info', `[Serverless Sync] ${req.method} | Authorized Request`);
+  log('info', `[Serverless Sync] ${req.method} | Authorized Request`, { user: userPayload?.username || 'viewer' });
 
   // ── FALLBACK: No Redis URL configured → proxy to keyvalue.xyz ───────────────
   if (!redisUrl) {
