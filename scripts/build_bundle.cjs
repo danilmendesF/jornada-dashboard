@@ -1,6 +1,7 @@
 /**
  * 📦 BUILD BUNDLE SCRIPT — Jornada Dashboard
  * Bundles and minifies all modular JS/CSS files into dist/app.min.js and dist/style.min.css
+ * Also syncs production static assets into public/ for Vercel deployment.
  * Run with: node scripts/build_bundle.cjs
  */
 
@@ -10,13 +11,18 @@ const { minify } = require('terser');
 
 const rootDir = path.resolve(__dirname, '..');
 const distDir = path.join(rootDir, 'dist');
+const publicDir = path.join(rootDir, 'public');
 
 if (!fs.existsSync(distDir)) {
   fs.mkdirSync(distDir, { recursive: true });
 }
+if (!fs.existsSync(publicDir)) {
+  fs.mkdirSync(publicDir, { recursive: true });
+}
 
 // Order of JS execution dependencies
 const jsOrder = [
+  'js/util.js',
   'js/config.js',
   'js/storage.js',
   'js/stats.js',
@@ -55,14 +61,14 @@ async function build() {
   // Obfuscate and minify using Terser
   const minifyResult = await minify(bundledJS, {
     compress: {
-      drop_console: true, // Remove all console.log, console.error, etc.
+      drop_console: true,
       passes: 2
     },
     mangle: {
       toplevel: true
     },
     format: {
-      comments: false // Remove comments
+      comments: false
     }
   });
 
@@ -95,6 +101,37 @@ async function build() {
     console.log('✅ Assets copiados para dist/assets com sucesso!');
   }
 
+  // Sync to public/ directory for Vercel Static Output
+  console.log('📂 Sincronizando arquivos para public/ para deploy na Vercel...');
+  if (fs.existsSync(path.join(rootDir, 'index.html'))) {
+    fs.copyFileSync(path.join(rootDir, 'index.html'), path.join(publicDir, 'index.html'));
+  }
+  if (fs.existsSync(path.join(rootDir, 'logo.png'))) {
+    fs.copyFileSync(path.join(rootDir, 'logo.png'), path.join(publicDir, 'logo.png'));
+  }
+  if (fs.existsSync(path.join(rootDir, 'version.json'))) {
+    fs.copyFileSync(path.join(rootDir, 'version.json'), path.join(publicDir, 'version.json'));
+  }
+
+  // Sync dist into public/dist
+  const publicDistDir = path.join(publicDir, 'dist');
+  if (!fs.existsSync(publicDistDir)) fs.mkdirSync(publicDistDir, { recursive: true });
+  
+  function copyDirRecursive(src, dest) {
+    if (!fs.existsSync(dest)) fs.mkdirSync(dest, { recursive: true });
+    fs.readdirSync(src).forEach(item => {
+      const srcPath = path.join(src, item);
+      const destPath = path.join(dest, item);
+      if (fs.lstatSync(srcPath).isDirectory()) {
+        copyDirRecursive(srcPath, destPath);
+      } else {
+        fs.copyFileSync(srcPath, destPath);
+      }
+    });
+  }
+
+  copyDirRecursive(distDir, publicDistDir);
+  console.log('✅ Pasta public/ sincronizada com sucesso para a Vercel!');
   console.log('🎉 Build de Produção Concluído!');
 }
 

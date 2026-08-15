@@ -78,6 +78,15 @@ if (fs.existsSync(htmlPath)) {
 
   fs.writeFileSync(htmlPath, html, 'utf8');
   console.log(`✅ Nova versão (v${newVersion}) injetada com sucesso no index.html (e cache busting atualizado)!`);
+  
+  const publicHtmlPath = path.join(rootDir, 'public', 'index.html');
+  if (fs.existsSync(path.dirname(publicHtmlPath))) {
+    fs.writeFileSync(publicHtmlPath, html, 'utf8');
+  }
+  const publicVersionPath = path.join(rootDir, 'public', 'version.json');
+  if (fs.existsSync(path.dirname(publicVersionPath))) {
+    fs.writeFileSync(publicVersionPath, JSON.stringify({ version: newVersion }, null, 2) + '\n', 'utf8');
+  }
 } else {
   console.error('❌ index.html não encontrado.');
   process.exit(1);
