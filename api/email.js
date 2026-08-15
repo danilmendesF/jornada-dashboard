@@ -440,8 +440,8 @@ export default async function handler(req, res) {
   return res.status(200).json({
     status: 'Email module operational',
     endpoints: {
-      previewWelcome: '/api/email?preview=welcome&name=Danilo',
-      previewDeck: '/api/email?preview=deck&name=Danilo&deck=Charizard+ex'
+      previewWelcome: `${DEFAULT_APP_URL}/api/email?preview=welcome&name=Danilo`,
+      previewDeck: `${DEFAULT_APP_URL}/api/email?preview=deck&name=Danilo&deck=Charizard+ex`
     }
   });
 }
