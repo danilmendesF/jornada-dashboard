@@ -1,14 +1,15 @@
 // ── JS/MIRROR.JS ────────────────────────────────────────────────────────────
 // Team Player Mirror Match generation & retro-sync
 
-window.invertPlacar = function(placar) {
+function invertPlacar(placar) {
   if (!placar || typeof placar !== 'string' || !placar.includes('-')) return placar;
   const parts = placar.split('-');
   if (parts.length !== 2) return placar;
   return `${parts[1].trim()}-${parts[0].trim()}`;
-};
+}
+window.invertPlacar = invertPlacar;
 
-window.buildMirrorMatch = function(primaryMatch) {
+function buildMirrorMatch(primaryMatch) {
   if (!primaryMatch || !primaryMatch.Adversario) return null;
   
   const currentPlayers = typeof loadPlayers === 'function' ? loadPlayers() : (window.players || []);
@@ -87,7 +88,9 @@ window.buildMirrorMatch = function(primaryMatch) {
     Comentarios:      primaryMatch.Comentarios ? `[Espelho vs ${primaryMatch.Player}] ${primaryMatch.Comentarios}` : `Partida interna vs ${primaryMatch.Player}`,
     _manual:          true
   };
-};
+}
+window.buildMirrorMatch = buildMirrorMatch;
+
 
 window.syncAllTeamMirrorMatches = function() {
   const currentPlayers = typeof loadPlayers === 'function' ? loadPlayers() : (window.players || []);

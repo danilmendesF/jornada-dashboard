@@ -1,26 +1,30 @@
 // ── JS/STATS.JS ─────────────────────────────────────────────────────────────
 
-window.pct = function(n, d) {
+function pct(n, d) {
   return d === 0 ? 0 : Math.round((n / d) * 100);
-};
+}
+window.pct = pct;
 
-window.avg = function(arr) {
+function avg(arr) {
   return arr.length === 0 ? 0 : (arr.reduce((a, b) => a + b, 0) / arr.length).toFixed(1);
-};
+}
+window.avg = avg;
 
-window.getMatchDeck = function(d) {
+function getMatchDeck(d) {
   if (!d) return 'Desconhecido';
   if (d.Arquetipo) return d.Subtipo ? `${d.Arquetipo} (${d.Subtipo})` : d.Arquetipo;
   return d.Deck || 'Desconhecido';
-};
+}
+window.getMatchDeck = getMatchDeck;
 
-window.getMatchOppDeck = function(d) {
+function getMatchOppDeck(d) {
   if (!d) return 'Desconhecido';
   if (d.DeckAdvArquetipo) return d.SubtipoAdv ? `${d.DeckAdvArquetipo} (${d.SubtipoAdv})` : d.DeckAdvArquetipo;
   return d.DeckAdv || 'Desconhecido';
-};
+}
+window.getMatchOppDeck = getMatchOppDeck;
 
-window.groupBy = function(data, keyOrFn) {
+function groupBy(data, keyOrFn) {
   const fn = typeof keyOrFn === 'function' ? keyOrFn : item => item[keyOrFn];
   return data.reduce((acc, item) => {
     const key = fn(item) ?? 'Outros';
@@ -28,17 +32,19 @@ window.groupBy = function(data, keyOrFn) {
     acc[key].push(item);
     return acc;
   }, {});
-};
+}
+window.groupBy = groupBy;
 
-window.isBricked = function(r) {
+function isBricked(r) {
   if (!r) return false;
   if (r.GamesDetail && Array.isArray(r.GamesDetail) && r.GamesDetail.length > 0) {
     return r.GamesDetail.some(g => g.brick === 'Sim');
   }
   return r.Brick === 'Sim' || (r.Brick && r.Brick !== 'Nenhum' && r.Brick !== 'Não');
-};
+}
+window.isBricked = isBricked;
 
-window.calculateStats = function(matches) {
+function calculateStats(matches) {
   if (!Array.isArray(matches) || matches.length === 0) {
     return { wins: 0, draws: 0, losses: 0, total: 0, wr: 0, brickWins: 0, totalBricks: 0, totalGamesCount: 0, totalGameBricksCount: 0 };
   }
@@ -76,4 +82,6 @@ window.calculateStats = function(matches) {
     totalGamesCount,
     totalGameBricksCount
   };
-};
+}
+window.calculateStats = calculateStats;
+
