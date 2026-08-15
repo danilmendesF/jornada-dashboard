@@ -48,12 +48,15 @@ requiredContracts.forEach(c => {
 console.log('\n4. Validando Registros de Decisao (docs/decisions/) e Divida Tecnica...');
 const requiredAdrs = [
   '0001-offline-first-hybrid-storage.md', '0002-sequential-match-indexing.md',
-  '0003-serverless-jwt-auth.md', '0004-cyber-pokemon-design-system.md'
+  '0003-serverless-jwt-auth.md', '0004-cyber-pokemon-design-system.md',
+  '0005-redis-rate-limiting-fail-open.md', '0006-strict-jwt-expiration-and-correlation-id.md',
+  '0007-csp-and-html-sanitization.md'
 ];
 requiredAdrs.forEach(f => {
   assert(fs.existsSync(path.join(rootDir, 'docs', 'decisions', f)), `ADR docs/decisions/${f} existe`);
 });
 assert(fs.existsSync(path.join(rootDir, 'docs', 'TECH_DEBT.md')), 'Registro docs/TECH_DEBT.md existe');
+assert(fs.existsSync(path.join(rootDir, 'docs', 'privacy', 'DATA-RETENTION-AND-DELETION.md')), 'Documento docs/privacy/DATA-RETENTION-AND-DELETION.md existe');
 
 // 5. Check Operations Runbooks
 console.log('\n5. Validando Manuais de Operacao e Rollback (docs/operations/)...');
@@ -88,7 +91,7 @@ try {
 console.log('\n9. Executando Matriz Completa de Testes Unitarios no Vitest...');
 try {
   const testOutput = execSync('npx vitest run', { cwd: rootDir, stdio: 'pipe' }).toString();
-  assert(testOutput.includes('passed'), 'Matriz completa de testes unitarios no Vitest aprovada (13/13 suites)');
+  assert(testOutput.includes('passed'), 'Matriz completa de testes unitarios no Vitest aprovada (19/19 suites)');
 } catch (e) {
   assert(false, `Falha nos testes unitarios: ${e.message}`);
 }

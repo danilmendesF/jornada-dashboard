@@ -77,7 +77,9 @@ describe('Data Contracts & Schema Validation (GAP-SDD-003)', () => {
       email: 'danilo@jornada.com',
       name: 'Danilo',
       teamId: 'team_default_sync',
-      role: 'admin'
+      role: 'admin',
+      iat: Math.floor(Date.now() / 1000),
+      exp: Math.floor(Date.now() / 1000) + 2592000
     };
 
     expect(validateBasicSchema(jwtSchema, validClaims)).toBe(true);

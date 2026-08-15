@@ -24,6 +24,7 @@ window.sortTableByColumn = function(colKey) {
 };
 
 window.renderTable = function(rows, resetPage = false) {
+  const _esc = (typeof escapeHtml === 'function') ? escapeHtml : (typeof window !== 'undefined' && typeof window.escapeHtml === 'function') ? window.escapeHtml : (s) => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
   const tbody = document.getElementById('tableBody');
   if (!tbody) return;
 
@@ -115,17 +116,17 @@ window.renderTable = function(rows, resetPage = false) {
       <tr>
         <td style="font-weight:700; color:var(--accent2);">${displayId}</td>
         <td>${r.Data || '—'}</td>
-        <td style="font-weight:600;">${r.Player || '—'}</td>
-        <td style="color:var(--text);">${r.Deck || '—'}</td>
-        <td style="color:var(--text2);">${r.DeckAdv || '—'}</td>
+        <td style="font-weight:600;">${_esc(r.Player) || '—'}</td>
+        <td style="color:var(--text);">${_esc(r.Deck) || '—'}</td>
+        <td style="color:var(--text2);">${_esc(r.DeckAdv) || '—'}</td>
         <td><span class="badge sm">${r.Formato || 'MD1'}</span></td>
-        <td style="font-size:0.78rem;">${r.Colecao || '—'}</td>
+        <td style="font-size:0.78rem;">${_esc(r.Colecao) || '—'}</td>
         <td><span class="badge sm ${r.Confiabilidade === 'Baixa' ? 'badge-warn' : 'badge-info'}">${r.Confiabilidade || 'Alta'}</span></td>
         <td>${r.Start || '—'}</td>
         <td style="font-weight:700;">${r.Placar || '—'}</td>
         <td><span class="badge ${resClass}">${r.Resultado || '—'}</span></td>
         <td>${isBrk ? '💥 Sim' : '🟢 Não'}</td>
-        <td>${r.Local || '—'}</td>
+        <td>${_esc(r.Local) || '—'}</td>
         <td style="text-align:center;">
           ${r.ListaMeuDeck || r.ListaDeckAdv ? `<button class="action-btn sm" onclick="openMatchDeckList('${r.id}', 'own')" title="Ver Lista">📋 Listas</button>` : '—'}
         </td>

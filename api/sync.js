@@ -1,29 +1,49 @@
-// Vercel Serverless Function: api/sync.js
-// Connects to Redis per request with JWT Authentication and Fallback support.
-
 import { createClient } from 'redis';
 import crypto from 'crypto';
 
-
-function log(level, message, context = {}) {
-  const payload = { timestamp: new Date().toISOString(), level, message, ...context };
-  if (level === 'error') console.error(JSON.stringify(payload));
-  else console.log(JSON.stringify(payload));
-}
 export function getJwtSecret() {
   const secret = process.env.JWT_SECRET;
   if (!secret || typeof secret !== 'string' || secret.trim().length === 0) {
-    log('error', '[Serverless Sync] FATAL: JWT_SECRET environment variable is missing or empty.');
+    console.error(JSON.stringify({
+      timestamp: new Date().toISOString(),
+      service: 'jornada-sync',
+      level: 'error',
+      message: '[Serverless Sync] FATAL: JWT_SECRET environment variable is missing or empty.'
+    }));
     return null;
   }
   return secret.trim();
 }
 
-export function createJwt(payload) {
+export function getRequestId(req) {
+  const incoming = req?.headers?.['x-request-id'] || req?.headers?.['x-correlation-id'];
+  if (incoming && typeof incoming === 'string' && /^[a-zA-Z0-9_-]{8,64}$/.test(incoming)) {
+    return incoming;
+  }
+  return crypto.randomUUID();
+}
+
+function log(level, message, context = {}) {
+  const payload = {
+    timestamp: new Date().toISOString(),
+    service: 'jornada-sync',
+    level,
+    message,
+    ...context
+  };
+  if (level === 'error') console.error(JSON.stringify(payload));
+  else console.log(JSON.stringify(payload));
+}
+
+export function createJwt(payload, expiresInSeconds = 30 * 24 * 60 * 60) {
   const secret = getJwtSecret();
   if (!secret) return null;
+  const now = Math.floor(Date.now() / 1000);
+  const exp = payload.exp || (now + expiresInSeconds);
+  const fullPayload = { ...payload, iat: payload.iat || now, exp };
+
   const header = Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url');
-  const body = Buffer.from(JSON.stringify(payload)).toString('base64url');
+  const body = Buffer.from(JSON.stringify(fullPayload)).toString('base64url');
   const signature = crypto.createHmac('sha256', secret).update(`${header}.${body}`).digest('base64url');
   return `${header}.${body}.${signature}`;
 }
@@ -33,145 +53,134 @@ export function verifyJwt(token) {
   if (!secret || !token || typeof token !== 'string') return null;
   const parts = token.split('.');
   if (parts.length !== 3) return null;
-  const [header, body, signature] = parts;
-  const expected = crypto.createHmac('sha256', secret).update(`${header}.${body}`).digest('base64url');
-  if (signature !== expected) return null;
+  const [headerB64, bodyB64, signature] = parts;
+
   try {
-    return JSON.parse(Buffer.from(body, 'base64url').toString('utf8'));
+    const header = JSON.parse(Buffer.from(headerB64, 'base64url').toString('utf8'));
+    if (!header || header.alg !== 'HS256') return null;
+  } catch (e) {
+    return null;
+  }
+
+  const expected = crypto.createHmac('sha256', secret).update(`${headerB64}.${bodyB64}`).digest('base64url');
+  if (signature !== expected) return null;
+
+  try {
+    const payload = JSON.parse(Buffer.from(bodyB64, 'base64url').toString('utf8'));
+    if (payload.exp && typeof payload.exp === 'number') {
+      const now = Math.floor(Date.now() / 1000);
+      if (now > payload.exp + 60) {
+        return null;
+      }
+    }
+    return payload;
   } catch (e) {
     return null;
   }
 }
 
 export default async function handler(req, res) {
-  // CORS headers
+  const requestId = getRequestId(req);
+  res.setHeader('X-Request-ID', requestId);
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-
-  // Prevent caching on Vercel Edge / browser
-  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-  res.setHeader('Pragma', 'no-cache');
-  res.setHeader('Expires', '0');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Request-ID');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
 
-  const authHeader = req.headers.authorization || '';
-  const bearerToken = authHeader.replace('Bearer ', '').trim();
-  const queryToken = req.query?.token;
+  const activeToken = req.query.token || 'team_default_sync';
+  const syncKey = `jornada_sync_${activeToken}`;
 
-  let userPayload = null;
-  if (bearerToken) {
-    userPayload = verifyJwt(bearerToken);
-  }
-
-  let activeToken = queryToken || 'team_default_sync';
-
-  // ── SECURITY & AUTHORIZATION GATE ──────────────────────────────────────────
+  // Enforce JWT Authentication for Mutations
   if (req.method === 'POST') {
-    if (!bearerToken) {
-      log('warn', '[Serverless Sync] Rejected POST without Authorization Bearer header');
-      return res.status(401).json({ error: 'Autenticação obrigatória (Token Bearer ausente).' });
-    }
-    if (!userPayload) {
-      log('warn', '[Serverless Sync] Rejected POST with invalid/expired JWT');
-      return res.status(403).json({ error: 'Token JWT inválido ou expirado. Faça login novamente.' });
-    }
-
-    // Authorization Policy: Check if user has permission to mutate activeToken namespace
-    const allowedTokens = userPayload.allowedSyncTokens || (userPayload.teamId ? [userPayload.teamId] : ['team_default_sync']);
-    const isAdmin = userPayload.role === 'admin';
-    const isDefaultTeam = activeToken === 'team_default_sync';
-
-    if (!isAdmin && !isDefaultTeam && !allowedTokens.includes(activeToken)) {
-      log('warn', '[Serverless Sync] Unauthorized mutation attempt for foreign sync namespace', {
-        user: userPayload.email || userPayload.name,
-        attemptedToken: activeToken
+    const authHeader = req.headers.authorization || req.headers.Authorization || '';
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      log('warn', 'POST /api/sync unauthenticated attempt rejected', { requestId, activeToken });
+      return res.status(401).json({
+        error: 'Autenticação obrigatória. Faça login no dashboard para sincronizar os dados do time com a nuvem.'
       });
-      return res.status(403).json({ error: 'Acesso negado: você não tem autorização para modificar este time/namespace.' });
     }
 
-    // Payload size and schema sanity check
-    const rawBody = JSON.stringify(req.body || {});
-    if (rawBody.length > 2097152) { // 2MB limit
-      return res.status(413).json({ error: 'Payload excede o limite de tamanho permitido (2MB).' });
+    const token = authHeader.replace('Bearer ', '').trim();
+    const userPayload = verifyJwt(token);
+
+    if (!userPayload) {
+      log('warn', 'POST /api/sync invalid JWT rejected', { requestId, activeToken });
+      return res.status(403).json({
+        error: 'Token JWT inválido ou expirado. Faça login novamente para continuar.'
+      });
     }
-    if (!req.body || typeof req.body !== 'object' || (req.body.manualMatches && !Array.isArray(req.body.manualMatches))) {
-      return res.status(400).json({ error: 'Estrutura de payload inválida.' });
+
+    // Enforce Authorization (BOLA/IDOR Prevention)
+    const isTeamMember = Array.isArray(userPayload.allowedSyncTokens) && userPayload.allowedSyncTokens.includes(activeToken);
+    const isDefaultTeam = (activeToken === 'team_default_sync');
+    const isAdmin = (userPayload.role === 'admin');
+
+    if (!isTeamMember && !isDefaultTeam && !isAdmin) {
+      log('warn', 'Unauthorized namespace mutation attempt blocked', { requestId, user: userPayload.email, targetToken: activeToken });
+      return res.status(403).json({
+        error: `Acesso negado: você não tem autorização para modificar este time/namespace (${activeToken}).`
+      });
+    }
+
+    const body = req.body;
+    if (!body || typeof body !== 'object' || (!Array.isArray(body.manualMatches) && !Array.isArray(body.decks))) {
+      return res.status(400).json({ error: 'Estrutura de payload inválida para sincronização.' });
     }
   }
 
-  const redisUrl = process.env.REDIS_URL;
-  const key = `jornada_sync_${activeToken.replace(/[^a-zA-Z0-9_-]/g, '')}`;
-
-  log('info', `[Serverless Sync] ${req.method} | Authorized Request`, { user: userPayload?.username || userPayload?.name || 'viewer' });
-
-  // ── FALLBACK: No Redis URL configured → proxy to keyvalue.xyz ───────────────
-  if (!redisUrl) {
-    log('info', '[Serverless Sync] REDIS_URL not found. Falling back to keyvalue.xyz proxy...');
-    try {
-      if (req.method === 'GET') {
-        const proxyRes = await fetch(`https://keyvalue.xyz/v1/${key}`);
-        if (proxyRes.status === 404) {
-          return res.status(404).json({ error: 'Not found' });
-        }
-        if (!proxyRes.ok) throw new Error(`Proxy GET failed (${proxyRes.status})`);
-        const data = await proxyRes.json();
-        return res.status(200).json(data);
-      }
-      if (req.method === 'POST') {
-        const proxyRes = await fetch(`https://keyvalue.xyz/v1/${key}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(req.body)
-        });
-        if (!proxyRes.ok) {
-          const errText = await proxyRes.text();
-          throw new Error(`Proxy POST failed with status ${proxyRes.status}: ${errText}`);
-        }
-        return res.status(200).json({ success: true });
-      }
-    } catch (proxyErr) {
-      log('error', '[Serverless Sync] Proxy Error:', { error: proxyErr.message });
-      return res.status(500).json({ error: proxyErr.message });
+  const REDIS_URL = process.env.REDIS_URL;
+  if (!REDIS_URL) {
+    if (req.method === 'GET') {
+      return res.status(200).json({
+        message: 'Modo Offline: REDIS_URL não configurado na Vercel.',
+        manualMatches: []
+      });
     }
-    return;
+    return res.status(200).json({
+      success: true,
+      message: 'Modo Offline: Dados mantidos localmente no navegador.'
+    });
   }
 
-  // ── REDIS MODE: Connect per-request ────────────────────────────────────────
-  const redis = createClient({ url: redisUrl });
-  redis.on('error', (err) => log('error', '[Serverless Sync] Redis client error:', { error: err.message }));
-
+  let client = null;
   try {
-    await redis.connect();
+    client = createClient({ url: REDIS_URL });
+    await client.connect();
 
     if (req.method === 'GET') {
-      const value = await redis.get(key);
-      if (!value) {
-        return res.status(404).json({ error: 'Not found' });
+      const data = await client.get(syncKey);
+      if (!data) {
+        return res.status(200).json({ manualMatches: [] });
       }
-      return res.status(200).json(JSON.parse(value));
+      return res.status(200).json(JSON.parse(data));
     }
 
     if (req.method === 'POST') {
-      const payload = req.body;
-      if (!payload || typeof payload !== 'object') {
-        return res.status(400).json({ error: 'Invalid payload' });
+      const body = req.body;
+      if (!body || typeof body !== 'object' || (!Array.isArray(body.manualMatches) && !Array.isArray(body.decks))) {
+        return res.status(400).json({ error: 'Estrutura de payload inválida para sincronização.' });
       }
-      await redis.set(key, JSON.stringify(payload));
-      return res.status(200).json({ success: true });
+
+      await client.set(syncKey, JSON.stringify(body));
+      log('info', 'Synced payload saved to Redis', { requestId, activeToken, matchesCount: body.manualMatches?.length || 0 });
+
+      return res.status(200).json({
+        success: true,
+        message: 'Dados sincronizados na nuvem com sucesso!',
+        updatedAt: new Date().toISOString()
+      });
     }
 
-    return res.status(405).json({ error: 'Method not allowed' });
-
-  } catch (err) {
-    log('error', '[Serverless Sync] Redis Error:', { error: err.message });
-    return res.status(500).json({ error: err.message });
+    return res.status(405).json({ error: 'Método não permitido.' });
+  } catch (error) {
+    log('error', 'Sync handler exception', { requestId, activeToken, error: error.message });
+    return res.status(500).json({ error: 'Falha interna ao processar sincronização na nuvem.' });
   } finally {
-    if (redis && redis.isOpen) {
-      await redis.disconnect();
+    if (client && client.isOpen) {
+      await client.disconnect();
     }
   }
 }

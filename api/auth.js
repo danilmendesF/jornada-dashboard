@@ -1,22 +1,16 @@
-/**
- * 🔐 VERCEL SERVERLESS FUNCTION: /api/auth
- * Secure User Registration, Login & JWT Verification for Jornada Dashboard
- */
-
 import { createClient } from 'redis';
 import crypto from 'crypto';
 import { sendWelcomeEmail } from './email.js';
 
-
-function log(level, message, context = {}) {
-  const payload = { timestamp: new Date().toISOString(), level, message, ...context };
-  if (level === 'error') console.error(JSON.stringify(payload));
-  else console.log(JSON.stringify(payload));
-}
 export function getJwtSecret() {
   const secret = process.env.JWT_SECRET;
   if (!secret || typeof secret !== 'string' || secret.trim().length === 0) {
-    log('error', '[Serverless Auth] FATAL: JWT_SECRET environment variable is missing or empty.');
+    console.error(JSON.stringify({
+      timestamp: new Date().toISOString(),
+      service: 'jornada-auth',
+      level: 'error',
+      message: '[Serverless Auth] FATAL: JWT_SECRET environment variable is missing or empty.'
+    }));
     return null;
   }
   return secret.trim();
@@ -24,12 +18,37 @@ export function getJwtSecret() {
 
 const REDIS_URL = process.env.REDIS_URL;
 
-// Helper: HMAC SHA-256 Signature for lightweight JWT
-export function signJwt(payload) {
+// Helper: Correlation & Request ID
+export function getRequestId(req) {
+  const incoming = req?.headers?.['x-request-id'] || req?.headers?.['x-correlation-id'];
+  if (incoming && typeof incoming === 'string' && /^[a-zA-Z0-9_-]{8,64}$/.test(incoming)) {
+    return incoming;
+  }
+  return crypto.randomUUID();
+}
+
+function log(level, message, context = {}) {
+  const payload = {
+    timestamp: new Date().toISOString(),
+    service: 'jornada-auth',
+    level,
+    message,
+    ...context
+  };
+  if (level === 'error') console.error(JSON.stringify(payload));
+  else console.log(JSON.stringify(payload));
+}
+
+// Helper: HMAC SHA-256 Signature for JWT with finite expiration (exp)
+export function signJwt(payload, expiresInSeconds = 30 * 24 * 60 * 60) {
   const secret = getJwtSecret();
   if (!secret) return null;
+  const now = Math.floor(Date.now() / 1000);
+  const exp = payload.exp || (now + expiresInSeconds);
+  const fullPayload = { ...payload, iat: payload.iat || now, exp };
+
   const header = Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url');
-  const body = Buffer.from(JSON.stringify(payload)).toString('base64url');
+  const body = Buffer.from(JSON.stringify(fullPayload)).toString('base64url');
   const signature = crypto.createHmac('sha256', secret).update(`${header}.${body}`).digest('base64url');
   return `${header}.${body}.${signature}`;
 }
@@ -39,11 +58,29 @@ export function verifyJwt(token) {
   if (!secret || !token || typeof token !== 'string') return null;
   const parts = token.split('.');
   if (parts.length !== 3) return null;
-  const [header, body, signature] = parts;
-  const expected = crypto.createHmac('sha256', secret).update(`${header}.${body}`).digest('base64url');
-  if (signature !== expected) return null;
+  const [headerB64, bodyB64, signature] = parts;
+
+  // Validate algorithm
   try {
-    return JSON.parse(Buffer.from(body, 'base64url').toString('utf8'));
+    const header = JSON.parse(Buffer.from(headerB64, 'base64url').toString('utf8'));
+    if (!header || header.alg !== 'HS256') return null;
+  } catch (e) {
+    return null;
+  }
+
+  const expected = crypto.createHmac('sha256', secret).update(`${headerB64}.${bodyB64}`).digest('base64url');
+  if (signature !== expected) return null;
+
+  try {
+    const payload = JSON.parse(Buffer.from(bodyB64, 'base64url').toString('utf8'));
+    // Enforce finite lifetime expiration (with 60s clock skew tolerance)
+    if (payload.exp && typeof payload.exp === 'number') {
+      const now = Math.floor(Date.now() / 1000);
+      if (now > payload.exp + 60) {
+        return null; // Expired token
+      }
+    }
+    return payload;
   } catch (e) {
     return null;
   }
@@ -60,27 +97,63 @@ function verifyPassword(password, storedHash, storedSalt) {
   return crypto.timingSafeEqual(Buffer.from(hash, 'hex'), Buffer.from(storedHash, 'hex'));
 }
 
+// Helper: Distributed Redis Rate Limiter (ADR 0005: Fail-Open on Redis Error)
+export async function checkRateLimit(redis, clientIp, action, limit = 10, windowSec = 900) {
+  if (!redis || !clientIp) return { allowed: true, remaining: limit };
+  const key = `ratelimit_auth_${clientIp.replace(/[^a-zA-Z0-9:._-]/g, '')}_${action}`;
+  try {
+    const current = await redis.incr(key);
+    if (current === 1) {
+      await redis.expire(key, windowSec);
+    }
+    if (current > limit) {
+      return { allowed: false, remaining: 0, retryAfter: windowSec };
+    }
+    return { allowed: true, remaining: limit - current };
+  } catch (err) {
+    // Fail-Open strategy (ADR 0005) to ensure tournament availability
+    log('warn', 'Redis rate limit fail-open exception', { error: err.message });
+    return { allowed: true, remaining: limit };
+  }
+}
+
 export default async function handler(req, res) {
+  const requestId = getRequestId(req);
+  res.setHeader('X-Request-ID', requestId);
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Request-ID');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
 
+  const clientIp = (req.headers['x-forwarded-for'] || req.socket?.remoteAddress || '127.0.0.1').split(',')[0].trim();
   let redis = null;
   if (REDIS_URL) {
     try {
       redis = createClient({ url: REDIS_URL });
       await redis.connect();
     } catch (e) {
-      console.warn('Redis auth fallback to in-memory/KV mode:', e);
+      log('warn', 'Redis connection fallback mode', { requestId, error: e.message });
     }
   }
 
   try {
     const action = req.query.action || (req.body && req.body.action);
+
+    // Rate Limiting on sensitive actions (register & login)
+    if (req.method === 'POST' && (action === 'register' || action === 'login')) {
+      const rateResult = await checkRateLimit(redis, clientIp, action, 10, 900);
+      if (!rateResult.allowed) {
+        log('warn', 'Rate limit exceeded for auth endpoint', { requestId, clientIp, action });
+        res.setHeader('Retry-After', String(rateResult.retryAfter || 900));
+        return res.status(429).json({
+          error: 'Muitas tentativas consecutivas. Aguarde alguns minutos antes de tentar novamente.',
+          retryAfter: rateResult.retryAfter || 900
+        });
+      }
+    }
 
     // ── ACTION 1: REGISTER ──────────────────────────────────────────────────
     if (req.method === 'POST' && action === 'register') {
@@ -109,6 +182,9 @@ export default async function handler(req, res) {
         name: name.trim(),
         linkedPlayer: name.trim(),
         email: email.toLowerCase().trim(),
+        teamId: 'team_default_sync',
+        allowedSyncTokens: ['team_default_sync'],
+        role: 'player',
         hash,
         salt,
         createdAt: new Date().toISOString()
@@ -122,23 +198,33 @@ export default async function handler(req, res) {
         if (userObj.linkedPlayer) await redis.sAdd('claimed_players', userObj.linkedPlayer);
       }
 
-      const token = signJwt({ id: userObj.id, name: userObj.name, linkedPlayer: userObj.linkedPlayer, email: userObj.email });
+      const token = signJwt({
+        id: userObj.id,
+        name: userObj.name,
+        linkedPlayer: userObj.linkedPlayer,
+        email: userObj.email,
+        teamId: userObj.teamId,
+        allowedSyncTokens: userObj.allowedSyncTokens,
+        role: userObj.role
+      });
 
-      // Trigger Welcome & Confirmation Email
+      log('info', 'User registered successfully', { requestId, userId: userObj.id, email: userObj.email });
+
+      // Trigger Welcome Email non-blocking
       let emailStatus = { success: false, delivered: false };
       try {
         if (typeof sendWelcomeEmail === 'function') {
           emailStatus = await sendWelcomeEmail(userObj.name, userObj.email);
         }
       } catch (emailErr) {
-        console.warn('[Serverless Auth] Non-blocking email dispatch warning:', emailErr.message);
+        log('warn', 'Welcome email non-blocking dispatch warning', { requestId, error: emailErr.message });
       }
 
       return res.status(200).json({
         success: true,
         message: 'Cadastro realizado com sucesso!',
         token,
-        user: { id: userObj.id, name: userObj.name, email: userObj.email },
+        user: { id: userObj.id, name: userObj.name, email: userObj.email, role: userObj.role },
         emailStatus
       });
     }
@@ -158,12 +244,19 @@ export default async function handler(req, res) {
         if (raw) userObj = JSON.parse(raw);
       }
 
-      // If user not found in KV or KV disabled, return authentication response
       if (!userObj) {
-        // Safe check or success for demo environment if KV not connected
         if (!REDIS_URL) {
           const { hash, salt } = hashPassword(password);
-          userObj = { id: `usr_${Date.now()}`, name: email.split('@')[0], email, hash, salt };
+          userObj = {
+            id: `usr_${Date.now()}`,
+            name: email.split('@')[0],
+            email,
+            teamId: 'team_default_sync',
+            allowedSyncTokens: ['team_default_sync'],
+            role: 'player',
+            hash,
+            salt
+          };
         } else {
           return res.status(401).json({ error: 'E-mail ou senha incorretos.' });
         }
@@ -174,12 +267,29 @@ export default async function handler(req, res) {
         }
       }
 
-      const token = signJwt({ id: userObj.id, name: userObj.name, email: userObj.email });
+      const token = signJwt({
+        id: userObj.id,
+        name: userObj.name,
+        linkedPlayer: userObj.linkedPlayer || userObj.name,
+        email: userObj.email,
+        teamId: userObj.teamId || 'team_default_sync',
+        allowedSyncTokens: userObj.allowedSyncTokens || ['team_default_sync'],
+        role: userObj.role || 'player'
+      });
+
+      log('info', 'User login successful', { requestId, userId: userObj.id, email: userObj.email });
+
       return res.status(200).json({
         success: true,
         message: 'Login efetuado com sucesso!',
         token,
-        user: { id: userObj.id, name: userObj.name, email: userObj.email }
+        user: {
+          id: userObj.id,
+          name: userObj.name,
+          linkedPlayer: userObj.linkedPlayer || userObj.name,
+          email: userObj.email,
+          role: userObj.role || 'player'
+        }
       });
     }
 
@@ -207,27 +317,63 @@ export default async function handler(req, res) {
       return res.status(200).json({ valid: true, user: verified });
     }
 
-    // ── ACTION 4: RESET SINGLE ACCOUNT ───────────────────────────────────────
-    if (req.method === 'POST' && action === 'reset_single') {
-      const { playerName } = req.body || {};
-      if (!playerName) return res.status(400).json({error: 'Nome do jogador não informado.'});
+    // ── ACTION 4: ADMIN USER DATA DELETION / RIGHT TO BE FORGOTTEN (PRIV-001) ──
+    if (req.method === 'POST' && (action === 'admin_delete_user_data' || action === 'reset_single')) {
+      const authHeader = req.headers.authorization || '';
+      const token = authHeader.replace('Bearer ', '').trim();
+      const verifiedAdmin = verifyJwt(token);
+
+      if (!verifiedAdmin || verifiedAdmin.role !== 'admin') {
+        log('warn', 'Unauthorized admin delete attempt blocked', { requestId });
+        return res.status(403).json({ error: 'Operação administrativa restrita. Permissão negada.' });
+      }
+
+      const { targetEmail, playerName } = req.body || {};
+      const emailToDelete = targetEmail || (playerName ? null : null);
+
       if (redis) {
         try {
-          const nameKey = `player_claim_${playerName.toLowerCase().trim()}`;
-          const email = await redis.get(nameKey);
-          if (email) {
-            await redis.del(`user_${email.toLowerCase().trim()}`);
-            await redis.sRem('users_list', email);
+          if (emailToDelete) {
+            const userKey = `user_${emailToDelete.toLowerCase().trim()}`;
+            const rawUser = await redis.get(userKey);
+            if (rawUser) {
+              const parsed = JSON.parse(rawUser);
+              if (parsed.name) {
+                await redis.del(`player_claim_${parsed.name.toLowerCase().trim()}`);
+                await redis.sRem('claimed_players', parsed.name.trim());
+              }
+            }
+            await redis.del(userKey);
+            await redis.sRem('users_list', emailToDelete.toLowerCase().trim());
+          } else if (playerName) {
+            const nameKey = `player_claim_${playerName.toLowerCase().trim()}`;
+            const linkedEmail = await redis.get(nameKey);
+            if (linkedEmail) {
+              await redis.del(`user_${linkedEmail.toLowerCase().trim()}`);
+              await redis.sRem('users_list', linkedEmail);
+            }
+            await redis.del(nameKey);
+            await redis.sRem('claimed_players', playerName.trim());
           }
-          await redis.del(nameKey);
-          await redis.sRem('claimed_players', playerName.trim());
-        } catch(e) { console.warn('Single reset error', e); }
+          log('info', 'Admin deleted user account/PII', { requestId, admin: verifiedAdmin.email, target: emailToDelete || playerName });
+        } catch (e) {
+          log('error', 'Admin deletion failure', { requestId, error: e.message });
+        }
       }
-      return res.status(200).json({ success: true, message: `Conta de ${playerName} resetada com sucesso.` });
+      return res.status(200).json({ success: true, message: 'Dados e conta do usuário expurgados com sucesso.' });
     }
 
-    // ── ACTION 5: RESET ALL ACCOUNTS ─────────────────────────────────────────
+    // ── ACTION 5: ADMIN RESET ALL ACCOUNTS ──────────────────────────────────
     if (req.method === 'POST' && action === 'reset_all') {
+      const authHeader = req.headers.authorization || '';
+      const token = authHeader.replace('Bearer ', '').trim();
+      const verifiedAdmin = verifyJwt(token);
+
+      if (!verifiedAdmin || verifiedAdmin.role !== 'admin') {
+        log('warn', 'Unauthorized admin reset_all attempt blocked', { requestId });
+        return res.status(403).json({ error: 'Operação administrativa restrita. Permissão negada.' });
+      }
+
       if (redis) {
         try {
           const users = await redis.sMembers('users_list');
@@ -239,15 +385,15 @@ export default async function handler(req, res) {
           await redis.del('users_list');
           await redis.del('claimed_players');
 
-          // Clean all player_claim_* keys
           const keys = await redis.keys('player_claim_*');
           if (keys && keys.length > 0) {
             for (const key of keys) {
               await redis.del(key);
             }
           }
+          log('info', 'Admin executed reset_all', { requestId, admin: verifiedAdmin.email });
         } catch (err) {
-          console.warn('[Serverless Auth] Reset warning:', err.message);
+          log('warn', 'Reset all warning', { requestId, error: err.message });
         }
       }
       return res.status(200).json({ success: true, message: 'Todas as contas de usuários foram resetadas com sucesso!' });
@@ -255,7 +401,7 @@ export default async function handler(req, res) {
 
     return res.status(400).json({ error: 'Ação não suportada.' });
   } catch (e) {
-    log('error', 'Auth handler error:', { error: e });
+    log('error', 'Auth handler unhandled exception', { requestId, error: e.message });
     return res.status(500).json({ error: e.message || 'Erro interno no servidor de autenticação.' });
   } finally {
     if (redis && redis.isOpen) {

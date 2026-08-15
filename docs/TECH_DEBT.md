@@ -13,6 +13,8 @@
 | **`AR-001`** | **Merge** | Serializacao canonica nao recursiva (`canonicalMatchString`). | O dominio do Jornada TCG utiliza apenas objetos planos de partidas (`Match`), tornando desnecessaria a complexidade de ordenacao recursiva profunda. | Teste `tests/merge_tiebreak.test.js` e propriedades algebricas 100% validadas. |
 | **`AR-002`** | **Tombstones** | Janela de retencao de exclusoes em 180 dias. | Previne crescimento indefinido de tombstones no `localStorage` do navegador e no Redis. | TTL de 180 dias e mais que suficiente para o ciclo de torneios e temporadas ativas. |
 | **`AR-003`** | **Autorizacao** | Edicao colaborativa de partidas entre membros do mesmo time. | Reduz atrito no registro e correcao de placares em tempo real durante torneios presenciais. | Documentado em `docs/audit/HUMAN-DECISIONS-AUTHORIZATION.md`. |
+| **`AR-004`** | **Rate Limiting** | Fail-Open em caso de falha ou timeout do Redis (`checkRateLimit`). | Garante que indisponibilidades temporarias de conexao nao impecam jogadores de acessarem o dashboard em regionais. | ADR 0005 e logs estruturados de aviso. |
+| **`AR-005`** | **Privacidade / LGPD** | Expurgo de contas com preservacao de historico competitivo do time. | Mantem a integridade estatistica dos graficos de matchups desvinculando os dados pessoais (nome/email/hash). | SPEC-008 e `docs/privacy/DATA-RETENTION-AND-DELETION.md`. |
 
 ---
 
