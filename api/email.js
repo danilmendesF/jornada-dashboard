@@ -51,18 +51,18 @@ export function generateWelcomeEmailHtml(playerName = 'Treinador', playerEmail =
     <!-- CONTAINER PRINCIPAL DARK THEME -->
     <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 580px; background-color: #0d1225; border-radius: 18px; margin: 0 auto; box-shadow: 0 16px 45px rgba(0, 0, 0, 0.85), 0 0 35px rgba(124, 106, 247, 0.18); overflow: hidden; border: 1px solid rgba(124, 106, 247, 0.4);" class="email-container">
       
-      <!-- TOP HEADER / BRAND -->
+      <!-- TOP HEADER / BRAND WITH OFFICIAL LOGO -->
       <tr>
-        <td style="padding: 26px 32px 18px 32px; background-color: #0a0e1e; border-bottom: 1px solid rgba(124, 106, 247, 0.25);">
+        <td style="padding: 24px 32px 18px 32px; background-color: #0a0e1e; border-bottom: 1px solid rgba(124, 106, 247, 0.25);">
           <table border="0" cellpadding="0" cellspacing="0" width="100%">
             <tr>
               <td align="left" style="vertical-align: middle;">
                 <table border="0" cellpadding="0" cellspacing="0">
                   <tr>
-                    <td style="vertical-align: middle; padding-right: 12px;">
-                      <div style="background: linear-gradient(135deg, #7c3aed, #00c8f8); width: 38px; height: 38px; border-radius: 10px; text-align: center; line-height: 38px; font-size: 20px; color: #ffffff; font-weight: bold; box-shadow: 0 4px 14px rgba(0, 200, 248, 0.35);">
-                        ⚡
-                      </div>
+                    <td style="vertical-align: middle; padding-right: 14px;">
+                      <a href="${appUrl}" target="_blank" style="text-decoration: none; display: block;">
+                        <img src="${appUrl}/logo.png" alt="Jornada TCG Team Logo" width="48" height="48" style="display: block; border-radius: 10px; width: 48px; height: 48px; object-fit: contain; box-shadow: 0 4px 14px rgba(0, 200, 248, 0.35); border: 1px solid rgba(0, 200, 248, 0.3);" />
+                      </a>
                     </td>
                     <td style="vertical-align: middle;">
                       <div style="font-size: 20px; font-weight: 900; color: #ffffff; letter-spacing: -0.5px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
@@ -244,9 +244,15 @@ export function generateWelcomeEmailHtml(playerName = 'Treinador', playerEmail =
         </td>
       </tr>
 
-      <!-- FOOTER PROFISSIONAL DARK COM REDES E COPYRIGHT -->
+      <!-- FOOTER PROFISSIONAL DARK COM LOGO, REDES E COPYRIGHT -->
       <tr>
         <td style="background-color: #0a0e1e; padding: 24px 32px; border-top: 1px solid rgba(124, 106, 247, 0.25); text-align: center;">
+          <div style="margin-bottom: 14px;">
+            <a href="${appUrl}" target="_blank" style="text-decoration: none; display: inline-block;">
+              <img src="${appUrl}/logo.png" alt="Jornada TCG Team Logo" width="38" height="38" style="display: inline-block; border-radius: 8px; width: 38px; height: 38px; object-fit: contain; margin: 0 auto;" />
+            </a>
+          </div>
+
           <div style="margin-bottom: 12px;">
             <a href="${appUrl}" target="_blank" style="color: #00c8f8; text-decoration: none; font-size: 12px; font-weight: 700; margin: 0 10px;">🌐 Painel Oficial</a>
             <span style="color: #475569;">&bull;</span>
@@ -289,8 +295,10 @@ export function generateNewDeckEmailHtml(playerName = 'Treinador', deckName = 'N
 </head>
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #060913; margin: 0; padding: 24px; color: #cbd5e1;">
   <div style="max-width: 520px; margin: 0 auto; background: #0d1225; border-radius: 14px; padding: 28px; border: 1px solid rgba(124, 106, 247, 0.4); box-shadow: 0 8px 30px rgba(0,0,0,0.7);">
-    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 20px;">
-      <span style="background: linear-gradient(135deg, #7c3aed, #00c8f8); color: #ffffff; padding: 4px 10px; border-radius: 8px; font-size: 16px; font-weight: bold;">⚡</span>
+    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
+      <a href="${appUrl}" target="_blank" style="text-decoration: none; display: block;">
+        <img src="${appUrl}/logo.png" alt="Jornada TCG Team" width="36" height="36" style="display: block; border-radius: 8px; width: 36px; height: 36px; object-fit: contain;" />
+      </a>
       <strong style="font-size: 18px; color: #ffffff;">Jornada TCG Team</strong>
     </div>
     <h2 style="color: #00c8f8; font-size: 20px; margin: 0 0 12px 0;">🃏 Novo Deck Cadastrado!</h2>

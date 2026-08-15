@@ -81,7 +81,10 @@ async function build() {
     console.log(`✅ CSS Minificado gerado com sucesso: dist/style.min.css (${(cleanCSS.length / 1024).toFixed(1)} KB)`);
   }
 
-  // Copy assets
+  // Copy assets & logo
+  if (fs.existsSync(path.join(rootDir, 'logo.png'))) {
+    fs.copyFileSync(path.join(rootDir, 'logo.png'), path.join(distDir, 'logo.png'));
+  }
   const assetsDir = path.join(rootDir, 'assets');
   const distAssetsDir = path.join(distDir, 'assets');
   if (fs.existsSync(assetsDir)) {
