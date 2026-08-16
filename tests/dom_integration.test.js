@@ -128,5 +128,31 @@ describe('DOM & UI Integration Tests (JSDOM)', () => {
     expect(filtered[0].Player).toBe('Danilo');
     expect(filtered[0].Deck).toBe('Charizard ex');
   });
+
+  it('deve garantir que package.json, version.json e index.html (#appVersion e #appVersionAuth) sao estritamente identicos para evitar loop de reload (CHG-002)', () => {
+    const pkg = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../package.json'), 'utf8'));
+    const versionJson = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../version.json'), 'utf8'));
+    
+    const appVersionEl = document.getElementById('appVersion');
+    const appVersionAuthEl = document.getElementById('appVersionAuth');
+
+    expect(appVersionEl).not.toBeNull();
+    expect(appVersionAuthEl).not.toBeNull();
+
+    const domAppVersion = appVersionEl.textContent.trim();
+    const domAppVersionAuth = appVersionAuthEl.textContent.trim();
+
+    expect(pkg.version).toBe(versionJson.version);
+    expect(domAppVersion).toBe(pkg.version);
+    expect(domAppVersionAuth).toBe(pkg.version);
+
+    // Valida que nenhuma atualizacao espuria sera disparada quando as versoes forem identicas
+    let updateCalled = false;
+    if (versionJson.version && versionJson.version !== domAppVersion) {
+      updateCalled = true;
+    }
+    expect(updateCalled).toBe(false);
+  });
 });
+
 

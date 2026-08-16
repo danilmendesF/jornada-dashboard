@@ -106,6 +106,23 @@ try {
   assert(false, `Falha na compilacao do bundle: ${e.message}`);
 }
 
+// 11. Validate Version Synchronization & Reload Prevention (CHG-002)
+console.log('\n11. Validando Consistencia e Sincronizacao de Versao (CHG-002)...');
+try {
+  const pkg = JSON.parse(fs.readFileSync(path.join(rootDir, 'package.json'), 'utf8'));
+  const versionJson = JSON.parse(fs.readFileSync(path.join(rootDir, 'version.json'), 'utf8'));
+  const html = fs.readFileSync(path.join(rootDir, 'index.html'), 'utf8');
+
+  const appVersionMatch = html.match(/id="appVersion"\s*>\s*([^<]+)\s*</);
+  const appVersionAuthMatch = html.match(/id="appVersionAuth"\s*>\s*([^<]+)\s*</);
+
+  assert(pkg.version === versionJson.version, `package.json (${pkg.version}) e version.json (${versionJson.version}) sincronizados`);
+  assert(appVersionMatch && appVersionMatch[1].trim() === pkg.version, `index.html #appVersion (${appVersionMatch ? appVersionMatch[1].trim() : 'N/A'}) sincronizado com package.json (${pkg.version})`);
+  assert(appVersionAuthMatch && appVersionAuthMatch[1].trim() === pkg.version, `index.html #appVersionAuth (${appVersionAuthMatch ? appVersionAuthMatch[1].trim() : 'N/A'}) sincronizado com package.json (${pkg.version})`);
+} catch (e) {
+  assert(false, `Falha na validacao de versao: ${e.message}`);
+}
+
 console.log('\n==================================================');
 console.log(`RESULTADO DA VALIDACAO SDD 2.0 & GOVERNANCA GLOBAL:`);
 console.log(`   Verificacoes Aprovadas: ${passes}`);
@@ -119,3 +136,4 @@ if (failures > 0) {
   console.log('SDD GATE 2.0: 100% Aprovado com Sucesso!');
   process.exit(0);
 }
+
