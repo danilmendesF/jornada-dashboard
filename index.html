@@ -19,18 +19,7 @@
     />
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
-    <link rel="stylesheet" href="dist/style.min.css?v=2.1.1" />
-    <script>
-      (function () {
-        try {
-          var token = localStorage.getItem("jornada_auth_token");
-          var user = localStorage.getItem("jornada_user_profile");
-          if (token && user) {
-            document.documentElement.classList.add("auth-session-active");
-          }
-        } catch (e) {}
-      })();
-    </script>
+    <link rel="stylesheet" href="dist/style.min.css?v=2.1.2" />
   </head>
   <body>
     <div id="authPageWall" class="auth-wall-container" style="display: flex">
@@ -2363,32 +2352,7 @@
         </div>
       </div>
     </div>
-    <script src="dist/app.min.js?v=2.1.1"></script>
-    <script>
-      // Mobile Hamburger Menu Toggle
-      const mobileBtn = document.getElementById('mobileMenuBtn');
-      const topNav = document.getElementById('topNavRouter');
-      if (mobileBtn && topNav) {
-        mobileBtn.addEventListener('click', () => {
-          topNav.classList.toggle('menu-open');
-          mobileBtn.classList.toggle('is-active');
-          // Close profile dropdown and filters if open
-          const profileMenu = document.querySelector('.user-dropdown-menu');
-          if (profileMenu) profileMenu.classList.remove('show-dropdown');
-          document.getElementById('multiPlayerWrap')?.classList.remove('open');
-          document.getElementById('multiDeckWrap')?.classList.remove('open');
-          document.querySelectorAll('.searchable-select-wrap.open').forEach(w => w.classList.remove('open'));
-        });
-        
-        // Fechar menu ao clicar num link
-        topNav.querySelectorAll('.nav-link').forEach(link => {
-          link.addEventListener('click', () => {
-            topNav.classList.remove('menu-open');
-            mobileBtn.classList.remove('is-active');
-          });
-        });
-      }
-    </script>
+    <script src="dist/app.min.js?v=2.1.2"></script>
     <div id="versionReloadOverlay">
       <div class="version-reload-spinner">
         <i class="fas fa-sync-alt"></i>

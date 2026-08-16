@@ -1,7 +1,17 @@
 // ── JS/AUTH.JS ──────────────────────────────────────────────────────────────
 // Client Authentication & Team Session Management (Auth Wall & Modal)
 
+// Immediate Anti-FOUC Session Pre-activation (CHG-001)
+try {
+  if (typeof localStorage !== 'undefined' && localStorage.getItem('jornada_auth_token') && localStorage.getItem('jornada_user_profile')) {
+    if (typeof document !== 'undefined' && document.documentElement) {
+      document.documentElement.classList.add('auth-session-active');
+    }
+  }
+} catch (e) {}
+
 window.currentUser = null;
+
 
 window.getAuthToken = () => localStorage.getItem('jornada_auth_token') || '';
 window.getCurrentUser = () => { try { return JSON.parse(localStorage.getItem('jornada_user_profile')) || null; } catch { return null; } };

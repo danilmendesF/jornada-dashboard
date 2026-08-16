@@ -10,20 +10,25 @@ const __dirname = path.dirname(__filename);
 const htmlContent = fs.readFileSync(path.resolve(__dirname, '../index.html'), 'utf-8');
 const statsCode = fs.readFileSync(path.resolve(__dirname, '../js/stats.js'), 'utf-8');
 const mirrorCode = fs.readFileSync(path.resolve(__dirname, '../js/mirror.js'), 'utf-8');
+const routerCode = fs.readFileSync(path.resolve(__dirname, '../js/router.js'), 'utf-8');
+const authCode = fs.readFileSync(path.resolve(__dirname, '../js/auth.js'), 'utf-8');
 
 describe('DOM & UI Integration Tests (JSDOM)', () => {
   let dom;
   let document;
 
   beforeEach(() => {
-    dom = new JSDOM(htmlContent);
+    dom = new JSDOM(htmlContent, { url: 'https://www.jornadatcgteam.com.br' });
     global.window = dom.window;
     global.document = dom.window.document;
+    global.localStorage = dom.window.localStorage;
     document = dom.window.document;
 
     // Load core modules
     new Function(statsCode)();
     new Function(mirrorCode)();
+    new Function(authCode)();
+    new Function(routerCode)();
   });
 
   it('deve possuir todos os IDs críticos no DOM do index.html', () => {
@@ -34,6 +39,48 @@ describe('DOM & UI Integration Tests (JSDOM)', () => {
     expect(document.getElementById('tableSearch')).not.toBeNull();
     expect(document.getElementById('quickLogBody')).not.toBeNull();
     expect(document.getElementById('modalMatchForm')).not.toBeNull();
+    expect(document.getElementById('mobileMenuBtn')).not.toBeNull();
+    expect(document.getElementById('topNavRouter')).not.toBeNull();
+  });
+
+  it('deve alternar menu mobile (menu-open e is-active) e fechar ao clicar em nav-link (CHG-001)', () => {
+    const mobileBtn = document.getElementById('mobileMenuBtn');
+    const topNav = document.getElementById('topNavRouter');
+
+    if (window.initRouter) window.initRouter();
+
+    expect(topNav.classList.contains('menu-open')).toBe(false);
+    expect(mobileBtn.classList.contains('is-active')).toBe(false);
+
+    // 1. Clicar no botão hambúrguer para abrir
+    mobileBtn.click();
+    expect(topNav.classList.contains('menu-open')).toBe(true);
+    expect(mobileBtn.classList.contains('is-active')).toBe(true);
+
+    // 2. Clicar novamente no botão hambúrguer para fechar
+    mobileBtn.click();
+    expect(topNav.classList.contains('menu-open')).toBe(false);
+    expect(mobileBtn.classList.contains('is-active')).toBe(false);
+
+    // 3. Abrir novamente e fechar ao clicar em um nav-link
+    mobileBtn.click();
+    expect(topNav.classList.contains('menu-open')).toBe(true);
+    
+    const navLink = topNav.querySelector('.nav-link');
+    expect(navLink).not.toBeNull();
+    navLink.click();
+
+    expect(topNav.classList.contains('menu-open')).toBe(false);
+    expect(mobileBtn.classList.contains('is-active')).toBe(false);
+  });
+
+  it('deve ativar auth-session-active imediatamente quando credenciais estiverem no localStorage (CHG-001 anti-FOUC)', () => {
+    dom.window.localStorage.setItem('jornada_auth_token', 'valid_mock_jwt_token');
+    dom.window.localStorage.setItem('jornada_user_profile', JSON.stringify({ name: 'Danilo', email: 'danilo@jornada.com' }));
+
+    // Executa módulo auth
+    new Function(authCode)();
+    expect(document.documentElement.classList.contains('auth-session-active')).toBe(true);
   });
 
   it('deve validar bloqueio de auto-duelo no formulário', () => {
@@ -82,3 +129,4 @@ describe('DOM & UI Integration Tests (JSDOM)', () => {
     expect(filtered[0].Deck).toBe('Charizard ex');
   });
 });
+
