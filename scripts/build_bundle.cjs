@@ -42,8 +42,20 @@ const jsOrder = [
 ];
 
 async function build() {
-  console.log('📦 Compilando Bundle Único Minificado para Produção com Terser...');
+  // ── 1. READ SINGLE SOURCE OF TRUTH (package.json) ──────────────────────────
+  const pkgPath = path.join(rootDir, 'package.json');
+  if (!fs.existsSync(pkgPath)) {
+    throw new Error('package.json não encontrado na raiz.');
+  }
+  const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+  const appVersion = pkg.version;
+  if (!appVersion || typeof appVersion !== 'string' || !/^\d+\.\d+\.\d+/.test(appVersion)) {
+    throw new Error(`Versão semântica inválida ou ausente no package.json: ${appVersion}`);
+  }
 
+  console.log(`📦 Compilando Bundle para Produção (Versão: v${appVersion})...`);
+
+  // ── 2. MINIFY JS WITH TERSER ────────────────────────────────────────────────
   let bundledJS = '/* Jornada Dashboard Production Bundle */\n(function(){\n"use strict";\n';
 
   jsOrder.forEach(file => {
@@ -58,7 +70,6 @@ async function build() {
 
   bundledJS += '\n})();\n';
 
-  // Obfuscate and minify using Terser
   const minifyResult = await minify(bundledJS, {
     compress: {
       drop_console: true,
@@ -76,7 +87,7 @@ async function build() {
   fs.writeFileSync(jsDistPath, minifyResult.code, 'utf8');
   console.log(`✅ JS Bundle gerado com sucesso: dist/app.min.js (${(minifyResult.code.length / 1024).toFixed(1)} KB)`);
 
-  // Minify CSS
+  // ── 3. MINIFY CSS ───────────────────────────────────────────────────────────
   const cssPath = path.join(rootDir, 'style.css');
   if (fs.existsSync(cssPath)) {
     const rawCSS = fs.readFileSync(cssPath, 'utf8');
@@ -87,7 +98,7 @@ async function build() {
     console.log(`✅ CSS Minificado gerado com sucesso: dist/style.min.css (${(cleanCSS.length / 1024).toFixed(1)} KB)`);
   }
 
-  // Copy assets & logo
+  // ── 4. COPY ASSETS & LOGO ───────────────────────────────────────────────────
   if (fs.existsSync(path.join(rootDir, 'logo.png'))) {
     fs.copyFileSync(path.join(rootDir, 'logo.png'), path.join(distDir, 'logo.png'));
   }
@@ -101,16 +112,54 @@ async function build() {
     console.log('✅ Assets copiados para dist/assets com sucesso!');
   }
 
-  // Sync to public/ directory for Vercel Static Output
-  console.log('📂 Sincronizando arquivos para public/ para deploy na Vercel...');
-  if (fs.existsSync(path.join(rootDir, 'index.html'))) {
-    fs.copyFileSync(path.join(rootDir, 'index.html'), path.join(publicDir, 'index.html'));
+  // ── 5. GENERATE & INJECT VERSION DERIVED ARTIFACTS (CHG-003) ────────────────
+  console.log('🔄 Gerando e injetando artefatos derivados de versão (CHG-003)...');
+
+  // A. Generate version.json (Root and Public)
+  const versionJsonContent = JSON.stringify({ version: appVersion }, null, 2) + '\n';
+  fs.writeFileSync(path.join(rootDir, 'version.json'), versionJsonContent, 'utf8');
+  fs.writeFileSync(path.join(publicDir, 'version.json'), versionJsonContent, 'utf8');
+  console.log(`✅ version.json gerado automaticamente com versão "${appVersion}"`);
+
+  // B. Process index.html template and inject version
+  const htmlTemplatePath = path.join(rootDir, 'index.html');
+  if (!fs.existsSync(htmlTemplatePath)) {
+    throw new Error('index.html não encontrado na raiz.');
   }
+
+  const rawHtml = fs.readFileSync(htmlTemplatePath, 'utf8');
+
+  // Strict Validation: ensure required placeholders or elements exist
+  const placeholderCount = (rawHtml.match(/__APP_VERSION__/g) || []).length;
+  if (placeholderCount < 2 && !rawHtml.includes('appVersion')) {
+    throw new Error('❌ index.html não contém os placeholders __APP_VERSION__ esperados.');
+  }
+
+  let processedHtml = rawHtml;
+  if (placeholderCount > 0) {
+    processedHtml = rawHtml.replaceAll('__APP_VERSION__', appVersion);
+  } else {
+    // Fallback regex replacement if rawHtml had concrete version
+    processedHtml = processedHtml
+      .replace(/(<span\s+id="appVersion(?:Auth)?"\s*>)(.*?)(<\/span>)/g, `$1${appVersion}$3`)
+      .replace(/src="dist\/app\.min\.js(\?v=[0-9\.]+)?"/g, `src="dist/app.min.js?v=${appVersion}"`)
+      .replace(/href="dist\/style\.min\.css(\?v=[0-9\.]+)?"/g, `href="dist/style.min.css?v=${appVersion}"`);
+  }
+
+  // Strict Assertion: No unreplaced __APP_VERSION__ in final output
+  if (processedHtml.includes('__APP_VERSION__')) {
+    throw new Error('❌ Erro no build: Placeholder __APP_VERSION__ não resolvido no index.html.');
+  }
+
+  // Write compiled public/index.html
+  const publicHtmlPath = path.join(publicDir, 'index.html');
+  fs.writeFileSync(publicHtmlPath, processedHtml, 'utf8');
+  console.log(`✅ public/index.html gerado com sucesso com versão "${appVersion}" injetada!`);
+
+  // ── 6. SYNC STATIC FILES TO PUBLIC/ (VERCEL DEPLOYMENT) ──────────────────────
+  console.log('📂 Sincronizando arquivos finais para public/ para deploy na Vercel...');
   if (fs.existsSync(path.join(rootDir, 'logo.png'))) {
     fs.copyFileSync(path.join(rootDir, 'logo.png'), path.join(publicDir, 'logo.png'));
-  }
-  if (fs.existsSync(path.join(rootDir, 'version.json'))) {
-    fs.copyFileSync(path.join(rootDir, 'version.json'), path.join(publicDir, 'version.json'));
   }
 
   // Sync dist into public/dist
@@ -132,10 +181,11 @@ async function build() {
 
   copyDirRecursive(distDir, publicDistDir);
   console.log('✅ Pasta public/ sincronizada com sucesso para a Vercel!');
-  console.log('🎉 Build de Produção Concluído!');
+  console.log(`🎉 Build de Produção v${appVersion} Concluído com Sucesso!`);
 }
 
 build().catch(err => {
-  console.error('❌ Erro no build:', err);
+  console.error('❌ Erro no build:', err.message);
   process.exit(1);
 });
+

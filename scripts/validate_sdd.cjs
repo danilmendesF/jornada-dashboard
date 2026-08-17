@@ -50,7 +50,9 @@ const requiredAdrs = [
   '0001-offline-first-hybrid-storage.md', '0002-sequential-match-indexing.md',
   '0003-serverless-jwt-auth.md', '0004-cyber-pokemon-design-system.md',
   '0005-redis-rate-limiting-fail-open.md', '0006-strict-jwt-expiration-and-correlation-id.md',
-  '0007-csp-and-html-sanitization.md'
+  '0007-csp-and-html-sanitization.md', '0008-two-tier-rate-limiting-ip-and-account.md',
+  '0009-active-session-verification-in-sync.md', '0010-csp-script-src-elem-hardening.md',
+  '0011-single-source-of-truth-versioning.md'
 ];
 requiredAdrs.forEach(f => {
   assert(fs.existsSync(path.join(rootDir, 'docs', 'decisions', f)), `ADR docs/decisions/${f} existe`);
@@ -106,22 +108,33 @@ try {
   assert(false, `Falha na compilacao do bundle: ${e.message}`);
 }
 
-// 11. Validate Version Synchronization & Reload Prevention (CHG-002)
-console.log('\n11. Validando Consistencia e Sincronizacao de Versao (CHG-002)...');
+// 11. Validate Version Synchronization & Single Source of Truth (CHG-002 & CHG-003)
+console.log('\n11. Validando Consistencia e Single Source of Truth de Versao (CHG-003)...');
 try {
   const pkg = JSON.parse(fs.readFileSync(path.join(rootDir, 'package.json'), 'utf8'));
   const versionJson = JSON.parse(fs.readFileSync(path.join(rootDir, 'version.json'), 'utf8'));
-  const html = fs.readFileSync(path.join(rootDir, 'index.html'), 'utf8');
+  const publicVersionJson = JSON.parse(fs.readFileSync(path.join(rootDir, 'public', 'version.json'), 'utf8'));
+  const templateHtml = fs.readFileSync(path.join(rootDir, 'index.html'), 'utf8');
+  const publicHtml = fs.readFileSync(path.join(rootDir, 'public', 'index.html'), 'utf8');
 
-  const appVersionMatch = html.match(/id="appVersion"\s*>\s*([^<]+)\s*</);
-  const appVersionAuthMatch = html.match(/id="appVersionAuth"\s*>\s*([^<]+)\s*</);
+  // 1. Template contains placeholders
+  assert(templateHtml.includes('__APP_VERSION__'), 'index.html (template) contem placeholders __APP_VERSION__');
 
-  assert(pkg.version === versionJson.version, `package.json (${pkg.version}) e version.json (${versionJson.version}) sincronizados`);
-  assert(appVersionMatch && appVersionMatch[1].trim() === pkg.version, `index.html #appVersion (${appVersionMatch ? appVersionMatch[1].trim() : 'N/A'}) sincronizado com package.json (${pkg.version})`);
-  assert(appVersionAuthMatch && appVersionAuthMatch[1].trim() === pkg.version, `index.html #appVersionAuth (${appVersionAuthMatch ? appVersionAuthMatch[1].trim() : 'N/A'}) sincronizado com package.json (${pkg.version})`);
+  // 2. version.json and public/version.json match package.json.version
+  assert(pkg.version === versionJson.version, `version.json derivado (${versionJson.version}) sincronizado com package.json (${pkg.version})`);
+  assert(pkg.version === publicVersionJson.version, `public/version.json derivado (${publicVersionJson.version}) sincronizado com package.json (${pkg.version})`);
+
+  // 3. public/index.html has resolved version and zero placeholders
+  const appVersionMatch = publicHtml.match(/id="appVersion"\s*>\s*([^<]+)\s*</);
+  const appVersionAuthMatch = publicHtml.match(/id="appVersionAuth"\s*>\s*([^<]+)\s*</);
+
+  assert(appVersionMatch && appVersionMatch[1].trim() === pkg.version, `public/index.html #appVersion (${appVersionMatch ? appVersionMatch[1].trim() : 'N/A'}) sincronizado com package.json (${pkg.version})`);
+  assert(appVersionAuthMatch && appVersionAuthMatch[1].trim() === pkg.version, `public/index.html #appVersionAuth (${appVersionAuthMatch ? appVersionAuthMatch[1].trim() : 'N/A'}) sincronizado com package.json (${pkg.version})`);
+  assert(!publicHtml.includes('__APP_VERSION__'), 'public/index.html nao contem placeholders __APP_VERSION__ nao resolvidos');
 } catch (e) {
   assert(false, `Falha na validacao de versao: ${e.message}`);
 }
+
 
 console.log('\n==================================================');
 console.log(`RESULTADO DA VALIDACAO SDD 2.0 & GOVERNANCA GLOBAL:`);

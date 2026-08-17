@@ -19,7 +19,7 @@ if (!['patch', 'minor', 'major'].includes(releaseType)) {
   process.exit(1);
 }
 
-// 1. Ler e atualizar package.json
+// 1. Ler e atualizar package.json (Single Source of Truth)
 if (!fs.existsSync(pkgPath)) {
   console.error('❌ package.json não encontrado.');
   process.exit(1);
@@ -51,43 +51,14 @@ pkg.version = newVersion;
 fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n', 'utf8');
 console.log(`🆙 Versão atualizada no package.json: ${currentVersion} ➔ ${newVersion}`);
 
-const versionPath = path.join(rootDir, 'version.json');
-fs.writeFileSync(versionPath, JSON.stringify({ version: newVersion }, null, 2) + '\n', 'utf8');
-console.log(`✅ version.json gerado com sucesso!`);
-
-// 2. Injetar a versão no index.html
-if (fs.existsSync(htmlPath)) {
-  let html = fs.readFileSync(htmlPath, 'utf8');
-  
-  // Expressão regular para encontrar e substituir o conteúdo da tag do appVersion e appVersionAuth
-  const regex = /(<span\s+id="appVersion(?:Auth)?"\s*>)(.*?)(<\/span>)/g;
-  
-  if (regex.test(html)) {
-    html = html.replace(regex, `$1${newVersion}$3`);
-  } else {
-    console.error('⚠️ Tag <span id="appVersion"> ou <span id="appVersionAuth"> não encontrada no index.html. Não foi possível injetar a versão.');
-  }
-
-  // Cache busting para app.min.js
-  const scriptRegex = /src="dist\/app\.min\.js(\?v=[0-9\.]+)?"/g;
-  html = html.replace(scriptRegex, `src="dist/app.min.js?v=${newVersion}"`);
-
-  // Cache busting para style.min.css
-  const cssRegex = /href="dist\/style\.min\.css(\?v=[0-9\.]+)?"/g;
-  html = html.replace(cssRegex, `href="dist/style.min.css?v=${newVersion}"`);
-
-  fs.writeFileSync(htmlPath, html, 'utf8');
-  console.log(`✅ Nova versão (v${newVersion}) injetada com sucesso no index.html (e cache busting atualizado)!`);
-  
-  const publicHtmlPath = path.join(rootDir, 'public', 'index.html');
-  if (fs.existsSync(path.dirname(publicHtmlPath))) {
-    fs.writeFileSync(publicHtmlPath, html, 'utf8');
-  }
-  const publicVersionPath = path.join(rootDir, 'public', 'version.json');
-  if (fs.existsSync(path.dirname(publicVersionPath))) {
-    fs.writeFileSync(publicVersionPath, JSON.stringify({ version: newVersion }, null, 2) + '\n', 'utf8');
-  }
-} else {
-  console.error('❌ index.html não encontrado.');
+// 2. Invocar o motor de build central para gerar artefatos derivados (CHG-003)
+console.log('🚀 Executando build central para gerar artefatos derivados (public/, version.json, bundles)...');
+const { execSync } = require('child_process');
+try {
+  execSync('node scripts/build_bundle.cjs', { cwd: rootDir, stdio: 'inherit' });
+  console.log(`✅ Bump para v${newVersion} e compilação de artefatos concluídos com sucesso!`);
+} catch (e) {
+  console.error(`❌ Erro ao compilar artefatos após bump de versão: ${e.message}`);
   process.exit(1);
 }
+

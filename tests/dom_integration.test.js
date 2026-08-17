@@ -7,7 +7,13 @@ import { JSDOM } from 'jsdom';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const htmlContent = fs.readFileSync(path.resolve(__dirname, '../index.html'), 'utf-8');
+const pkg = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../package.json'), 'utf-8'));
+const publicHtmlPath = path.resolve(__dirname, '../public/index.html');
+const rawHtmlPath = path.resolve(__dirname, '../index.html');
+const htmlContent = fs.existsSync(publicHtmlPath)
+  ? fs.readFileSync(publicHtmlPath, 'utf-8')
+  : fs.readFileSync(rawHtmlPath, 'utf-8').replaceAll('__APP_VERSION__', pkg.version);
+
 const statsCode = fs.readFileSync(path.resolve(__dirname, '../js/stats.js'), 'utf-8');
 const mirrorCode = fs.readFileSync(path.resolve(__dirname, '../js/mirror.js'), 'utf-8');
 const routerCode = fs.readFileSync(path.resolve(__dirname, '../js/router.js'), 'utf-8');
@@ -129,10 +135,15 @@ describe('DOM & UI Integration Tests (JSDOM)', () => {
     expect(filtered[0].Deck).toBe('Charizard ex');
   });
 
-  it('deve garantir que package.json, version.json e index.html (#appVersion e #appVersionAuth) sao estritamente identicos para evitar loop de reload (CHG-002)', () => {
-    const pkg = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../package.json'), 'utf8'));
+  it('deve garantir que package.json e a unica Source of Truth e artefatos derivados (DOM, version.json) sao sincronizados sem placeholders (CHG-003)', () => {
+    const pkgJson = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../package.json'), 'utf8'));
     const versionJson = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../version.json'), 'utf8'));
-    
+    const templateHtml = fs.readFileSync(path.resolve(__dirname, '../index.html'), 'utf8');
+
+    // 1. Template na raiz contem placeholders version-neutral
+    expect(templateHtml).toContain('__APP_VERSION__');
+
+    // 2. Elementos no DOM renderizado possuem a versao exata do package.json
     const appVersionEl = document.getElementById('appVersion');
     const appVersionAuthEl = document.getElementById('appVersionAuth');
 
@@ -142,11 +153,13 @@ describe('DOM & UI Integration Tests (JSDOM)', () => {
     const domAppVersion = appVersionEl.textContent.trim();
     const domAppVersionAuth = appVersionAuthEl.textContent.trim();
 
-    expect(pkg.version).toBe(versionJson.version);
-    expect(domAppVersion).toBe(pkg.version);
-    expect(domAppVersionAuth).toBe(pkg.version);
+    expect(domAppVersion).not.toBe('__APP_VERSION__');
+    expect(domAppVersionAuth).not.toBe('__APP_VERSION__');
+    expect(domAppVersion).toBe(pkgJson.version);
+    expect(domAppVersionAuth).toBe(pkgJson.version);
+    expect(versionJson.version).toBe(pkgJson.version);
 
-    // Valida que nenhuma atualizacao espuria sera disparada quando as versoes forem identicas
+    // 3. Valida que nenhuma atualizacao espuria sera disparada quando as versoes forem identicas
     let updateCalled = false;
     if (versionJson.version && versionJson.version !== domAppVersion) {
       updateCalled = true;
@@ -154,5 +167,6 @@ describe('DOM & UI Integration Tests (JSDOM)', () => {
     expect(updateCalled).toBe(false);
   });
 });
+
 
 
