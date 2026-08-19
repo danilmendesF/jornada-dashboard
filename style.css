@@ -3082,4 +3082,458 @@ html.auth-session-active #appDashboardContainer {
   color: var(--text2);
 }
 
+/* ============================================================
+   CHG-004 — TOURNAMENTS META DASHBOARD
+   ============================================================ */
+.tournaments-meta-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-bottom: 2.5rem;
+}
+
+.meta-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-bd);
+  border-radius: var(--radius);
+  padding: 1.25rem 1.5rem;
+  box-shadow: var(--shadow);
+}
+
+.meta-header-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent2);
+  background: rgba(0, 200, 248, 0.1);
+  border: 1px solid rgba(0, 200, 248, 0.25);
+  border-radius: 20px;
+  padding: 0.2rem 0.65rem;
+  margin-bottom: 0.35rem;
+}
+
+.meta-pulse-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent2);
+  box-shadow: 0 0 6px var(--accent2);
+  animation: pulse 2s infinite ease-in-out;
+}
+
+.meta-header-subtitle {
+  font-size: 0.88rem;
+  color: var(--text2);
+  margin: 0;
+}
+
+.meta-date-highlight {
+  color: var(--accent2);
+  font-weight: 700;
+}
+
+.meta-refresh-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: var(--bg3);
+  border: 1px solid var(--glass-bd);
+  color: var(--text);
+  padding: 0.55rem 1rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.meta-refresh-btn:hover {
+  border-color: var(--accent2);
+  background: rgba(0, 200, 248, 0.12);
+  color: var(--accent2);
+}
+
+.meta-state-box {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-bd);
+  border-radius: var(--radius);
+  padding: 3rem 1.5rem;
+  text-align: center;
+  color: var(--text2);
+}
+.meta-state-box.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+.meta-state-icon {
+  font-size: 2.2rem;
+  margin-bottom: 0.5rem;
+}
+
+.meta-spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid rgba(0, 200, 248, 0.2);
+  border-top-color: var(--accent2);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+/* KPIs */
+.meta-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+}
+.kpi-card.meta-kpi {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-bd);
+  border-radius: var(--radius);
+  padding: 1.1rem 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: var(--shadow);
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+.kpi-card.meta-kpi:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+.kpi-value.meta-deck-val {
+  font-size: 1.15rem;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 170px;
+}
+
+/* Split Visual */
+.meta-main-split {
+  display: grid;
+  grid-template-columns: 1fr 1.25fr;
+  gap: 1.25rem;
+}
+
+.meta-chart-box, .meta-decks-box, .meta-champions-section {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-bd);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+}
+
+.meta-box-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 0.65rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.meta-box-title {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.meta-box-tag {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  color: var(--text2);
+  letter-spacing: 0.05em;
+  font-weight: 600;
+}
+
+.meta-canvas-wrap {
+  position: relative;
+  flex: 1;
+  min-height: 320px;
+  width: 100%;
+}
+
+/* Cards Top Decks */
+.meta-top-decks-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.meta-deck-card {
+  background: rgba(18, 22, 34, 0.6);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.85rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  transition: all 0.2s ease;
+}
+.meta-deck-card:hover {
+  background: rgba(26, 32, 50, 0.8);
+  border-color: var(--accent2);
+}
+
+.meta-deck-card.rank-1 {
+  border-color: rgba(52, 224, 161, 0.4);
+  background: linear-gradient(90deg, rgba(52, 224, 161, 0.08) 0%, rgba(18, 22, 34, 0.6) 100%);
+}
+
+.meta-deck-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.meta-rank-tag {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--accent2);
+  min-width: 28px;
+}
+.meta-rank-tag.other {
+  font-size: 1.1rem;
+}
+
+.meta-deck-icons {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+}
+.meta-pkmn-icon {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+}
+.meta-pkmn-fallback {
+  font-size: 1.2rem;
+}
+
+.meta-deck-info {
+  flex: 1;
+  min-width: 0;
+}
+.meta-deck-title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.meta-deck-players {
+  font-size: 0.75rem;
+  color: var(--text2);
+}
+
+.meta-deck-share-badge {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #34e0a1;
+  background: rgba(52, 224, 161, 0.1);
+  padding: 0.2rem 0.6rem;
+  border-radius: 6px;
+  border: 1px solid rgba(52, 224, 161, 0.25);
+}
+.meta-deck-share-badge.other {
+  color: #94a3b8;
+  background: rgba(148, 163, 184, 0.1);
+  border-color: rgba(148, 163, 184, 0.25);
+}
+
+.meta-progress-bar-bg {
+  height: 5px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.meta-progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #34e0a1, #38bdf8);
+  border-radius: 10px;
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.meta-progress-bar-fill.other {
+  background: linear-gradient(90deg, #64748b, #94a3b8);
+}
+
+.meta-deck-card-footer {
+  display: flex;
+  justify-content: flex-end;
+}
+.meta-deck-wins-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #f5c842;
+  background: rgba(245, 200, 66, 0.12);
+  border: 1px solid rgba(245, 200, 66, 0.3);
+  border-radius: 4px;
+  padding: 0.15rem 0.45rem;
+}
+
+/* Campeões */
+.meta-champions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.meta-champ-card {
+  background: rgba(18, 22, 34, 0.65);
+  border: 1px solid var(--glass-bd);
+  border-radius: var(--radius-sm);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 0.85rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
+}
+.meta-champ-card:hover {
+  border-color: rgba(245, 200, 66, 0.4);
+  transform: translateY(-2px);
+}
+
+.meta-champ-header {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.6rem;
+}
+.meta-champ-trophy {
+  font-size: 1.4rem;
+}
+.meta-champ-tour-info {
+  flex: 1;
+  min-width: 0;
+}
+.meta-champ-tour-name {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.meta-champ-tour-players {
+  font-size: 0.73rem;
+  color: var(--text2);
+}
+
+.meta-champ-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.meta-champ-player-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.84rem;
+}
+.meta-champ-label {
+  color: var(--text2);
+  font-size: 0.75rem;
+}
+.meta-champ-player-name {
+  color: var(--accent2);
+  font-weight: 700;
+}
+
+.meta-champ-deck-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 0.4rem 0.6rem;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+}
+.meta-champ-pkmn-icon {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+.meta-champ-deck-text {
+  display: flex;
+  flex-direction: column;
+}
+.meta-champ-deck-name {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.meta-champ-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  border-top: 1px solid var(--border);
+  padding-top: 0.6rem;
+}
+
+.meta-btn-limitless, .meta-btn-decklist {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.74rem;
+  font-weight: 600;
+  padding: 0.3rem 0.6rem;
+  border-radius: 4px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+.meta-btn-limitless {
+  background: rgba(0, 200, 248, 0.1);
+  border: 1px solid rgba(0, 200, 248, 0.25);
+  color: var(--accent2);
+}
+.meta-btn-limitless:hover {
+  background: rgba(0, 200, 248, 0.2);
+  border-color: var(--accent2);
+}
+.meta-btn-decklist {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+.meta-btn-decklist:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+@media (max-width: 900px) {
+  .meta-main-split {
+    grid-template-columns: 1fr;
+  }
+}
+
+
 

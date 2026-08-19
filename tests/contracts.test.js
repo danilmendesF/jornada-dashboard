@@ -84,4 +84,28 @@ describe('Data Contracts & Schema Validation (GAP-SDD-003)', () => {
 
     expect(validateBasicSchema(jwtSchema, validClaims)).toBe(true);
   });
+
+  it('deve validar payload de torneios contra tournament-meta.schema.json (SPEC-009)', () => {
+    const tourSchema = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../docs/contracts/tournament-meta.schema.json'), 'utf-8'));
+    const validTourMeta = {
+      date: '2026-08-17',
+      displayDate: '17/08/2026',
+      timezone: 'America/Sao_Paulo',
+      minPlayersFilter: 150,
+      totalTournaments: 1,
+      totalPlayers: 200,
+      topDecks: [
+        { name: 'Dragapult', players: 50, metaShare: 25.0, wins: 1, icons: ['icon1'] }
+      ],
+      other: { players: 150, metaShare: 75.0 },
+      champions: [
+        { tournament: 'Tour 1', tournamentId: 't1', players: 200, player: 'Champ', deck: 'Dragapult' }
+      ],
+      tournaments: [
+        { id: 't1', name: 'Tour 1', organizer: 'Org', players: 200, url: 'url' }
+      ]
+    };
+
+    expect(validateBasicSchema(tourSchema, validTourMeta)).toBe(true);
+  });
 });

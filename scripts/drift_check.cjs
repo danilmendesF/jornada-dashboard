@@ -63,6 +63,16 @@ checkDrift(globalHeaders.some(h => h.key === 'X-Frame-Options'), 'vercel.json de
 checkDrift(fs.existsSync(path.join(rootDir, 'docs', 'contracts', 'match.schema.json')), 'Contrato docs/contracts/match.schema.json presente');
 checkDrift(fs.existsSync(path.join(rootDir, 'docs', 'contracts', 'sync-payload.schema.json')), 'Contrato docs/contracts/sync-payload.schema.json presente');
 checkDrift(fs.existsSync(path.join(rootDir, 'docs', 'contracts', 'jwt-claims.schema.json')), 'Contrato docs/contracts/jwt-claims.schema.json presente');
+checkDrift(fs.existsSync(path.join(rootDir, 'docs', 'contracts', 'tournament-meta.schema.json')), 'Contrato docs/contracts/tournament-meta.schema.json presente (SPEC-009)');
+
+// 10. Check Tournaments Meta (SPEC-009 / CHG-004)
+const tourMetaJs = fs.readFileSync(path.join(rootDir, 'js', 'tournaments_meta.js'), 'utf-8');
+checkDrift(tourMetaJs.includes('fetchTournamentsMetaSummary'), 'js/tournaments_meta.js exporta fetchTournamentsMetaSummary (SPEC-009)');
+checkDrift(tourMetaJs.includes('renderTournamentsMetaSummary'), 'js/tournaments_meta.js exporta renderTournamentsMetaSummary (SPEC-009)');
+
+const tourMetaApi = fs.readFileSync(path.join(rootDir, 'api', 'tournaments_meta.js'), 'utf-8');
+checkDrift(tourMetaApi.includes('parseCompletedTournaments'), 'api/tournaments_meta.js exporta parseCompletedTournaments (SPEC-009)');
+checkDrift(tourMetaApi.includes('aggregateTournamentData'), 'api/tournaments_meta.js exporta aggregateTournamentData (SPEC-009)');
 
 console.log('\n==================================================');
 if (drifts === 0) {

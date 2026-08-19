@@ -37,6 +37,7 @@ const jsOrder = [
   'js/sync_cloud.js',
   'js/auth.js',
   'js/router.js',
+  'js/tournaments_meta.js',
   'app.js',
   'manager.js'
 ];

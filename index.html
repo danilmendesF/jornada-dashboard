@@ -1231,11 +1231,114 @@
       </div>
       
       <div id="tab-tournaments" class="page-tab">
-        <section class="tournaments-section" style="padding: 2rem; text-align: center; color: var(--text2);">
-          <h2 class="chart-title" style="margin-bottom: 1rem;">🏆 Torneios & Competições</h2>
-          <div style="background: var(--glass-bg); border: 1px dashed var(--border); border-radius: var(--radius); padding: 3rem; margin-top: 1rem;">
-            <p style="font-size: 1.1rem; margin-bottom: 0.5rem;">Resultados de campeonatos oficiais e grandes eventos.</p>
-            <p style="font-size: 0.9rem; opacity: 0.7;">Em breve haverá integração com plataformas externas para obter dados automatizados.</p>
+        <section class="tournaments-meta-section" id="tournamentsMetaContainer">
+          <!-- Header do Painel do Meta -->
+          <div class="meta-section-header">
+            <div class="meta-header-left">
+              <div class="meta-header-badge">
+                <span class="meta-pulse-dot"></span>
+                <span>Play Limitless &middot; Pokémon TCG</span>
+              </div>
+              <h2 class="chart-title" style="margin: 0.3rem 0; display: flex; align-items: center; gap: 0.6rem;">
+                🏆 Resumo do Meta — Torneios Online
+              </h2>
+              <p class="meta-header-subtitle">
+                Análise competitiva dos torneios Standard com mais de 150 jogadores realizados em
+                <strong id="metaDisplayDateBadge" class="meta-date-highlight">—</strong>
+              </p>
+            </div>
+            <div class="meta-header-actions">
+              <button class="action-btn meta-refresh-btn" id="btnRefreshTournamentsMeta" title="Atualizar dados do Meta">
+                🔄 Atualizar Dados
+              </button>
+            </div>
+          </div>
+
+          <!-- Loading State -->
+          <div id="tournamentsMetaLoading" class="meta-state-box loading" style="display: none;">
+            <div class="meta-spinner"></div>
+            <p>Carregando e agregando metagame dos torneios online…</p>
+          </div>
+
+          <!-- Error State -->
+          <div id="tournamentsMetaError" class="meta-state-box error" style="display: none;">
+            <div class="meta-state-icon">⚠️</div>
+            <h4 id="tournamentsMetaErrorMsg">Não foi possível carregar os dados do Meta.</h4>
+            <button class="action-btn sm" onclick="window.fetchTournamentsMetaSummary(null, true)">Tentar Novamente</button>
+          </div>
+
+          <!-- Empty State -->
+          <div id="tournamentsMetaEmpty" class="meta-state-box empty" style="display: none;">
+            <div class="meta-state-icon">📋</div>
+            <h4>Nenhum torneio elegível encontrado</h4>
+            <p>Não foram registrados torneios Standard com mais de 150 participantes na data (<span id="tournamentsMetaEmptyDate">—</span>).</p>
+          </div>
+
+          <!-- Content State -->
+          <div id="tournamentsMetaContent" style="display: none;">
+            <!-- Top KPIs -->
+            <div class="meta-kpi-grid">
+              <div class="kpi-card meta-kpi">
+                <div class="kpi-icon"><i class="fas fa-trophy"></i></div>
+                <div class="kpi-info">
+                  <div class="kpi-value" id="kpiMetaTournaments">—</div>
+                  <div class="kpi-label">Torneios Elegíveis (+150p)</div>
+                </div>
+              </div>
+              <div class="kpi-card meta-kpi">
+                <div class="kpi-icon" style="color: var(--cyan)"><i class="fas fa-users"></i></div>
+                <div class="kpi-info">
+                  <div class="kpi-value" id="kpiMetaPlayers">—</div>
+                  <div class="kpi-label">Jogadores Analisados</div>
+                </div>
+              </div>
+              <div class="kpi-card meta-kpi">
+                <div class="kpi-icon" style="color: var(--yellow)"><i class="fas fa-crown"></i></div>
+                <div class="kpi-info">
+                  <div class="kpi-value meta-deck-val" id="kpiMetaTopDeck">—</div>
+                  <div class="kpi-label" id="kpiMetaTopDeckSub">Deck #1 do Meta</div>
+                </div>
+              </div>
+              <div class="kpi-card meta-kpi">
+                <div class="kpi-icon" style="color: var(--green)"><i class="fas fa-medal"></i></div>
+                <div class="kpi-info">
+                  <div class="kpi-value meta-deck-val" id="kpiMetaWinnerDeck">—</div>
+                  <div class="kpi-label" id="kpiMetaWinnerDeckSub">Campeão Mais Frequente</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Meta Share & Top Decks Visual Split -->
+            <div class="meta-main-split">
+              <!-- Left: Gráfico de Distribuição -->
+              <div class="meta-chart-box">
+                <div class="meta-box-header">
+                  <h3 class="meta-box-title">📊 Distribuição do Meta Share</h3>
+                  <span class="meta-box-tag">Top Decks vs Outros</span>
+                </div>
+                <div class="meta-canvas-wrap">
+                  <canvas id="chartMetaShareDistribution"></canvas>
+                </div>
+              </div>
+
+              <!-- Right: Grid de Cards dos Top Decks -->
+              <div class="meta-decks-box">
+                <div class="meta-box-header">
+                  <h3 class="meta-box-title">🃏 Principais Arquétipos</h3>
+                  <span class="meta-box-tag">Top 6 + Outros</span>
+                </div>
+                <div class="meta-top-decks-grid" id="metaTopDecksGrid"></div>
+              </div>
+            </div>
+
+            <!-- Seção de Campeões -->
+            <div class="meta-champions-section">
+              <div class="meta-box-header">
+                <h3 class="meta-box-title">🏆 Hall dos Campeões do Dia</h3>
+                <span class="meta-box-tag">Vencedores dos Torneios Elegíveis</span>
+              </div>
+              <div class="meta-champions-grid" id="metaChampionsGrid"></div>
+            </div>
           </div>
         </section>
       </div>
