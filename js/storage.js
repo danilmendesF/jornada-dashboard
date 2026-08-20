@@ -137,19 +137,68 @@ function loadManual() {
   const k = (typeof window !== 'undefined' && window.KEY_MATCHES) ? window.KEY_MATCHES : (typeof getScopedKey === 'function' ? getScopedKey('jornada_manual_matches') : 'jornada_manual_matches');
   try {
     let m = JSON.parse(localStorage.getItem(k)) || [];
-    if (Array.isArray(m)) {
+    if (Array.isArray(m) && m.length > 0) {
+      // Primary key has data — apply migrations and return
       const originalJson = JSON.stringify(m);
       m = migrateLegacyMatches(m);
-      if (typeof ensureMatchSequence === 'function') {
-        ensureMatchSequence(m);
-      }
-      if (JSON.stringify(m) !== originalJson) {
-        safeSetItem(k, JSON.stringify(m));
+      if (typeof ensureMatchSequence === 'function') ensureMatchSequence(m);
+      if (JSON.stringify(m) !== originalJson) safeSetItem(k, JSON.stringify(m));
+      return m;
+    }
+
+    // ── FALLBACK CHAIN: primary key was empty (likely namespace race on boot) ──
+    // Scan localStorage for any jornada_u_*_matches key with data.
+    // This handles the case where getActiveUserId() returned 'anonymous'
+    // because jornada_user_profile hadn't been written yet by verifyAuthToken().
+    if (typeof localStorage !== 'undefined') {
+      let bestKey = null;
+      let bestData = [];
+
+      // 1. Check legacy key
+      try {
+        const legacyRaw = localStorage.getItem('jornada_manual_matches');
+        if (legacyRaw) {
+          const legacyData = JSON.parse(legacyRaw) || [];
+          if (Array.isArray(legacyData) && legacyData.length > bestData.length) {
+            bestData = legacyData;
+            bestKey = 'jornada_manual_matches';
+          }
+        }
+      } catch (e) {}
+
+      // 2. Scan all jornada_u_*_matches keys (multi-user, multi-device)
+      try {
+        for (let i = 0; i < localStorage.length; i++) {
+          const candidateKey = localStorage.key(i);
+          if (!candidateKey) continue;
+          if (candidateKey === k) continue; // already checked
+          if (/^jornada_u_.+_matches$/.test(candidateKey)) {
+            try {
+              const candidateData = JSON.parse(localStorage.getItem(candidateKey)) || [];
+              if (Array.isArray(candidateData) && candidateData.length > bestData.length) {
+                bestData = candidateData;
+                bestKey = candidateKey;
+              }
+            } catch (e) {}
+          }
+        }
+      } catch (e) {}
+
+      if (bestData.length > 0) {
+        console.warn(`[loadManual] Primary key "${k}" was empty. Found ${bestData.length} matches in fallback key "${bestKey}". Migrating to primary key.`);
+        bestData = migrateLegacyMatches(bestData);
+        if (typeof ensureMatchSequence === 'function') ensureMatchSequence(bestData);
+        // Migrate data to the current primary key so future reads find it directly
+        safeSetItem(k, JSON.stringify(bestData));
+        return bestData;
       }
     }
-    return m;
+    // ── END FALLBACK CHAIN ────────────────────────────────────────────────────
+
+    return [];
   } catch(e) { return []; }
 }
+
 function saveManual(m) {
   const k = (typeof window !== 'undefined' && window.KEY_MATCHES) ? window.KEY_MATCHES : (typeof getScopedKey === 'function' ? getScopedKey('jornada_manual_matches') : 'jornada_manual_matches');
   if (Array.isArray(m)) {

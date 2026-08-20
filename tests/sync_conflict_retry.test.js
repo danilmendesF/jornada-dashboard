@@ -207,7 +207,10 @@ describe('CHG-006.4: Final Production Release — Zero Data Loss & Multi-Device 
 
   it('TEST-007: Snapshot vazio local contra Cloud populada -> Cloud preservada e Local populado', async () => {
     const kMatches = global.window.KEY_MATCHES;
-    localStorageMock[kMatches] = JSON.stringify([]); // Local vazio
+    localStorageMock[kMatches] = JSON.stringify([]); // Local primário vazio
+    // Limpar também a chave legada para não ativar o fallback chain (cenário: local realmente vazio)
+    delete localStorageMock['jornada_manual_matches'];
+    delete localStorageMock['jornada_u_user_danilo_matches'];
 
     const cloudData = [
       { id: '11111111-1111-4111-8111-000000000001', Player: 'Danilo', updatedAt: '2026-08-19T10:00:00Z' },
