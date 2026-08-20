@@ -5,6 +5,17 @@ O formato e baseado em Keep a Changelog e este projeto adere ao Versionamento Se
 
 ---
 
+## [2.1.7] - 2026-08-20
+### Corrigido (P0 Incident — Data Preservation)
+- **FIX 1 — Namespace Race Condition no `pullFromCloud`:** As chaves de storage (`KEY_MATCHES`, `KEY_DECKS`, etc.) eram resolvidas de forma assíncrona após o `await fetch()`, quando `getActiveUserId()` ainda podia retornar `'anonymous'`. Resultado: o merge era salvo na chave errada (`jornada_u_anonymous_matches`), causando 511 → 0 na UI. Corrigido capturando todos os `_k*` de forma **síncrona antes do `fetch()`**, garantindo o UID correto.
+- **FIX 2 — Auto-backup destruindo snapshot válido com snapshot vazio:** O `checkAndRunDailyAutoBackup` rodava 1500ms após o boot (estado transitório `allData=[]`) e sobrescrevia o snapshot do mesmo dia — apagando o backup de 511 partidas. Adicionado guard: se `matchesCount === 0` e existe qualquer backup anterior com dados, o snapshot é abortado.
+- **FIX 3 — `initSyncUI` sem namespace resolvido:** `initAuthSession()` era chamado dentro de `initializeData()`, mas `initializeData()` era disparado pelo `pullFromCloud` após o fetch. Agora `initAuthSession()` é chamado **antes** de `pullFromCloud()` em `initSyncUI`, garantindo `window.currentUser` e o namespace correto no momento da captura das chaves.
+- **Empty Cloud Guard:** Se Cloud retorna `[]` mas o local tem dados, o merge **não é executado** e nenhuma escrita é feita (Cloud vazia ≠ "usuário apagou tudo").
+- **Logs de diagnóstico:** `[Sync Pull]` loga `localBefore`, `cloud`, `merged` e `key` para rastreabilidade futura.
+- **Testes INCIDENT-001 a INCIDENT-012:** Suite completa de testes de regressão cobrindo todos os cenários do incidente de produção.
+
+---
+
 ## [2.1.6] - 2026-08-20
 ### Corrigido (Hotfix de Produção)
 - **Race Condition no Session Guard do Boot:** O `pullFromCloud` durante o BOOTING capturava `requestToken` antes do JWT estar disponível no localStorage. O Session Guard descartava silenciosamente toda a resposta do PULL, resultando em 0 partidas exibidas na Visão Geral. Corrigido com verificação `isBoot` que bypassa a checagem de igualdade de token durante o estado de inicialização.

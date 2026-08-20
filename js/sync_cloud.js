@@ -199,6 +199,17 @@ async function pullFromCloud(quiet = false) {
   const url = getSyncUrl();
   if (!url) return;
 
+  // ── FIX: Resolve storage keys SYNCHRONOUSLY before the async fetch ────────
+  // Capturing keys here ensures getActiveUserId() resolves to the correct UID,
+  // not 'anonymous', which can happen if keys are resolved after await fetch().
+  const _kMatches  = (typeof window !== 'undefined' && window.KEY_MATCHES)  ? window.KEY_MATCHES  : (typeof getScopedKey === 'function' ? getScopedKey('jornada_manual_matches') : 'jornada_manual_matches');
+  const _kDecks    = (typeof window !== 'undefined' && window.KEY_DECKS)    ? window.KEY_DECKS    : (typeof getScopedKey === 'function' ? getScopedKey('jornada_decks')          : 'jornada_decks');
+  const _kPlayers  = (typeof window !== 'undefined' && window.KEY_PLAYERS)  ? window.KEY_PLAYERS  : (typeof getScopedKey === 'function' ? getScopedKey('jornada_players')        : 'jornada_players');
+  const _kEdits    = (typeof window !== 'undefined' && window.KEY_EDITS)    ? window.KEY_EDITS    : (typeof getScopedKey === 'function' ? getScopedKey('jornada_edited_matches')  : 'jornada_edited_matches');
+  const _kDeleted  = (typeof window !== 'undefined' && window.KEY_DELETED)  ? window.KEY_DELETED  : (typeof getScopedKey === 'function' ? getScopedKey('jornada_deleted_ids')     : 'jornada_deleted_ids');
+  const _kArch     = (typeof window !== 'undefined' && typeof window.getScopedKey === 'function') ? window.getScopedKey('jornada_archetype_unifications') : 'jornada_archetype_unifications';
+  // ─────────────────────────────────────────────────────────────────────────
+
   const requestToken = typeof getAuthToken === 'function' ? getAuthToken() : (typeof localStorage !== 'undefined' ? (localStorage.getItem('jornada_auth_token') || '') : '');
   const requestSessionGen = (typeof window !== 'undefined' && window._authSessionGen !== undefined) ? window._authSessionGen : _authSessionGen;
 
@@ -243,36 +254,38 @@ async function pullFromCloud(quiet = false) {
 
         if (Array.isArray(data.manualMatches)) {
           const localManual = (typeof window !== 'undefined' && typeof window.loadManual === 'function') ? window.loadManual() : (typeof loadManual === 'function' ? loadManual() : []);
-          const mergedMatches = deterministicMergeMatches(localManual, data.manualMatches, combinedDeleted);
-          const kMatches = (typeof window !== 'undefined' && window.KEY_MATCHES) ? window.KEY_MATCHES : (typeof getScopedKey === 'function' ? getScopedKey('jornada_manual_matches') : 'jornada_manual_matches');
-          const safeSet = (typeof window !== 'undefined' && typeof window.safeSetItem === 'function') ? window.safeSetItem : (typeof safeSetItem === 'function' ? safeSetItem : ((k, v) => { if (typeof localStorage !== 'undefined') localStorage.setItem(k, v); }));
-          safeSet(kMatches, JSON.stringify(mergedMatches));
+          const cloudMatches = data.manualMatches;
+
+          // ── EMPTY CLOUD GUARD: never overwrite local data with empty cloud ──
+          // If cloud returns [] but local has data, preserve local completely.
+          // Empty cloud does NOT imply the user deleted everything.
+          if (cloudMatches.length === 0 && localManual.length > 0) {
+            console.warn(`[Sync Pull] Cloud retornou 0 partidas mas local possui ${localManual.length}. Preservando local. Nenhuma escrita realizada.`);
+          } else {
+            const mergedMatches = deterministicMergeMatches(localManual, cloudMatches, combinedDeleted);
+            console.log(`[Sync Pull] localBefore=${localManual.length} cloud=${cloudMatches.length} merged=${mergedMatches.length} key=${_kMatches}`);
+            const safeSet = (typeof window !== 'undefined' && typeof window.safeSetItem === 'function') ? window.safeSetItem : (typeof safeSetItem === 'function' ? safeSetItem : ((k, v) => { if (typeof localStorage !== 'undefined') localStorage.setItem(k, v); }));
+            safeSet(_kMatches, JSON.stringify(mergedMatches));
+          }
         }
         if (Array.isArray(data.decks) && data.decks.length > 0 && typeof safeSetItem === 'function') {
-          const kDecks = (typeof window !== 'undefined' && window.KEY_DECKS) ? window.KEY_DECKS : (typeof getScopedKey === 'function' ? getScopedKey('jornada_decks') : 'jornada_decks');
           const localDecks = (typeof window !== 'undefined' && typeof window.loadDecks === 'function') ? window.loadDecks() : (typeof loadDecks === 'function' ? loadDecks() : []);
-          // Merge: prefer remote if bigger or local empty; never destroy local decks with empty remote
           const mergedDecks = localDecks.length >= data.decks.length ? localDecks : data.decks;
-          safeSetItem(kDecks, JSON.stringify(mergedDecks));
+          safeSetItem(_kDecks, JSON.stringify(mergedDecks));
         }
         if (Array.isArray(data.players) && data.players.length > 0 && typeof safeSetItem === 'function') {
-          const kPlayers = (typeof window !== 'undefined' && window.KEY_PLAYERS) ? window.KEY_PLAYERS : (typeof getScopedKey === 'function' ? getScopedKey('jornada_players') : 'jornada_players');
           const localPlayers = (typeof window !== 'undefined' && typeof window.loadPlayers === 'function') ? window.loadPlayers() : (typeof loadPlayers === 'function' ? loadPlayers() : []);
-          // Merge: use remote if it has more players, otherwise keep local
           const mergedPlayers = localPlayers.length >= data.players.length ? localPlayers : data.players;
-          safeSetItem(kPlayers, JSON.stringify(mergedPlayers));
+          safeSetItem(_kPlayers, JSON.stringify(mergedPlayers));
         }
         if (data.edits && typeof data.edits === 'object' && typeof safeSetItem === 'function') {
-          const kEdits = (typeof window !== 'undefined' && window.KEY_EDITS) ? window.KEY_EDITS : (typeof getScopedKey === 'function' ? getScopedKey('jornada_edited_matches') : 'jornada_edited_matches');
-          safeSetItem(kEdits, JSON.stringify(data.edits));
+          safeSetItem(_kEdits, JSON.stringify(data.edits));
         }
         if (Array.isArray(data.deletedIds) && typeof safeSetItem === 'function') {
-          const kDeleted = (typeof window !== 'undefined' && window.KEY_DELETED) ? window.KEY_DELETED : (typeof getScopedKey === 'function' ? getScopedKey('jornada_deleted_ids') : 'jornada_deleted_ids');
-          safeSetItem(kDeleted, JSON.stringify(Array.from(combinedDeleted)));
+          safeSetItem(_kDeleted, JSON.stringify(Array.from(combinedDeleted)));
         }
         if (Array.isArray(data.archetypeUnifications) && typeof safeSetItem === 'function') {
-          const kArch = (typeof window !== 'undefined' && typeof window.getScopedKey === 'function') ? window.getScopedKey('jornada_archetype_unifications') : 'jornada_archetype_unifications';
-          safeSetItem(kArch, JSON.stringify(data.archetypeUnifications));
+          safeSetItem(_kArch, JSON.stringify(data.archetypeUnifications));
         }
 
         if (typeof initializeData === 'function') initializeData();
@@ -517,11 +530,20 @@ function initSyncUI() {
 
   const token = typeof getAuthToken === 'function' ? getAuthToken() : (typeof localStorage !== 'undefined' ? localStorage.getItem('jornada_auth_token') : '');
   if (token) {
+    // ── FIX: Ensure auth session (user profile + namespace) is resolved ───────
+    // initAuthSession() reads jornada_user_profile synchronously from localStorage,
+    // setting window.currentUser so getActiveUserId() returns the correct UID
+    // BEFORE the first pullFromCloud() resolves storage keys.
+    if (typeof initAuthSession === 'function') {
+      try { initAuthSession(); } catch (e) {}
+    }
+    // ─────────────────────────────────────────────────────────────────────────
     syncLifecycleState = 'BOOTING';
     if (typeof window !== 'undefined') window.syncLifecycleState = 'BOOTING';
     pullFromCloud(true).then(() => {
       startSyncInterval();
     });
+
   } else {
     syncLifecycleState = 'LOGGED_OUT';
     isCloudSyncReady = false;

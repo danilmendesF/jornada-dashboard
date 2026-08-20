@@ -2470,6 +2470,31 @@ function checkAndRunDailyAutoBackup(force = false) {
 
     const matchesCount = (typeof allData !== 'undefined' && Array.isArray(allData)) ? allData.length : payload.manualMatches.length;
 
+    // ── SAFETY GUARD: never overwrite a valid backup with an empty snapshot ────
+    // This prevents a boot-time race where the auto-backup runs before the sync
+    // PULL completes, capturing allData=[] and destroying the previous real backup.
+    let backupsList = [];
+    try {
+      backupsList = JSON.parse(localStorage.getItem(KEY_AUTO_BACKUPS)) || [];
+    } catch (e) {
+      backupsList = [];
+    }
+
+    const existingTodayBackupWithData = backupsList.find(b => b.date === todayStr && b.matchesCount > 0);
+    if (!force && matchesCount === 0 && existingTodayBackupWithData) {
+      console.warn(`[AutoBackup] Snapshot abortado: allData=0 mas já existe backup de hoje com ${existingTodayBackupWithData.matchesCount} partidas. Backup preservado.`);
+      renderAutoBackupsList();
+      return;
+    }
+    // ── Also check any previous backups from any date ────────────────────────
+    const anyBackupWithData = backupsList.find(b => b.matchesCount > 0);
+    if (!force && matchesCount === 0 && anyBackupWithData) {
+      console.warn(`[AutoBackup] Snapshot abortado: allData=0 mas existe backup anterior com ${anyBackupWithData.matchesCount} partidas (${anyBackupWithData.date}). Provável estado transitório de boot.`);
+      renderAutoBackupsList();
+      return;
+    }
+    // ─────────────────────────────────────────────────────────────────────────
+
     const snapshot = {
       id: 'auto_' + todayStr + '_' + Date.now(),
       date: todayStr,
@@ -2479,13 +2504,6 @@ function checkAndRunDailyAutoBackup(force = false) {
       matchesCount: matchesCount,
       payload
     };
-
-    let backupsList = [];
-    try {
-      backupsList = JSON.parse(localStorage.getItem(KEY_AUTO_BACKUPS)) || [];
-    } catch (e) {
-      backupsList = [];
-    }
 
     backupsList = backupsList.filter(b => b.date !== todayStr || force);
     backupsList.unshift(snapshot);
@@ -2503,6 +2521,7 @@ function checkAndRunDailyAutoBackup(force = false) {
     console.error('❌ Erro no Backup Diário Automático:', err);
   }
 }
+
 
 window.renderAutoBackupsList = function() {
   const container = document.getElementById('autoBackupsList');
