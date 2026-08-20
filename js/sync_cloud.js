@@ -1,68 +1,133 @@
 // ── JS/SYNC_CLOUD.JS ────────────────────────────────────────────────────────
-// Cloud synchronization & backup helpers with JWT Auth Header support
+// Cloud synchronization, OCC Conflict Single Retry & Multi-Device Convergence (CHG-006.4 Emergency)
 
-window.syncStatusState = 'idle';
+var MAX_RETRY_ATTEMPTS = 1;
+var BASE_BACKOFF_MS = 200;
+var MAX_BACKOFF_MS = 2000;
 
-window.setSyncStatus = function(state, text) {
-  window.syncStatusState = state;
-  const dot = document.getElementById('headerSyncDot');
-  if (!dot) return;
-  dot.title = text || state;
+var syncLifecycleState = 'LOGGED_OUT';
+var isCloudSyncReady = false;
+var syncStatusState = 'idle';
 
-  if (state === 'syncing') {
-    dot.style.background = '#f5c842';
-  } else if (state === 'success') {
-    dot.style.background = '#34e0a1';
-  } else if (state === 'error') {
-    dot.style.background = '#f75050';
-  } else {
-    dot.style.background = '#38d9f5';
+var _syncPushTimer = null;
+var _syncIntervalTimer = null;
+var _hasPendingSync = false;
+var _activePullPromise = null;
+var _activePushPromise = null;
+var _syncRetryCount = 0;
+var _syncBackoffTimer = null;
+var _currentCloudRevision = 0;
+var _lastOperationIdempotencyKey = null;
+var _authSessionGen = 1;
+
+function setPendingSync(val) {
+  _hasPendingSync = Boolean(val);
+  if (typeof window !== 'undefined') window._hasPendingSync = _hasPendingSync;
+  if (typeof localStorage !== 'undefined') {
+    try {
+      const pendingKey = (typeof window !== 'undefined' && typeof window.getScopedKey === 'function') ? window.getScopedKey('jornada_sync_pending') : 'jornada_sync_pending';
+      if (val) {
+        localStorage.setItem(pendingKey, '1');
+      } else {
+        localStorage.removeItem(pendingKey);
+      }
+    } catch (e) {}
   }
-};
+}
 
-window.triggerSyncPush = function() {
-  if (window._syncPushTimer) clearTimeout(window._syncPushTimer);
-  window._syncPushTimer = setTimeout(() => {
+// Restore persistent pending sync state on bootstrap
+try {
+  const pendingKey = (typeof window !== 'undefined' && typeof window.getScopedKey === 'function') ? window.getScopedKey('jornada_sync_pending') : 'jornada_sync_pending';
+  if (typeof localStorage !== 'undefined' && localStorage.getItem(pendingKey) === '1') {
+    _hasPendingSync = true;
+    if (typeof window !== 'undefined') window._hasPendingSync = true;
+  }
+} catch (e) {}
+
+function setSyncStatus(state, text) {
+  syncStatusState = state;
+  if (typeof window !== 'undefined') window.syncStatusState = state;
+  const doc = typeof document !== 'undefined' ? document : null;
+  if (!doc) return;
+
+  const dot = doc.getElementById('headerSyncDot');
+  const ind = doc.getElementById('syncStatusIndicator');
+  const txt = doc.getElementById('syncStatusText');
+
+  const colors = {
+    syncing: { color: '#f5c842', label: text || 'Sincronizando…' },
+    success: { color: '#34e0a1', label: text || 'Sincronizado' },
+    connected: { color: '#34e0a1', label: text || 'Sincronizado' },
+    error: { color: '#f75050', label: text || 'Erro de Conexão' },
+    offline: { color: '#94a3b8', label: text || 'Modo Offline' },
+    idle: { color: '#38d9f5', label: text || 'Pronto' }
+  };
+
+  const current = colors[state] || colors.idle;
+  if (dot) {
+    dot.style.background = current.color;
+    dot.title = current.label;
+  }
+  if (ind) ind.style.background = current.color;
+  if (txt) {
+    txt.textContent = current.label;
+    txt.style.color = current.color;
+  }
+}
+
+function calculateBackoffDelay(attempt, base = BASE_BACKOFF_MS, max = MAX_BACKOFF_MS) {
+  const cap = Math.min(max, base * Math.pow(2, attempt));
+  return Math.random() * cap;
+}
+
+function triggerSyncPush() {
+  if (_syncPushTimer) clearTimeout(_syncPushTimer);
+  if (typeof window !== 'undefined' && window._syncPushTimer) clearTimeout(window._syncPushTimer);
+
+  _syncPushTimer = setTimeout(() => {
+    _syncPushTimer = null;
+    if (typeof window !== 'undefined') window._syncPushTimer = null;
     if (typeof pushToCloud === 'function') pushToCloud();
-  }, 1500);
-};
+  }, 800);
 
-window.getSyncUrl = function(token) {
-  const authToken = typeof getAuthToken === 'function' ? getAuthToken() : '';
-  const syncToken = token || localStorage.getItem('jornada_sync_token') || 'team_default_sync';
-  
-  const url = `/api/sync?token=${encodeURIComponent(syncToken)}`;
-  return url;
-};
+  if (typeof window !== 'undefined') window._syncPushTimer = _syncPushTimer;
+}
 
-window.getSyncHeaders = function() {
-  const authToken = typeof getAuthToken === 'function' ? getAuthToken() : '';
+function getSyncUrl(token) {
+  const syncToken = token || (typeof localStorage !== 'undefined' ? localStorage.getItem('jornada_sync_token') : null) || 'team_default_sync';
+  const cleanToken = syncToken.replace(/[^a-zA-Z0-9_-]/g, '');
+  const ts = Date.now();
+  return `/api/sync?token=${encodeURIComponent(cleanToken)}&_t=${ts}`;
+}
+
+function getSyncHeaders() {
+  const authToken = typeof getAuthToken === 'function' ? getAuthToken() : (typeof localStorage !== 'undefined' ? (localStorage.getItem('jornada_auth_token') || '') : '');
   const headers = { 'Content-Type': 'application/json' };
   if (authToken) {
     headers['Authorization'] = `Bearer ${authToken}`;
   }
   return headers;
-};
+}
 
 function canonicalMatchString(match) {
   if (!match || typeof match !== 'object') return '';
   const keys = Object.keys(match).sort();
   const sortedObj = {};
   keys.forEach(k => {
-    // Avoid non-deterministic circular or function values
     if (typeof match[k] !== 'function') {
       sortedObj[k] = match[k];
     }
   });
   return JSON.stringify(sortedObj);
 }
-window.canonicalMatchString = canonicalMatchString;
 
 function deterministicMergeMatches(listA, listB, deletedIdsSet = new Set()) {
+  const normA = (typeof window !== 'undefined' && typeof window.migrateLegacyMatches === 'function') ? window.migrateLegacyMatches(listA || []) : (typeof migrateLegacyMatches === 'function' ? migrateLegacyMatches(listA || []) : (listA || []));
+  const normB = (typeof window !== 'undefined' && typeof window.migrateLegacyMatches === 'function') ? window.migrateLegacyMatches(listB || []) : (typeof migrateLegacyMatches === 'function' ? migrateLegacyMatches(listB || []) : (listB || []));
   const map = new Map();
   const delSet = deletedIdsSet instanceof Set ? deletedIdsSet : new Set(deletedIdsSet || []);
 
-  [...(listA || []), ...(listB || [])].forEach(m => {
+  [...normA, ...normB].forEach(m => {
     if (!m || !m.id || delSet.has(m.id)) return;
     if (!map.has(m.id)) {
       map.set(m.id, m);
@@ -73,7 +138,6 @@ function deterministicMergeMatches(listA, listB, deletedIdsSet = new Set()) {
       if (tsA > tsB) {
         map.set(m.id, m);
       } else if (tsA === tsB) {
-        // Deterministic Canonical Lexicographical Tie-breaker (Commutativity guarantee)
         const strA = canonicalMatchString(m);
         const strB = canonicalMatchString(existing);
         if (strA.localeCompare(strB) > 0) {
@@ -89,141 +153,490 @@ function deterministicMergeMatches(listA, listB, deletedIdsSet = new Set()) {
   }
 
   merged.sort((a, b) => {
-    const tsA = (typeof getMatchTimestamp === 'function' ? getMatchTimestamp(a) : (Date.parse(a.Data || a.createdAt) || 0));
-    const tsB = (typeof getMatchTimestamp === 'function' ? getMatchTimestamp(b) : (Date.parse(b.Data || b.createdAt) || 0));
+    const tsA = (typeof getMatchTimestamp === 'function' ? getMatchTimestamp(a) : (Date.parse(a.createdAt || (a.Data ? `${a.Data}T12:00:00Z` : 0)) || 0));
+    const tsB = (typeof getMatchTimestamp === 'function' ? getMatchTimestamp(b) : (Date.parse(b.createdAt || (b.Data ? `${b.Data}T12:00:00Z` : 0)) || 0));
     if (tsA !== tsB) return tsA - tsB;
     return String(a.id || '').localeCompare(String(b.id || ''));
   });
 
   return merged;
 }
-window.deterministicMergeMatches = deterministicMergeMatches;
 
-window.pullFromCloud = async function(quiet = false) {
+// ── LOCAL SAFETY BACKUP (CHG-006.4 Emergency) ───────────────────────────────
+function saveLocalSafetyBackup() {
+  try {
+    if (typeof localStorage === 'undefined') return;
+    const uid = (typeof window !== 'undefined' && typeof window.getActiveUserId === 'function') ? window.getActiveUserId() : 'anonymous';
+    const backupKey = `jornada_u_${uid}_safety_backup`;
+
+    const manual = (typeof window !== 'undefined' && typeof window.loadManual === 'function') ? window.loadManual() : (typeof loadManual === 'function' ? loadManual() : []);
+    const decks = (typeof window !== 'undefined' && typeof window.loadDecks === 'function') ? window.loadDecks() : (typeof loadDecks === 'function' ? loadDecks() : []);
+    const players = (typeof window !== 'undefined' && typeof window.loadPlayers === 'function') ? window.loadPlayers() : (typeof loadPlayers === 'function' ? loadPlayers() : []);
+
+    // Do not overwrite existing non-empty backup with empty snapshot
+    if (manual.length === 0 && decks.length === 0) {
+      const existingRaw = localStorage.getItem(backupKey);
+      if (existingRaw) return;
+    }
+
+    const snapshot = {
+      timestamp: new Date().toISOString(),
+      userId: uid,
+      manualMatches: manual,
+      decks: decks,
+      players: players
+    };
+
+    localStorage.setItem(backupKey, JSON.stringify(snapshot));
+  } catch (e) {
+    console.warn('[Safety Backup] Falha ao criar backup local de segurança:', e);
+  }
+}
+
+async function pullFromCloud(quiet = false) {
+  if (_activePullPromise) return _activePullPromise;
+
   const url = getSyncUrl();
   if (!url) return;
 
-  setSyncStatus('syncing', 'Baixando dados da nuvem…');
+  const requestToken = typeof getAuthToken === 'function' ? getAuthToken() : (typeof localStorage !== 'undefined' ? (localStorage.getItem('jornada_auth_token') || '') : '');
+  const requestSessionGen = (typeof window !== 'undefined' && window._authSessionGen !== undefined) ? window._authSessionGen : _authSessionGen;
 
-  try {
-    const res = await fetch(url, { headers: getSyncHeaders() });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
+  if (!quiet) setSyncStatus('syncing', 'Baixando dados da nuvem…');
+  const prevState = (typeof window !== 'undefined' ? window.syncLifecycleState : syncLifecycleState);
+  if (prevState !== 'CONFLICT_RETRYING') {
+    syncLifecycleState = 'PULLING';
+    if (typeof window !== 'undefined') window.syncLifecycleState = 'PULLING';
+  }
 
-    if (data && typeof data === 'object') {
-      if (Array.isArray(data.manualMatches) && typeof saveManual === 'function') {
-        const localManual = typeof loadManual === 'function' ? loadManual() : [];
-        const localDeleted = typeof loadDeleted === 'function' ? loadDeleted() : new Set();
+  _activePullPromise = (async () => {
+    try {
+      const res = await fetch(url, { headers: getSyncHeaders() });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+
+      // ── IN-FLIGHT SESSION & TOKEN GUARD (CHG-005.1) ─────────────────────────
+      const currentToken = typeof getAuthToken === 'function' ? getAuthToken() : (typeof localStorage !== 'undefined' ? (localStorage.getItem('jornada_auth_token') || '') : '');
+      const currentSessionGen = (typeof window !== 'undefined' && window._authSessionGen !== undefined) ? window._authSessionGen : _authSessionGen;
+      const currentState = (typeof window !== 'undefined' ? window.syncLifecycleState : syncLifecycleState);
+
+      if (!currentToken || currentState === 'LOGGED_OUT' || currentToken !== requestToken || currentSessionGen !== requestSessionGen) {
+        console.warn('[Sync Guard] Resposta de pull descartada: sessão foi encerrada ou alterada durante a requisição em voo.');
+        return;
+      }
+
+      if (data && typeof data === 'object') {
+        if (typeof data.revision === 'number') {
+          _currentCloudRevision = data.revision;
+          if (typeof window !== 'undefined') window._currentCloudRevision = _currentCloudRevision;
+        }
+
+        const localDeleted = (typeof window !== 'undefined' && typeof window.loadDeleted === 'function') ? window.loadDeleted() : (typeof loadDeleted === 'function' ? loadDeleted() : new Set());
         const remoteDeleted = Array.isArray(data.deletedIds) ? new Set(data.deletedIds) : new Set();
         const combinedDeleted = new Set([...localDeleted, ...remoteDeleted]);
-        const mergedMatches = deterministicMergeMatches(localManual, data.manualMatches, combinedDeleted);
-        saveManual(mergedMatches);
-      }
-      if (Array.isArray(data.decks) && typeof saveDecks === 'function') {
-        saveDecks(data.decks);
-      }
-      if (Array.isArray(data.players) && typeof savePlayers === 'function') {
-        savePlayers(data.players);
-      }
-      if (data.edits && typeof data.edits === 'object' && typeof saveEdits === 'function') {
-        saveEdits(data.edits);
-      }
-      if (Array.isArray(data.deletedIds) && typeof saveDeleted === 'function') {
-        saveDeleted(new Set(data.deletedIds));
-      }
-      if (Array.isArray(data.archetypeUnifications) && typeof saveArchetypeUnifications === 'function') {
-        saveArchetypeUnifications(data.archetypeUnifications);
-      }
-      if (typeof initializeData === 'function') initializeData();
-      if (typeof applyFilters === 'function') applyFilters();
 
-      setSyncStatus('success', 'Sincronizado com a nuvem!');
-      if (!quiet && typeof showToast === 'function') showToast('☁️ Dados sincronizados com a nuvem!');
+        if (Array.isArray(data.manualMatches)) {
+          const localManual = (typeof window !== 'undefined' && typeof window.loadManual === 'function') ? window.loadManual() : (typeof loadManual === 'function' ? loadManual() : []);
+          const mergedMatches = deterministicMergeMatches(localManual, data.manualMatches, combinedDeleted);
+          const kMatches = (typeof window !== 'undefined' && window.KEY_MATCHES) ? window.KEY_MATCHES : (typeof getScopedKey === 'function' ? getScopedKey('jornada_manual_matches') : 'jornada_manual_matches');
+          const safeSet = (typeof window !== 'undefined' && typeof window.safeSetItem === 'function') ? window.safeSetItem : (typeof safeSetItem === 'function' ? safeSetItem : ((k, v) => { if (typeof localStorage !== 'undefined') localStorage.setItem(k, v); }));
+          safeSet(kMatches, JSON.stringify(mergedMatches));
+        }
+        if (Array.isArray(data.decks) && typeof safeSetItem === 'function') {
+          const kDecks = (typeof window !== 'undefined' && window.KEY_DECKS) ? window.KEY_DECKS : (typeof getScopedKey === 'function' ? getScopedKey('jornada_decks') : 'jornada_decks');
+          safeSetItem(kDecks, JSON.stringify(data.decks));
+        }
+        if (Array.isArray(data.players) && typeof safeSetItem === 'function') {
+          const kPlayers = (typeof window !== 'undefined' && window.KEY_PLAYERS) ? window.KEY_PLAYERS : (typeof getScopedKey === 'function' ? getScopedKey('jornada_players') : 'jornada_players');
+          safeSetItem(kPlayers, JSON.stringify(data.players));
+        }
+        if (data.edits && typeof data.edits === 'object' && typeof safeSetItem === 'function') {
+          const kEdits = (typeof window !== 'undefined' && window.KEY_EDITS) ? window.KEY_EDITS : (typeof getScopedKey === 'function' ? getScopedKey('jornada_edited_matches') : 'jornada_edited_matches');
+          safeSetItem(kEdits, JSON.stringify(data.edits));
+        }
+        if (Array.isArray(data.deletedIds) && typeof safeSetItem === 'function') {
+          const kDeleted = (typeof window !== 'undefined' && window.KEY_DELETED) ? window.KEY_DELETED : (typeof getScopedKey === 'function' ? getScopedKey('jornada_deleted_ids') : 'jornada_deleted_ids');
+          safeSetItem(kDeleted, JSON.stringify(Array.from(combinedDeleted)));
+        }
+        if (Array.isArray(data.archetypeUnifications) && typeof safeSetItem === 'function') {
+          const kArch = (typeof window !== 'undefined' && typeof window.getScopedKey === 'function') ? window.getScopedKey('jornada_archetype_unifications') : 'jornada_archetype_unifications';
+          safeSetItem(kArch, JSON.stringify(data.archetypeUnifications));
+        }
+
+        if (typeof initializeData === 'function') initializeData();
+        if (typeof applyFilters === 'function') applyFilters();
+
+        const activeState = (typeof window !== 'undefined' ? window.syncLifecycleState : syncLifecycleState);
+        if (activeState !== 'CONFLICT_RETRYING') {
+          syncLifecycleState = 'READY';
+          isCloudSyncReady = true;
+          if (typeof window !== 'undefined') {
+            window.syncLifecycleState = 'READY';
+            window.isCloudSyncReady = true;
+          }
+
+          setSyncStatus('success', 'Sincronizado com a nuvem!');
+          if (!quiet && typeof showToast === 'function') showToast('☁️ Dados sincronizados com a nuvem!');
+
+          const hasPending = _hasPendingSync || (typeof window !== 'undefined' && window._hasPendingSync) || (typeof localStorage !== 'undefined' && localStorage.getItem('jornada_sync_pending') === '1');
+          if (hasPending) {
+            triggerSyncPush();
+          }
+        } else {
+          isCloudSyncReady = true;
+          if (typeof window !== 'undefined') {
+            window.isCloudSyncReady = true;
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('[Sync Pull Warning]: Falha na sincronização remota (Offline):', e);
+      syncLifecycleState = 'OFFLINE';
+      isCloudSyncReady = false;
+      if (typeof window !== 'undefined') {
+        window.syncLifecycleState = 'OFFLINE';
+        window.isCloudSyncReady = false;
+      }
+      setSyncStatus('offline', 'Modo Offline (dados locais protegidos)');
+    } finally {
+      _activePullPromise = null;
     }
-  } catch (e) {
-    console.warn('Pull Cloud failure:', e);
-    setSyncStatus('error', 'Falha ao sincronizar com nuvem');
+  })();
+
+  return _activePullPromise;
+}
+
+// ── PUSH TO CLOUD WITH OCC CONFLICT SINGLE RETRY (CHG-006.4 Emergency) ──────
+async function pushToCloud(attempt = 0, preservedIdempotencyKey = null) {
+  const activePromise = (typeof window !== 'undefined' && window._activePushPromise) ? window._activePushPromise : _activePushPromise;
+  // Prevent duplicate concurrent push cycles
+  if (activePromise && attempt === 0) {
+    return activePromise;
   }
-};
 
-window.pushToCloud = async function() {
-  const url = getSyncUrl();
-  if (!url) return;
+  let pushCycle;
+  pushCycle = (async () => {
+    const isReady = (typeof window !== 'undefined' ? window.isCloudSyncReady : isCloudSyncReady);
+    const state = (typeof window !== 'undefined' ? window.syncLifecycleState : syncLifecycleState);
 
-  setSyncStatus('syncing', 'Enviando dados para a nuvem…');
+    // EMERGENCY SYNC GUARD (CHG-005): Never push before pull is complete or when logged out
+    if (!isReady || (state !== 'READY' && state !== 'CONFLICT_RETRYING' && state !== 'PUSHING' && state !== 'BACKOFF')) {
+      setPendingSync(true);
+      console.warn('[Sync Guard] Push bloqueado: o primeiro Pull da nuvem ainda não foi concluído. Mutação mantida localmente e agendada.');
+      return;
+    }
 
-  const manual = typeof loadManual === 'function' ? loadManual() : [];
-  if (typeof ensureMatchSequence === 'function') ensureMatchSequence(manual);
+    const url = getSyncUrl();
+    if (!url) return;
 
-  const payload = {
-    manualMatches: manual,
-    decks: typeof loadDecks === 'function' ? loadDecks() : [],
-    players: typeof loadPlayers === 'function' ? loadPlayers() : [],
-    edits: typeof loadEdits === 'function' ? loadEdits() : {},
-    deletedIds: typeof loadDeleted === 'function' ? Array.from(loadDeleted()).slice(-300) : [],
-    deletedDecks: typeof loadDeletedDecks === 'function' ? Array.from(loadDeletedDecks()).slice(-300) : [],
-    deletedPlayers: typeof loadDeletedPlayers === 'function' ? Array.from(loadDeletedPlayers()).slice(-300) : [],
-    archetypeUnifications: typeof loadArchetypeUnifications === 'function' ? loadArchetypeUnifications() : [],
-    updatedAt: new Date().toISOString()
-  };
+    if (attempt === 0) {
+      syncLifecycleState = 'PUSHING';
+      if (typeof window !== 'undefined') window.syncLifecycleState = 'PUSHING';
+      setSyncStatus('syncing', 'Enviando dados para a nuvem…');
+    } else {
+      syncLifecycleState = 'CONFLICT_RETRYING';
+      if (typeof window !== 'undefined') window.syncLifecycleState = 'CONFLICT_RETRYING';
+      setSyncStatus('syncing', `Reconciliando conflito (${attempt}/${MAX_RETRY_ATTEMPTS})…`);
+    }
 
-  try {
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: getSyncHeaders(),
-      body: JSON.stringify(payload)
+    // Pre-push local safety backup
+    saveLocalSafetyBackup();
+
+    // Always fetch the freshest local state (handles new mutations or reconciled pull data)
+    const manual = (typeof window !== 'undefined' && typeof window.loadManual === 'function') ? window.loadManual() : (typeof loadManual === 'function' ? loadManual() : []);
+    if (typeof ensureMatchSequence === 'function') ensureMatchSequence(manual);
+
+    const genUuid = (typeof window !== 'undefined' && typeof window.generateUUID === 'function') ? window.generateUUID : (typeof generateUUID === 'function' ? generateUUID : () => 'idem_' + Date.now());
+    const idempotencyKey = preservedIdempotencyKey || genUuid();
+    _lastOperationIdempotencyKey = idempotencyKey;
+    if (typeof window !== 'undefined') window._lastOperationIdempotencyKey = idempotencyKey;
+
+    const curRev = (typeof window !== 'undefined' && typeof window._currentCloudRevision === 'number') ? window._currentCloudRevision : (_currentCloudRevision || 0);
+
+    const payload = {
+      baseRevision: curRev,
+      idempotencyKey: idempotencyKey,
+      manualMatches: manual,
+      decks: (typeof window !== 'undefined' && typeof window.loadDecks === 'function') ? window.loadDecks() : (typeof loadDecks === 'function' ? loadDecks() : []),
+      players: (typeof window !== 'undefined' && typeof window.loadPlayers === 'function') ? window.loadPlayers() : (typeof loadPlayers === 'function' ? loadPlayers() : []),
+      edits: (typeof window !== 'undefined' && typeof window.loadEdits === 'function') ? window.loadEdits() : (typeof loadEdits === 'function' ? loadEdits() : {}),
+      deletedIds: (typeof window !== 'undefined' && typeof window.loadDeleted === 'function') ? Array.from(window.loadDeleted()).slice(-300) : (typeof loadDeleted === 'function' ? Array.from(loadDeleted()).slice(-300) : []),
+      deletedDecks: (typeof window !== 'undefined' && typeof window.loadDeletedDecks === 'function') ? Array.from(window.loadDeletedDecks()).slice(-300) : (typeof loadDeletedDecks === 'function' ? Array.from(loadDeletedDecks()).slice(-300) : []),
+      deletedPlayers: (typeof window !== 'undefined' && typeof window.loadDeletedPlayers === 'function') ? Array.from(window.loadDeletedPlayers()).slice(-300) : (typeof loadDeletedPlayers === 'function' ? Array.from(loadDeletedPlayers()).slice(-300) : []),
+      archetypeUnifications: (typeof window !== 'undefined' && typeof window.loadArchetypeUnifications === 'function') ? window.loadArchetypeUnifications() : (typeof loadArchetypeUnifications === 'function' ? loadArchetypeUnifications() : []),
+      updatedAt: new Date().toISOString()
+    };
+
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: getSyncHeaders(),
+        body: JSON.stringify(payload)
+      });
+
+      if (res.status === 200 || (res.ok && res.status !== 401 && res.status !== 403 && res.status !== 409)) {
+        let resJson = null;
+        try {
+          resJson = await res.json();
+          if (resJson && typeof resJson.revision === 'number') {
+            _currentCloudRevision = resJson.revision;
+            if (typeof window !== 'undefined') window._currentCloudRevision = _currentCloudRevision;
+          }
+        } catch (parseErr) {}
+
+        _syncRetryCount = 0;
+        if (typeof window !== 'undefined') window._syncRetryCount = 0;
+        setPendingSync(false);
+
+        syncLifecycleState = 'READY';
+        if (typeof window !== 'undefined') window.syncLifecycleState = 'READY';
+        setSyncStatus('success', 'Dados salvos na nuvem!');
+        return { success: true, revision: _currentCloudRevision };
+      }
+
+      if (res.status === 401 || res.status === 403) {
+        console.error('[Sync Auth Error] Não autorizado a sincronizar na nuvem (HTTP ' + res.status + ')');
+        _syncRetryCount = 0;
+        if (typeof window !== 'undefined') window._syncRetryCount = 0;
+        setSyncStatus('error', 'Sessão expirada. Faça login novamente.');
+        return { error: 'UNAUTHORIZED' };
+      }
+
+      if (res.status === 409) {
+        let errJson = {};
+        try { errJson = await res.json(); } catch (e) {}
+
+        console.warn(`[Sync OCC Conflict] Conflito de revisão detectado (tentativa ${attempt + 1}/${MAX_RETRY_ATTEMPTS}):`, errJson);
+
+        if (attempt < MAX_RETRY_ATTEMPTS) {
+          _syncRetryCount = attempt + 1;
+          if (typeof window !== 'undefined') window._syncRetryCount = _syncRetryCount;
+
+          syncLifecycleState = 'CONFLICT_RETRYING';
+          if (typeof window !== 'undefined') window.syncLifecycleState = 'CONFLICT_RETRYING';
+
+          // 1. Safety backup of local state before merging
+          saveLocalSafetyBackup();
+
+          // 2. Immediate silent pull to merge remote state & update _currentCloudRevision
+          await pullFromCloud(true);
+
+          // 3. Single retry push with reconciled merged state & new idempotency key
+          return await pushToCloud(attempt + 1, null);
+        } else {
+          // Max retries exceeded (1 retry limit for emergency convergence): keep local data, set pending sync and gracefully recover
+          console.warn('[Sync OCC Conflict] Limite máximo de retries atingido (1). STOP seguro: mantendo dados locais e sincronização pendente.');
+          _syncRetryCount = 0;
+          if (typeof window !== 'undefined') window._syncRetryCount = 0;
+          setPendingSync(true);
+
+          syncLifecycleState = 'READY';
+          if (typeof window !== 'undefined') window.syncLifecycleState = 'READY';
+          setSyncStatus('error', 'Conflito na nuvem (sincronização pendente)');
+          return { error: 'REVISION_CONFLICT_EXHAUSTED' };
+        }
+      }
+
+      throw new Error(`HTTP ${res.status}`);
+    } catch (e) {
+      console.warn('[Sync Push Warning]: Falha ao salvar na nuvem (Offline):', e);
+      _syncRetryCount = 0;
+      if (typeof window !== 'undefined') window._syncRetryCount = 0;
+      setPendingSync(true);
+
+      syncLifecycleState = 'OFFLINE';
+      if (typeof window !== 'undefined') window.syncLifecycleState = 'OFFLINE';
+      setSyncStatus('error', 'Erro ao enviar para nuvem (pendente)');
+      return { error: 'OFFLINE' };
+    } finally {
+      if (attempt === 0) {
+        _activePushPromise = null;
+        if (typeof window !== 'undefined') window._activePushPromise = null;
+      }
+    }
+  })();
+
+  if (attempt === 0) {
+    _activePushPromise = pushCycle;
+    if (typeof window !== 'undefined') window._activePushPromise = pushCycle;
+  }
+
+  return pushCycle;
+}
+
+function startSyncInterval() {
+  stopSyncInterval();
+  if (typeof getAuthToken === 'function' && getAuthToken()) {
+    _syncIntervalTimer = setInterval(() => {
+      pullFromCloud(true);
+    }, 15000);
+    if (typeof window !== 'undefined') window._syncIntervalTimer = _syncIntervalTimer;
+  }
+}
+
+function stopSyncInterval() {
+  if (_syncIntervalTimer) {
+    clearInterval(_syncIntervalTimer);
+    _syncIntervalTimer = null;
+  }
+  if (typeof window !== 'undefined' && window._syncIntervalTimer) {
+    clearInterval(window._syncIntervalTimer);
+    window._syncIntervalTimer = null;
+  }
+  if (_syncBackoffTimer) {
+    clearTimeout(_syncBackoffTimer);
+    _syncBackoffTimer = null;
+  }
+  if (typeof window !== 'undefined' && window._syncBackoffTimer) {
+    clearTimeout(window._syncBackoffTimer);
+    window._syncBackoffTimer = null;
+  }
+}
+
+function initSyncUI() {
+  const curToken = 'team_default_sync';
+  if (typeof localStorage !== 'undefined') {
+    localStorage.setItem('jornada_sync_token', curToken);
+    const pendingKey = typeof window.getScopedKey === 'function' ? window.getScopedKey('jornada_sync_pending') : 'jornada_sync_pending';
+    if (localStorage.getItem(pendingKey) === '1') {
+      setPendingSync(true);
+    }
+  }
+
+  const token = typeof getAuthToken === 'function' ? getAuthToken() : (typeof localStorage !== 'undefined' ? localStorage.getItem('jornada_auth_token') : '');
+  if (token) {
+    syncLifecycleState = 'BOOTING';
+    if (typeof window !== 'undefined') window.syncLifecycleState = 'BOOTING';
+    pullFromCloud(true).then(() => {
+      startSyncInterval();
     });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    setSyncStatus('success', 'Dados salvos na nuvem!');
-  } catch (e) {
-    console.warn('Push Cloud failure:', e);
-    setSyncStatus('error', 'Erro ao salvar na nuvem');
+  } else {
+    syncLifecycleState = 'LOGGED_OUT';
+    isCloudSyncReady = false;
+    if (typeof window !== 'undefined') {
+      window.syncLifecycleState = 'LOGGED_OUT';
+      window.isCloudSyncReady = false;
+    }
   }
-};
+}
 
-window.exportBackup = function() {
-  const manual = typeof loadManual === 'function' ? loadManual() : [];
+if (typeof document !== 'undefined') {
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      stopSyncInterval();
+    } else {
+      const token = typeof getAuthToken === 'function' ? getAuthToken() : '';
+      const state = (typeof window !== 'undefined' ? window.syncLifecycleState : syncLifecycleState);
+      if (token && state !== 'LOGGED_OUT') {
+        pullFromCloud(true);
+        startSyncInterval();
+      }
+    }
+  });
+}
+
+// ── BACKUP & EXPORT FUNCTIONS ────────────────────────────────────────────────
+function exportBackup() {
+  const manual = (typeof window !== 'undefined' && typeof window.loadManual === 'function') ? window.loadManual() : (typeof loadManual === 'function' ? loadManual() : []);
   if (typeof ensureMatchSequence === 'function') ensureMatchSequence(manual);
 
   const data = {
+    exportedAt: new Date().toISOString(),
     manualMatches: manual,
     decks: typeof loadDecks === 'function' ? loadDecks() : [],
     players: typeof loadPlayers === 'function' ? loadPlayers() : [],
     locais: typeof loadLocais === 'function' ? loadLocais() : [],
-    colecoes: typeof loadColecoes === 'function' ? loadColecoes() : [],
-    exportedAt: new Date().toISOString()
+    colecoes: typeof loadColecoes === 'function' ? loadColecoes() : []
   };
 
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const jsonStr = JSON.stringify(data, null, 2);
+  const blob = new Blob([jsonStr], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
   a.download = `jornada_backup_${new Date().toISOString().slice(0, 10)}.json`;
   a.click();
   URL.revokeObjectURL(url);
-};
+}
 
-window.importBackup = function(file) {
+function importBackup(file) {
   if (!file) return;
   const reader = new FileReader();
   reader.onload = function(e) {
     try {
       const data = JSON.parse(e.target.result);
-      if (Array.isArray(data.manualMatches) && typeof ensureMatchSequence === 'function') {
-        ensureMatchSequence(data.manualMatches);
+      const migMatch = (typeof window !== 'undefined' && typeof window.migrateLegacyMatches === 'function') ? window.migrateLegacyMatches : (typeof migrateLegacyMatches === 'function' ? migrateLegacyMatches : null);
+      const ensSeq = (typeof window !== 'undefined' && typeof window.ensureMatchSequence === 'function') ? window.ensureMatchSequence : (typeof ensureMatchSequence === 'function' ? ensureMatchSequence : null);
+      const setItemFn = (typeof window !== 'undefined' && typeof window.safeSetItem === 'function') ? window.safeSetItem : (typeof safeSetItem === 'function' ? safeSetItem : null);
+
+      const kMatches = (typeof window !== 'undefined' && window.KEY_MATCHES) ? window.KEY_MATCHES : 'jornada_manual_matches';
+      const kDecks = (typeof window !== 'undefined' && window.KEY_DECKS) ? window.KEY_DECKS : 'jornada_decks';
+      const kPlayers = (typeof window !== 'undefined' && window.KEY_PLAYERS) ? window.KEY_PLAYERS : 'jornada_players';
+      const kLocais = (typeof window !== 'undefined' && window.KEY_LOCAIS) ? window.KEY_LOCAIS : 'jornada_locais';
+      const kColecoes = (typeof window !== 'undefined' && window.KEY_COLECOES) ? window.KEY_COLECOES : 'jornada_colecoes';
+
+      if (Array.isArray(data.manualMatches)) {
+        if (migMatch) data.manualMatches = migMatch(data.manualMatches);
+        if (ensSeq) ensSeq(data.manualMatches);
       }
-      if (data.manualMatches && typeof saveManual === 'function') saveManual(data.manualMatches);
-      if (data.decks && typeof saveDecks === 'function') saveDecks(data.decks);
-      if (data.players && typeof savePlayers === 'function') savePlayers(data.players);
-      if (data.locais && typeof saveLocais === 'function') saveLocais(data.locais);
-      if (data.colecoes && typeof saveColecoes === 'function') saveColecoes(data.colecoes);
-      
+      if (data.manualMatches && setItemFn) setItemFn(kMatches, JSON.stringify(data.manualMatches));
+      if (data.decks && setItemFn) setItemFn(kDecks, JSON.stringify(data.decks));
+      if (data.players && setItemFn) setItemFn(kPlayers, JSON.stringify(data.players));
+      if (data.locais && setItemFn) setItemFn(kLocais, JSON.stringify(data.locais));
+      if (data.colecoes && setItemFn) setItemFn(kColecoes, JSON.stringify(data.colecoes));
+
       if (typeof initializeData === 'function') initializeData();
       if (typeof applyFilters === 'function') applyFilters();
       if (typeof showToast === 'function') showToast('📦 Backup importado com sucesso!');
+      if (typeof window !== 'undefined' && window.isCloudSyncReady) {
+        triggerSyncPush();
+      }
     } catch (err) {
-      alert('Erro ao ler arquivo de backup JSON.');
+      if (typeof alert === 'function') alert('Erro ao ler arquivo de backup JSON.');
     }
   };
   reader.readAsText(file);
-};
+}
+
+// Global Exports for Browser & JSDOM
+if (typeof window !== 'undefined') {
+  window.MAX_RETRY_ATTEMPTS = MAX_RETRY_ATTEMPTS;
+  window.BASE_BACKOFF_MS = BASE_BACKOFF_MS;
+  window.MAX_BACKOFF_MS = MAX_BACKOFF_MS;
+  window.calculateBackoffDelay = calculateBackoffDelay;
+  window.syncLifecycleState = syncLifecycleState;
+  window.isCloudSyncReady = isCloudSyncReady;
+  window.syncStatusState = syncStatusState;
+  window.setSyncStatus = setSyncStatus;
+  window.triggerSyncPush = triggerSyncPush;
+  window.getSyncUrl = getSyncUrl;
+  window.getSyncHeaders = getSyncHeaders;
+  window.canonicalMatchString = canonicalMatchString;
+  window.deterministicMergeMatches = deterministicMergeMatches;
+  window.saveLocalSafetyBackup = saveLocalSafetyBackup;
+  window.pullFromCloud = pullFromCloud;
+  window.pushToCloud = pushToCloud;
+  window.startSyncInterval = startSyncInterval;
+  window.stopSyncInterval = stopSyncInterval;
+  window.initSyncUI = initSyncUI;
+  window.exportBackup = exportBackup;
+  window.importBackup = importBackup;
+  window.setPendingSync = setPendingSync;
+  window._authSessionGen = _authSessionGen;
+  window._currentCloudRevision = _currentCloudRevision;
+  window._syncRetryCount = _syncRetryCount;
+  window._lastOperationIdempotencyKey = _lastOperationIdempotencyKey;
+}
+if (typeof globalThis !== 'undefined') {
+  globalThis.MAX_RETRY_ATTEMPTS = MAX_RETRY_ATTEMPTS;
+  globalThis.BASE_BACKOFF_MS = BASE_BACKOFF_MS;
+  globalThis.MAX_BACKOFF_MS = MAX_BACKOFF_MS;
+  globalThis.calculateBackoffDelay = calculateBackoffDelay;
+  globalThis.syncLifecycleState = syncLifecycleState;
+  globalThis.isCloudSyncReady = isCloudSyncReady;
+  globalThis.canonicalMatchString = canonicalMatchString;
+  globalThis.deterministicMergeMatches = deterministicMergeMatches;
+  globalThis.saveLocalSafetyBackup = saveLocalSafetyBackup;
+  globalThis.pullFromCloud = pullFromCloud;
+  globalThis.pushToCloud = pushToCloud;
+}

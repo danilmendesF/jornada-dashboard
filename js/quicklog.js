@@ -121,7 +121,9 @@ window.quickLogMatch = function(resultado) {
   const advDeckObj = allDecks.find(d => d.name === deckAdv || d.arquetipo === deckAdv);
 
   const matchData = {
-    id:             Date.now().toString() + Math.random().toString(36).substr(2, 4),
+    id:             (typeof window.generateUUID === 'function' ? window.generateUUID() : generateUUID()),
+    createdAt:      new Date().toISOString(),
+    updatedAt:      new Date().toISOString(),
     Data:           new Date().toISOString().slice(0, 10),
     Player:         player,
     Deck:           deckName,

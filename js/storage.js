@@ -1,86 +1,266 @@
 // ── JS/STORAGE.JS ────────────────────────────────────────────────────────────
-// Safe LocalStorage wrappers & CRUD helper functions
+// Safe LocalStorage wrappers, Legacy Migration & User Storage Namespaces (CHG-006.2)
 
-window.safeSetItem = function(key, val) {
+function safeSetItem(key, val) {
   try {
-    localStorage.setItem(key, val);
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(key, val);
+    }
   } catch (e) {
     console.error('LocalStorage error:', e);
     if (typeof showToast === 'function') {
       showToast('⚠️ Erro ao salvar dados no navegador!');
     }
   }
-};
+}
 
-window.loadDecks = function() {
-  try { return JSON.parse(localStorage.getItem(KEY_DECKS)) || []; } catch(e) { return []; }
-};
-window.saveDecks = function(d) {
-  safeSetItem(KEY_DECKS, JSON.stringify(d));
+function migrateLegacyMatches(matches) {
+  if (!Array.isArray(matches) || matches.length === 0) return matches;
+
+  const isValidUuidFn = typeof isValidUUID === 'function' ? isValidUUID : (typeof window !== 'undefined' ? window.isValidUUID : null);
+  const genUuidFn = typeof generateUUID === 'function' ? generateUUID : (typeof window !== 'undefined' ? window.generateUUID : () => 'uuid_' + Date.now());
+
+  let needsMigration = false;
+  for (let i = 0; i < matches.length; i++) {
+    if (matches[i] && isValidUuidFn && !isValidUuidFn(matches[i].id)) {
+      needsMigration = true;
+      break;
+    }
+  }
+
+  if (!needsMigration) return matches;
+
+  const idMap = new Map();
+  matches.forEach(m => {
+    if (!m) return;
+    const oldId = String(m.id || '');
+    if (isValidUuidFn && !isValidUuidFn(oldId)) {
+      const newId = genUuidFn();
+      idMap.set(oldId, newId);
+      m.id = newId;
+      if (!m.createdAt) {
+        m.createdAt = m.Data ? `${m.Data}T12:00:00.000Z` : new Date().toISOString();
+      }
+      if (!m.updatedAt) {
+        m.updatedAt = m.createdAt;
+      }
+    } else {
+      idMap.set(oldId, oldId);
+    }
+  });
+
+  // Repair mirror references
+  matches.forEach(m => {
+    if (!m) return;
+    if (m._mirroredFrom && idMap.has(String(m._mirroredFrom))) {
+      m._mirroredFrom = idMap.get(String(m._mirroredFrom));
+    }
+    if (m._mirrorId && idMap.has(String(m._mirrorId))) {
+      m._mirrorId = idMap.get(String(m._mirrorId));
+    }
+  });
+
+  return matches;
+}
+
+function migrateLegacyUserStorage(userId) {
+  if (!userId || userId === 'anonymous' || typeof localStorage === 'undefined') return;
+  const targetNs = `jornada_u_${userId}`;
+
+  // 1. Matches migration
+  const legacyMatchesRaw = localStorage.getItem('jornada_manual_matches');
+  const targetMatchesRaw = localStorage.getItem(`${targetNs}_matches`);
+
+  if (legacyMatchesRaw && !targetMatchesRaw) {
+    try {
+      let legacyMatches = JSON.parse(legacyMatchesRaw);
+      if (Array.isArray(legacyMatches) && legacyMatches.length > 0) {
+        legacyMatches = migrateLegacyMatches(legacyMatches);
+        localStorage.setItem(`${targetNs}_matches`, JSON.stringify(legacyMatches));
+        localStorage.removeItem('jornada_manual_matches');
+      }
+    } catch (e) {
+      console.warn('[Storage Migration] Erro ao migrar matches legadas:', e);
+    }
+  }
+
+  // 2. Decks migration
+  const legacyDecks = localStorage.getItem('jornada_decks');
+  if (legacyDecks && !localStorage.getItem(`${targetNs}_decks`)) {
+    localStorage.setItem(`${targetNs}_decks`, legacyDecks);
+    localStorage.removeItem('jornada_decks');
+  }
+
+  // 3. Players migration
+  const legacyPlayers = localStorage.getItem('jornada_players');
+  if (legacyPlayers && !localStorage.getItem(`${targetNs}_players`)) {
+    localStorage.setItem(`${targetNs}_players`, legacyPlayers);
+    localStorage.removeItem('jornada_players');
+  }
+
+  // 4. Locais & Colecoes
+  const legacyLocais = localStorage.getItem('jornada_locais');
+  if (legacyLocais && !localStorage.getItem(`${targetNs}_locais`)) {
+    localStorage.setItem(`${targetNs}_locais`, legacyLocais);
+    localStorage.removeItem('jornada_locais');
+  }
+  const legacyColecoes = localStorage.getItem('jornada_colecoes');
+  if (legacyColecoes && !localStorage.getItem(`${targetNs}_colecoes`)) {
+    localStorage.setItem(`${targetNs}_colecoes`, legacyColecoes);
+    localStorage.removeItem('jornada_colecoes');
+  }
+
+  // 5. Deleted IDs & Edits
+  const legacyDeleted = localStorage.getItem('jornada_deleted_ids');
+  if (legacyDeleted && !localStorage.getItem(`${targetNs}_deleted_ids`)) {
+    localStorage.setItem(`${targetNs}_deleted_ids`, legacyDeleted);
+    localStorage.removeItem('jornada_deleted_ids');
+  }
+  const legacyEdits = localStorage.getItem('jornada_edited_matches');
+  if (legacyEdits && !localStorage.getItem(`${targetNs}_edited_matches`)) {
+    localStorage.setItem(`${targetNs}_edited_matches`, legacyEdits);
+    localStorage.removeItem('jornada_edited_matches');
+  }
+}
+
+function loadDecks() {
+  const k = (typeof window !== 'undefined' && window.KEY_DECKS) ? window.KEY_DECKS : (typeof getScopedKey === 'function' ? getScopedKey('jornada_decks') : 'jornada_decks');
+  try { return JSON.parse(localStorage.getItem(k)) || []; } catch(e) { return []; }
+}
+function saveDecks(d) {
+  const k = (typeof window !== 'undefined' && window.KEY_DECKS) ? window.KEY_DECKS : (typeof getScopedKey === 'function' ? getScopedKey('jornada_decks') : 'jornada_decks');
+  safeSetItem(k, JSON.stringify(d));
   if (typeof triggerSyncPush === 'function') triggerSyncPush();
-};
+}
 
-window.loadManual = function() {
+function loadManual() {
+  const k = (typeof window !== 'undefined' && window.KEY_MATCHES) ? window.KEY_MATCHES : (typeof getScopedKey === 'function' ? getScopedKey('jornada_manual_matches') : 'jornada_manual_matches');
   try {
-    const m = JSON.parse(localStorage.getItem(KEY_MATCHES)) || [];
-    if (Array.isArray(m) && typeof ensureMatchSequence === 'function') {
-      ensureMatchSequence(m);
+    let m = JSON.parse(localStorage.getItem(k)) || [];
+    if (Array.isArray(m)) {
+      const originalJson = JSON.stringify(m);
+      m = migrateLegacyMatches(m);
+      if (typeof ensureMatchSequence === 'function') {
+        ensureMatchSequence(m);
+      }
+      if (JSON.stringify(m) !== originalJson) {
+        safeSetItem(k, JSON.stringify(m));
+      }
     }
     return m;
   } catch(e) { return []; }
-};
-window.saveManual = function(m) {
-  if (Array.isArray(m) && typeof ensureMatchSequence === 'function') {
-    ensureMatchSequence(m);
+}
+function saveManual(m) {
+  const k = (typeof window !== 'undefined' && window.KEY_MATCHES) ? window.KEY_MATCHES : (typeof getScopedKey === 'function' ? getScopedKey('jornada_manual_matches') : 'jornada_manual_matches');
+  if (Array.isArray(m)) {
+    m = migrateLegacyMatches(m);
+    if (typeof ensureMatchSequence === 'function') {
+      ensureMatchSequence(m);
+    }
   }
-  safeSetItem(KEY_MATCHES, JSON.stringify(m));
+  safeSetItem(k, JSON.stringify(m));
   if (typeof triggerSyncPush === 'function') triggerSyncPush();
-};
+}
 
-window.loadPlayers = function() {
-  try { return JSON.parse(localStorage.getItem(KEY_PLAYERS)) || ['Danilo', 'GuiVaz', 'Victor', 'Lipe']; } catch(e) { return ['Danilo', 'GuiVaz', 'Victor', 'Lipe']; }
-};
-window.savePlayers = function(p) {
-  safeSetItem(KEY_PLAYERS, JSON.stringify(p));
+function loadPlayers() {
+  const k = (typeof window !== 'undefined' && window.KEY_PLAYERS) ? window.KEY_PLAYERS : (typeof getScopedKey === 'function' ? getScopedKey('jornada_players') : 'jornada_players');
+  try { return JSON.parse(localStorage.getItem(k)) || ['Danilo', 'GuiVaz', 'Victor', 'Lipe']; } catch(e) { return ['Danilo', 'GuiVaz', 'Victor', 'Lipe']; }
+}
+function savePlayers(p) {
+  const k = (typeof window !== 'undefined' && window.KEY_PLAYERS) ? window.KEY_PLAYERS : (typeof getScopedKey === 'function' ? getScopedKey('jornada_players') : 'jornada_players');
+  safeSetItem(k, JSON.stringify(p));
   if (typeof triggerSyncPush === 'function') triggerSyncPush();
-};
+}
 
-window.loadLocais = function() {
-  try { return JSON.parse(localStorage.getItem(KEY_LOCAIS)) || ['TCG Live', 'Liga Local', 'Regional', 'Treino', 'Outro']; } catch(e) { return ['TCG Live', 'Liga Local', 'Regional', 'Treino', 'Outro']; }
-};
-window.saveLocais = function(l) {
-  safeSetItem(KEY_LOCAIS, JSON.stringify(l));
+function loadLocais() {
+  const k = (typeof window !== 'undefined' && window.KEY_LOCAIS) ? window.KEY_LOCAIS : (typeof getScopedKey === 'function' ? getScopedKey('jornada_locais') : 'jornada_locais');
+  try { return JSON.parse(localStorage.getItem(k)) || ['TCG Live', 'Liga Local', 'Regional', 'Treino', 'Outro']; } catch(e) { return ['TCG Live', 'Liga Local', 'Regional', 'Treino', 'Outro']; }
+}
+function saveLocais(l) {
+  const k = (typeof window !== 'undefined' && window.KEY_LOCAIS) ? window.KEY_LOCAIS : (typeof getScopedKey === 'function' ? getScopedKey('jornada_locais') : 'jornada_locais');
+  safeSetItem(k, JSON.stringify(l));
   if (typeof triggerSyncPush === 'function') triggerSyncPush();
-};
+}
 
-window.loadColecoes = function() {
-  try { return JSON.parse(localStorage.getItem(KEY_COLECOES)) || ['SV01: Scarlet & Violet', 'SV02: Paldea Evolved', 'SV03: Obsidian Flames', 'SV04: Paradox Rift', 'SV05: Temporal Forces']; } catch(e) { return ['SV01: Scarlet & Violet', 'SV02: Paldea Evolved', 'SV03: Obsidian Flames', 'SV04: Paradox Rift', 'SV05: Temporal Forces']; }
-};
-window.saveColecoes = function(c) {
-  safeSetItem(KEY_COLECOES, JSON.stringify(c));
+function loadColecoes() {
+  const k = (typeof window !== 'undefined' && window.KEY_COLECOES) ? window.KEY_COLECOES : (typeof getScopedKey === 'function' ? getScopedKey('jornada_colecoes') : 'jornada_colecoes');
+  try { return JSON.parse(localStorage.getItem(k)) || ['SV01: Scarlet & Violet', 'SV02: Paldea Evolved', 'SV03: Obsidian Flames', 'SV04: Paradox Rift', 'SV05: Temporal Forces']; } catch(e) { return ['SV01: Scarlet & Violet', 'SV02: Paldea Evolved', 'SV03: Obsidian Flames', 'SV04: Paradox Rift', 'SV05: Temporal Forces']; }
+}
+function saveColecoes(c) {
+  const k = (typeof window !== 'undefined' && window.KEY_COLECOES) ? window.KEY_COLECOES : (typeof getScopedKey === 'function' ? getScopedKey('jornada_colecoes') : 'jornada_colecoes');
+  safeSetItem(k, JSON.stringify(c));
   if (typeof triggerSyncPush === 'function') triggerSyncPush();
-};
+}
 
-window.loadDeleted = function() {
-  try { return new Set(JSON.parse(localStorage.getItem(KEY_DELETED)) || []); } catch(e) { return new Set(); }
-};
-window.saveDeleted = function(s) {
-  safeSetItem(KEY_DELETED, JSON.stringify(Array.from(s)));
+function loadDeleted() {
+  const k = (typeof window !== 'undefined' && window.KEY_DELETED) ? window.KEY_DELETED : (typeof getScopedKey === 'function' ? getScopedKey('jornada_deleted_ids') : 'jornada_deleted_ids');
+  try { return new Set(JSON.parse(localStorage.getItem(k)) || []); } catch(e) { return new Set(); }
+}
+function saveDeleted(s) {
+  const k = (typeof window !== 'undefined' && window.KEY_DELETED) ? window.KEY_DELETED : (typeof getScopedKey === 'function' ? getScopedKey('jornada_deleted_ids') : 'jornada_deleted_ids');
+  safeSetItem(k, JSON.stringify(Array.from(s)));
   if (typeof triggerSyncPush === 'function') triggerSyncPush();
-};
+}
 
-window.loadEdits = function() {
-  try { return JSON.parse(localStorage.getItem(KEY_EDITS)) || {}; } catch(e) { return {}; }
-};
-window.saveEdits = function(e) {
-  safeSetItem(KEY_EDITS, JSON.stringify(e));
+function loadEdits() {
+  const k = (typeof window !== 'undefined' && window.KEY_EDITS) ? window.KEY_EDITS : (typeof getScopedKey === 'function' ? getScopedKey('jornada_edited_matches') : 'jornada_edited_matches');
+  try { return JSON.parse(localStorage.getItem(k)) || {}; } catch(e) { return {}; }
+}
+function saveEdits(e) {
+  const k = (typeof window !== 'undefined' && window.KEY_EDITS) ? window.KEY_EDITS : (typeof getScopedKey === 'function' ? getScopedKey('jornada_edited_matches') : 'jornada_edited_matches');
+  safeSetItem(k, JSON.stringify(e));
   if (typeof triggerSyncPush === 'function') triggerSyncPush();
-};
+}
 
-window.loadArchetypeUnifications = function() {
-  try { return JSON.parse(localStorage.getItem('jornada_archetype_unifications')) || []; } catch(e) { return []; }
-};
-window.saveArchetypeUnifications = function(rules) {
-  safeSetItem('jornada_archetype_unifications', JSON.stringify(rules));
+function loadArchetypeUnifications() {
+  const k = (typeof window !== 'undefined' && typeof window.getScopedKey === 'function') ? window.getScopedKey('jornada_archetype_unifications') : 'jornada_archetype_unifications';
+  try { return JSON.parse(localStorage.getItem(k)) || []; } catch(e) { return []; }
+}
+function saveArchetypeUnifications(rules) {
+  const k = (typeof window !== 'undefined' && typeof window.getScopedKey === 'function') ? window.getScopedKey('jornada_archetype_unifications') : 'jornada_archetype_unifications';
+  safeSetItem(k, JSON.stringify(rules));
   if (typeof triggerSyncPush === 'function') triggerSyncPush();
-};
+}
+
+if (typeof window !== 'undefined') {
+  window.safeSetItem = safeSetItem;
+  window.migrateLegacyMatches = migrateLegacyMatches;
+  window.migrateLegacyUserStorage = migrateLegacyUserStorage;
+  window.loadDecks = loadDecks;
+  window.saveDecks = saveDecks;
+  window.loadManual = loadManual;
+  window.saveManual = saveManual;
+  window.loadPlayers = loadPlayers;
+  window.savePlayers = savePlayers;
+  window.loadLocais = loadLocais;
+  window.saveLocais = saveLocais;
+  window.loadColecoes = loadColecoes;
+  window.saveColecoes = saveColecoes;
+  window.loadDeleted = loadDeleted;
+  window.saveDeleted = saveDeleted;
+  window.loadEdits = loadEdits;
+  window.saveEdits = saveEdits;
+  window.loadArchetypeUnifications = loadArchetypeUnifications;
+  window.saveArchetypeUnifications = saveArchetypeUnifications;
+}
+if (typeof globalThis !== 'undefined') {
+  globalThis.safeSetItem = safeSetItem;
+  globalThis.migrateLegacyMatches = migrateLegacyMatches;
+  globalThis.migrateLegacyUserStorage = migrateLegacyUserStorage;
+  globalThis.loadDecks = loadDecks;
+  globalThis.saveDecks = saveDecks;
+  globalThis.loadManual = loadManual;
+  globalThis.saveManual = saveManual;
+  globalThis.loadPlayers = loadPlayers;
+  globalThis.savePlayers = savePlayers;
+  globalThis.loadLocais = loadLocais;
+  globalThis.saveLocais = saveLocais;
+  globalThis.loadColecoes = loadColecoes;
+  globalThis.saveColecoes = saveColecoes;
+  globalThis.loadDeleted = loadDeleted;
+  globalThis.saveDeleted = saveDeleted;
+  globalThis.loadEdits = loadEdits;
+  globalThis.saveEdits = saveEdits;
+  globalThis.loadArchetypeUnifications = loadArchetypeUnifications;
+  globalThis.saveArchetypeUnifications = saveArchetypeUnifications;
+}

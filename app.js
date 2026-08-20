@@ -57,12 +57,6 @@ window.getMatchTimestamp = function(match) {
     if (!isNaN(t) && t > 1000000000000) return t;
   }
 
-  if (match.id) {
-    const idStr = String(match.id).substring(0, 13);
-    const idNum = parseInt(idStr, 10);
-    if (!isNaN(idNum) && idNum > 1000000000000) return idNum;
-  }
-
   if (match.Data) {
     const dateParsed = Date.parse(match.Data + 'T12:00:00Z');
     if (!isNaN(dateParsed) && dateParsed > 1000000000000) {
@@ -71,12 +65,23 @@ window.getMatchTimestamp = function(match) {
     }
   }
 
+  if (match.id) {
+    const idStr = String(match.id).substring(0, 13);
+    const idNum = parseInt(idStr, 10);
+    if (!isNaN(idNum) && idNum > 1000000000000) return idNum;
+  }
+
   return 0;
 };
 
 window.ensureMatchSequence = function(matches) {
   if (!Array.isArray(matches) || matches.length === 0) return matches;
-  matches.sort((a, b) => window.getMatchTimestamp(a) - window.getMatchTimestamp(b));
+  matches.sort((a, b) => {
+    const tsA = window.getMatchTimestamp(a);
+    const tsB = window.getMatchTimestamp(b);
+    if (tsA !== tsB) return tsA - tsB;
+    return String(a.id || '').localeCompare(String(b.id || ''));
+  });
   matches.forEach((m, idx) => {
     m.seqID = idx + 1;
     m.seqId = m.seqID;
@@ -106,10 +111,11 @@ function initializeData() {
   }
   const manual = (typeof loadManual === 'function') ? loadManual() : [];
   allData = applyDataOverrides(manual);
-  if (typeof saveManual === 'function' && Array.isArray(allData) && allData.length > 0) {
-    saveManual(allData);
-  }
   filtered = [...allData];
+  if (typeof window !== 'undefined') {
+    window.allData = allData;
+    window.filtered = filtered;
+  }
   if (typeof initAuthSession === 'function') {
     initAuthSession();
   }

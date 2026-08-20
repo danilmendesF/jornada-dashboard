@@ -52,7 +52,14 @@ const requiredAdrs = [
   '0005-redis-rate-limiting-fail-open.md', '0006-strict-jwt-expiration-and-correlation-id.md',
   '0007-csp-and-html-sanitization.md', '0008-two-tier-rate-limiting-ip-and-account.md',
   '0009-active-session-verification-in-sync.md', '0010-csp-script-src-elem-hardening.md',
-  '0011-single-source-of-truth-versioning.md', '0012-limitless-tournament-meta-aggregation.md'
+  '0011-single-source-of-truth-versioning.md', '0012-limitless-tournament-meta-aggregation.md',
+  '0013-emergency-sync-guard-and-deterministic-lifecycle.md',
+  '0014-uuidv4-immutable-identities-and-seqid-decoupling.md',
+  '0015-user-storage-namespaces.md',
+  '0016-redis-lua-atomic-commit-and-occ.md',
+  '0017-sync-conflict-retry-and-backoff.md',
+  '0018-e2e-multi-device-concurrency-homologation.md',
+  '0019-real-infrastructure-e2e-validation.md'
 ];
 requiredAdrs.forEach(f => {
   assert(fs.existsSync(path.join(rootDir, 'docs', 'decisions', f)), `ADR docs/decisions/${f} existe`);
@@ -93,7 +100,7 @@ try {
 console.log('\n9. Executando Matriz Completa de Testes Unitarios no Vitest...');
 try {
   const testOutput = execSync('npx vitest run', { cwd: rootDir, stdio: 'pipe' }).toString();
-  assert(testOutput.includes('passed'), 'Matriz completa de testes unitarios no Vitest aprovada (21/21 suites / 74 testes)');
+  assert(testOutput.includes('passed'), 'Matriz completa de testes unitarios no Vitest aprovada (24/24 suites)');
 } catch (e) {
   assert(false, `Falha nos testes unitarios: ${e.message}`);
 }

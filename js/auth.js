@@ -1,3 +1,4 @@
+const _rootAuth = typeof window !== 'undefined' ? window : (typeof globalThis !== 'undefined' ? globalThis : global);
 // ── JS/AUTH.JS ──────────────────────────────────────────────────────────────
 // Client Authentication & Team Session Management (Auth Wall & Modal)
 
@@ -10,14 +11,14 @@ try {
   }
 } catch (e) {}
 
-window.currentUser = null;
+_rootAuth.currentUser = null;
 
 
-window.getAuthToken = () => localStorage.getItem('jornada_auth_token') || '';
-window.getCurrentUser = () => { try { return JSON.parse(localStorage.getItem('jornada_user_profile')) || null; } catch { return null; } };
-window.getClaimedPlayers = () => { try { return JSON.parse(localStorage.getItem('jornada_claimed_players')) || []; } catch { return []; } };
+_rootAuth.getAuthToken = () => localStorage.getItem('jornada_auth_token') || '';
+_rootAuth.getCurrentUser = () => { try { return JSON.parse(localStorage.getItem('jornada_user_profile')) || null; } catch { return null; } };
+_rootAuth.getClaimedPlayers = () => { try { return JSON.parse(localStorage.getItem('jornada_claimed_players')) || []; } catch { return []; } };
 
-window.addClaimedPlayer = function(playerName) {
+_rootAuth.addClaimedPlayer = function(playerName) {
   const claimed = getClaimedPlayers();
   if (!claimed.includes(playerName)) {
     claimed.push(playerName);
@@ -25,7 +26,7 @@ window.addClaimedPlayer = function(playerName) {
   }
 };
 
-window.populatePlayerRegisterDropdowns = function() {
+_rootAuth.populatePlayerRegisterDropdowns = function() {
   const wallSel = document.getElementById('wallRegName');
   const authSel = document.getElementById('authRegName');
   const currentPlayers = typeof loadPlayers === 'function' ? loadPlayers() : ['Danilo', 'GuiVaz', 'Victor', 'Lipe'];
@@ -39,7 +40,7 @@ window.populatePlayerRegisterDropdowns = function() {
   if (authSel) authSel.innerHTML = optionsHtml;
 };
 
-window.fetchClaimedPlayers = async function() {
+_rootAuth.fetchClaimedPlayers = async function() {
   try {
     const res = await fetch('/api/auth?action=claimed');
     if (res.ok) {
@@ -52,8 +53,8 @@ window.fetchClaimedPlayers = async function() {
   } catch (e) {}
 };
 
-window.initAuthSession = function() {
-  window.currentUser = getCurrentUser();
+_rootAuth.initAuthSession = function() {
+  _rootAuth.currentUser = getCurrentUser();
   populatePlayerRegisterDropdowns();
   updateAuthUI();
   fetchClaimedPlayers();
@@ -62,7 +63,7 @@ window.initAuthSession = function() {
 };
 
 // ── AUTH WALL INLINE FEEDBACK ────────────────────────────────────────────────
-window.showAuthWallFeedback = function(feedbackId, btnId, message, type, duration) {
+_rootAuth.showAuthWallFeedback = function(feedbackId, btnId, message, type, duration) {
   const el = document.getElementById(feedbackId);
   const btn = document.getElementById(btnId);
   if (!el) return;
@@ -101,7 +102,7 @@ window.showAuthWallFeedback = function(feedbackId, btnId, message, type, duratio
   }
 };
 
-window.clearAuthWallFeedback = function(feedbackId, btnId) {
+_rootAuth.clearAuthWallFeedback = function(feedbackId, btnId) {
   const el = document.getElementById(feedbackId);
   const btn = document.getElementById(btnId);
   if (el) { el.style.display = 'none'; el.innerHTML = ''; }
@@ -114,7 +115,7 @@ async function verifyAuthToken(token) {
     if (res.ok) {
       const data = await res.json();
       if (data.valid && data.user) {
-        window.currentUser = data.user;
+        _rootAuth.currentUser = data.user;
         localStorage.setItem('jornada_user_profile', JSON.stringify(data.user));
         updateAuthUI();
       }
@@ -124,31 +125,31 @@ async function verifyAuthToken(token) {
   }
 }
 
-window.updateAuthUI = function() {
+_rootAuth.updateAuthUI = function() {
   const badge = document.getElementById('userProfileBadge');
   const wall = document.getElementById('authPageWall');
   const dashboard = document.getElementById('appDashboardContainer');
 
   const activeName = typeof getActivePlayerName === 'function' ? getActivePlayerName() : null;
 
-  if (window.currentUser || activeName) {
+  if (_rootAuth.currentUser || activeName) {
     document.documentElement.classList.add('auth-session-active');
     if (wall) wall.style.display = 'none';
     if (dashboard) dashboard.style.display = 'block';
 
-    if (badge && window.currentUser) {
-      const isDanil = window.currentUser.email === 'danilmendes@gmail.com';
+    if (badge && _rootAuth.currentUser) {
+      const isDanil = _rootAuth.currentUser.email === 'danilmendes@gmail.com';
       badge.innerHTML = `
         <div class="user-dropdown-container" id="profileDropdownContainer">
           <div class="user-dropdown-trigger">
             <img src="assets/trainer-avatar.svg" alt="Treinador" class="user-avatar" />
-            <span class="user-name hide-on-mobile">${window.currentUser.name}</span>
+            <span class="user-name hide-on-mobile">${_rootAuth.currentUser.name}</span>
             <span class="dropdown-arrow hide-on-mobile">▼</span>
           </div>
           <div class="user-dropdown-menu">
             <div class="dropdown-header">
-              <strong style="display:block;color:var(--text);">${window.currentUser.name}</strong>
-              <small style="color:var(--text2);font-size:0.75rem;">${window.currentUser.email}</small>
+              <strong style="display:block;color:var(--text);">${_rootAuth.currentUser.name}</strong>
+              <small style="color:var(--text2);font-size:0.75rem;">${_rootAuth.currentUser.email}</small>
             </div>
             <a href="#" class="dropdown-item">👤 Meu Perfil</a>
             ${isDanil ? '<a href="#" class="dropdown-item" onclick="document.getElementById(\'btnOpenManager\').click()">📋 Gerenciar</a>' : ''}
@@ -197,7 +198,9 @@ window.updateAuthUI = function() {
       }
     }
   } else {
-    document.documentElement.classList.remove('auth-session-active');
+    if (typeof document !== 'undefined' && document.documentElement) {
+      document.documentElement.classList.remove('auth-session-active');
+    }
     if (wall) wall.style.display = 'flex';
     if (dashboard) dashboard.style.display = 'none';
 
@@ -214,12 +217,12 @@ window.updateAuthUI = function() {
   }
 };
 
-window.openAuthModal = function(tab = 'login') {
+_rootAuth.openAuthModal = function(tab = 'login') {
   if (typeof showModal === 'function') showModal('modalAuth');
   switchAuthTab(tab);
 };
 
-window.switchAuthTab = function(tab) {
+_rootAuth.switchAuthTab = function(tab) {
   const tabs = ['tabAuthLogin', 'tabAuthRegister', 'tabWallLogin', 'tabWallRegister'];
   const loginForms = [document.getElementById('authLoginForm'), document.getElementById('wallLoginForm')];
   const regForms = [document.getElementById('authRegisterForm'), document.getElementById('wallRegisterForm')];
@@ -240,7 +243,7 @@ window.switchAuthTab = function(tab) {
   }
 };
 
-window.clearAuthForms = function() {
+_rootAuth.clearAuthForms = function() {
   const ids = ['wallLoginEmail', 'wallLoginPassword', 'wallRegEmail', 'wallRegPassword', 'wallRegConfirm', 'authLoginEmail', 'authLoginPassword', 'authRegEmail', 'authRegPassword', 'authRegConfirm'];
   ids.forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
   const wH = document.getElementById('wallPasswordMatchHint');
@@ -249,8 +252,8 @@ window.clearAuthForms = function() {
   if (aH) aH.innerHTML = '';
 };
 
-window.submitUserLogin = () => executeLogin(document.getElementById('authLoginEmail')?.value?.trim(), document.getElementById('authLoginPassword')?.value?.trim());
-window.submitWallLogin = () => executeLogin(document.getElementById('wallLoginEmail')?.value?.trim(), document.getElementById('wallLoginPassword')?.value?.trim());
+_rootAuth.submitUserLogin = () => executeLogin(document.getElementById('authLoginEmail')?.value?.trim(), document.getElementById('authLoginPassword')?.value?.trim());
+_rootAuth.submitWallLogin = () => executeLogin(document.getElementById('wallLoginEmail')?.value?.trim(), document.getElementById('wallLoginPassword')?.value?.trim());
 
 async function executeLogin(email, password) {
   if (!email || !password) {
@@ -272,8 +275,30 @@ async function executeLogin(email, password) {
 
     localStorage.setItem('jornada_auth_token', data.token);
     localStorage.setItem('jornada_user_profile', JSON.stringify(data.user));
-    window.currentUser = data.user;
+    _rootAuth.currentUser = data.user;
+
+    // CHG-006.2: Migrate legacy storage to user namespace and re-initialize data
+    if (typeof _rootAuth.migrateLegacyUserStorage === 'function') {
+      _rootAuth.migrateLegacyUserStorage(data.user.id);
+    }
+    if (typeof _rootAuth.initializeData === 'function') {
+      _rootAuth.initializeData();
+    }
+
     showAuthWallFeedback('wallLoginFeedback', 'btnWallLogin', `Bem-vindo de volta, ${data.user.name}!`, 'success', 1200);
+
+    // Pre-Pull Obrigatório antes de declarar READY (CHG-005)
+    if (typeof _rootAuth.pullFromCloud === 'function') {
+      try {
+        await _rootAuth.pullFromCloud(false);
+      } catch (err) {
+        console.warn('[Login Sync] Pull offline fallback:', err);
+      }
+    }
+    if (typeof _rootAuth.startSyncInterval === 'function') {
+      _rootAuth.startSyncInterval();
+    }
+
     setTimeout(() => {
       clearAuthForms();
       updateAuthUI();
@@ -284,8 +309,8 @@ async function executeLogin(email, password) {
   }
 }
 
-window.submitUserRegister = () => executeRegister(document.getElementById('authRegName')?.value?.trim(), document.getElementById('authRegEmail')?.value?.trim(), document.getElementById('authRegPassword')?.value?.trim(), document.getElementById('authRegConfirm')?.value?.trim());
-window.submitWallRegister = () => executeRegister(document.getElementById('wallRegName')?.value?.trim(), document.getElementById('wallRegEmail')?.value?.trim(), document.getElementById('wallRegPassword')?.value?.trim(), document.getElementById('wallRegConfirm')?.value?.trim());
+_rootAuth.submitUserRegister = () => executeRegister(document.getElementById('authRegName')?.value?.trim(), document.getElementById('authRegEmail')?.value?.trim(), document.getElementById('authRegPassword')?.value?.trim(), document.getElementById('authRegConfirm')?.value?.trim());
+_rootAuth.submitWallRegister = () => executeRegister(document.getElementById('wallRegName')?.value?.trim(), document.getElementById('wallRegEmail')?.value?.trim(), document.getElementById('wallRegPassword')?.value?.trim(), document.getElementById('wallRegConfirm')?.value?.trim());
 
 async function executeRegister(selectedName, email, password, confirm) {
   let targetName = selectedName;
@@ -353,23 +378,73 @@ async function executeRegister(selectedName, email, password, confirm) {
   }
 }
 
-window.logoutUser = function() {
+function logoutUser() {
+  const _root = _rootAuth;
+  if (typeof _root !== 'undefined') {
+    _root._authSessionGen = ((_root._authSessionGen || 0) + 1);
+  }
+  if (_root._syncPushTimer) {
+    clearTimeout(_root._syncPushTimer);
+    _root._syncPushTimer = null;
+  }
+  if (typeof _root.stopSyncInterval === 'function') {
+    _root.stopSyncInterval();
+  }
+  _root.syncLifecycleState = 'LOGGED_OUT';
+  _root.isCloudSyncReady = false;
+  _root._hasPendingSync = false;
+
+  if (typeof localStorage !== 'undefined') {
+    localStorage.removeItem('jornada_auth_token');
+    localStorage.removeItem('jornada_user_profile');
+  }
+  _root.currentUser = null;
+
+  if (typeof allData !== 'undefined') allData = [];
+  if (typeof filtered !== 'undefined') filtered = [];
+  if (typeof _root.allData !== 'undefined') _root.allData = [];
+  if (typeof _root.filtered !== 'undefined') _root.filtered = [];
+
+  if (typeof clearAuthForms === 'function') clearAuthForms();
+  if (typeof updateAuthUI === 'function') updateAuthUI();
+  if (typeof showToast === 'function') showToast('👋 Sessão encerrada.');
+}
+_rootAuth.logoutUser = logoutUser;
+
+function _oldLogoutUnused() {
+  if (_rootAuth._syncPushTimer) {
+    clearTimeout(_rootAuth._syncPushTimer);
+    _rootAuth._syncPushTimer = null;
+  }
+  if (typeof _rootAuth.stopSyncInterval === 'function') {
+    _rootAuth.stopSyncInterval();
+  }
+  _rootAuth.syncLifecycleState = 'LOGGED_OUT';
+  _rootAuth.isCloudSyncReady = false;
+  _rootAuth._hasPendingSync = false;
+
   localStorage.removeItem('jornada_auth_token');
   localStorage.removeItem('jornada_user_profile');
-  window.currentUser = null;
+  _rootAuth.currentUser = null;
+
+  if (typeof allData !== 'undefined') allData = [];
+  if (typeof filtered !== 'undefined') filtered = [];
+  if (typeof _rootAuth.allData !== 'undefined') _rootAuth.allData = [];
+  if (typeof _rootAuth.filtered !== 'undefined') _rootAuth.filtered = [];
+
   clearAuthForms();
   updateAuthUI();
   showToast?.('👋 Sessão encerrada.');
 };
 
-window.togglePasswordVisibility = function(inputId, btn) {
+_rootAuth.togglePasswordVisibility = function(inputId, btn) {
   const input = document.getElementById(inputId);
   if (!input) return;
   input.type = input.type === 'password' ? 'text' : 'password';
   btn.innerHTML = input.type === 'password' ? '👁️' : '🙈';
 };
 
-window.checkPasswordMatch = function(prefix) {
+_rootAuth.checkPasswordMatch = function(prefix) {
   const p1 = document.getElementById(`${prefix}RegPassword`)?.value;
   const p2 = document.getElementById(`${prefix}RegConfirm`)?.value;
   const hint = document.getElementById(`${prefix}PasswordMatchHint`);
@@ -381,3 +456,6 @@ window.checkPasswordMatch = function(prefix) {
 };
 
 
+
+if (typeof window !== 'undefined') window.logoutUser = logoutUser;
+if (typeof globalThis !== 'undefined') globalThis.logoutUser = logoutUser;

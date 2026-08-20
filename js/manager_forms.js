@@ -137,8 +137,16 @@ window.saveMatchForm = function() {
     derivedBrickOp = gamesDetail.some(g => g.brickOp === 'Sim') ? 'Sim' : 'Não';
   }
 
+  let existingMatch = null;
+  if (window.editingMatchId) {
+    const curMatches = typeof loadManual === 'function' ? loadManual() : [];
+    existingMatch = curMatches.find(m => m.id === window.editingMatchId);
+  }
+
   const matchData = {
-    id:               window.editingMatchId || (Date.now().toString() + Math.random().toString(36).substr(2, 4)),
+    id:               window.editingMatchId || (typeof window.generateUUID === 'function' ? window.generateUUID() : generateUUID()),
+    createdAt:        existingMatch?.createdAt || (matchDataLegacy?.createdAt || new Date().toISOString()),
+    updatedAt:        new Date().toISOString(),
     Data:             dataStr,
     Player:           player,
     Deck:             ownDeckName,

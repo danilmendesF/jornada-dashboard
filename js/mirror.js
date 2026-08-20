@@ -1,5 +1,5 @@
 // ── JS/MIRROR.JS ────────────────────────────────────────────────────────────
-// Team Player Mirror Match generation & retro-sync
+// Team Player Mirror Match generation & retro-sync (CHG-006.1 - UUIDv4)
 
 function invertPlacar(placar) {
   if (!placar || typeof placar !== 'string' || !placar.includes('-')) return placar;
@@ -12,7 +12,8 @@ window.invertPlacar = invertPlacar;
 function buildMirrorMatch(primaryMatch) {
   if (!primaryMatch || !primaryMatch.Adversario) return null;
   
-  const currentPlayers = typeof loadPlayers === 'function' ? loadPlayers() : (window.players || []);
+  const getPlayersFn = (typeof window !== 'undefined' && typeof window.loadPlayers === 'function') ? window.loadPlayers : (typeof loadPlayers === 'function' ? loadPlayers : null);
+  const currentPlayers = getPlayersFn ? getPlayersFn() : (typeof window !== 'undefined' ? (window.players || []) : []);
   const advNameLower = primaryMatch.Adversario.trim().toLowerCase();
   
   const isTeamMember = currentPlayers.some(p => p.trim().toLowerCase() === advNameLower);
@@ -53,11 +54,9 @@ function buildMirrorMatch(primaryMatch) {
     mirrorBrickOp = mirrorGamesDetail.some(g => g.brickOp === 'Sim') ? 'Sim' : 'Não';
   }
 
-  let mirrorId = primaryMatch._mirrorId;
-  if (!mirrorId) {
-    const baseNum = Number(primaryMatch.id);
-    mirrorId = (!isNaN(baseNum) && baseNum > 0) ? (baseNum + 1).toString() : (Date.now() + 1).toString();
-  }
+  const uuidGen = typeof window !== 'undefined' && window.generateUUID ? window.generateUUID : (typeof generateUUID === 'function' ? generateUUID : () => 'uuid_mirror_' + Date.now());
+  const mirrorId = primaryMatch._mirrorId || uuidGen();
+  primaryMatch._mirrorId = mirrorId;
 
   return {
     id:               mirrorId,
@@ -86,14 +85,16 @@ function buildMirrorMatch(primaryMatch) {
     ListaMeuDeck:     primaryMatch.ListaDeckAdv || '',
     ListaDeckAdv:     primaryMatch.ListaMeuDeck || '',
     Comentarios:      primaryMatch.Comentarios ? `[Espelho vs ${primaryMatch.Player}] ${primaryMatch.Comentarios}` : `Partida interna vs ${primaryMatch.Player}`,
+    createdAt:        primaryMatch.createdAt || new Date().toISOString(),
+    updatedAt:        primaryMatch.updatedAt || new Date().toISOString(),
     _manual:          true
   };
 }
 window.buildMirrorMatch = buildMirrorMatch;
 
-
 window.syncAllTeamMirrorMatches = function() {
-  const currentPlayers = typeof loadPlayers === 'function' ? loadPlayers() : (window.players || []);
+  const getPlayersFn = (typeof window !== 'undefined' && typeof window.loadPlayers === 'function') ? window.loadPlayers : (typeof loadPlayers === 'function' ? loadPlayers : null);
+  const currentPlayers = getPlayersFn ? getPlayersFn() : (typeof window !== 'undefined' ? (window.players || []) : []);
   if (!Array.isArray(currentPlayers) || currentPlayers.length === 0) return;
 
   let manual = typeof loadManual === 'function' ? loadManual() : [];
