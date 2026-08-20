@@ -5,6 +5,14 @@ O formato e baseado em Keep a Changelog e este projeto adere ao Versionamento Se
 
 ---
 
+## [2.1.6] - 2026-08-20
+### Corrigido (Hotfix de Produção)
+- **Race Condition no Session Guard do Boot:** O `pullFromCloud` durante o BOOTING capturava `requestToken` antes do JWT estar disponível no localStorage. O Session Guard descartava silenciosamente toda a resposta do PULL, resultando em 0 partidas exibidas na Visão Geral. Corrigido com verificação `isBoot` que bypassa a checagem de igualdade de token durante o estado de inicialização.
+- **Overwrite Destrutivo de Decks/Players no PULL:** `decks` e `players` retornados pela Cloud sobrescreviam diretamente os dados locais sem merge, podendo apagar dados locais com um payload menor da Cloud. Corrigido com merge não-destrutivo (preserva o conjunto maior).
+- **CSP bloqueando Upstash Redis:** Adicionados `https://*.upstash.io` e `https://api.upstash.com` à diretiva `connect-src` do `vercel.json`.
+
+---
+
 ## [2.1.5] - 2026-08-20
 ### Adicionado
 - **CHG-006.4 Emergency Convergence:** Reconciliação automática de conflitos OCC (`HTTP 409`) com `PULL` imediato, `deterministicMergeMatches` cumulativo (`LOCAL ∪ CLOUD`) e **Retry Único** controlado (`MAX_RETRY_ATTEMPTS = 1`).
