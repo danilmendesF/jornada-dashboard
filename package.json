@@ -1,6 +1,6 @@
 {
   "name": "jornada-dashboard",
-  "version": "2.1.4",
+  "version": "2.1.5",
   "type": "module",
   "dependencies": {
     "redis": "^4.6.10"

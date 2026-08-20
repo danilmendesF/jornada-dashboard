@@ -5,6 +5,18 @@ O formato e baseado em Keep a Changelog e este projeto adere ao Versionamento Se
 
 ---
 
+## [2.1.5] - 2026-08-20
+### Adicionado
+- **CHG-006.4 Emergency Convergence:** Reconciliação automática de conflitos OCC (`HTTP 409`) com `PULL` imediato, `deterministicMergeMatches` cumulativo (`LOCAL ∪ CLOUD`) e **Retry Único** controlado (`MAX_RETRY_ATTEMPTS = 1`).
+- **Pre-Push Local Safety Backup:** Função `saveLocalSafetyBackup()` criando snapshots de segurança escopados (`jornada_u_${uid}_safety_backup`) antes de mutações de reconciliação.
+- **Suíte de Testes de Convergência Multi-Device:** 15 cenários de testes automatizados (`TEST-001` a `TEST-015`) em `tests/sync_conflict_retry.test.js`.
+
+### Corrigido
+- **Mitigação de Perda de Dados em Produção:** Eliminação de bloqueios de sincronização e divergências entre múltiplos dispositivos simultâneos (ex.: Thales e Danilo).
+- **Proteção contra Overwrites Destrutivos:** Garantia estrita de união determinística por identidade estável UUIDv4, impossibilitando que snapshots menores sobrescrevam a Cloud ou apaguem dados locais.
+
+---
+
 ## [1.8.0] - 2026-08-14
 ### Adicionado
 - **SDD Specifications:** Especificacoes formais em `docs/specs/` (SPEC-001 a SPEC-006).
