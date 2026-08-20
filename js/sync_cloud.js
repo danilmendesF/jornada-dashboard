@@ -220,8 +220,14 @@ async function pullFromCloud(quiet = false) {
       const currentSessionGen = (typeof window !== 'undefined' && window._authSessionGen !== undefined) ? window._authSessionGen : _authSessionGen;
       const currentState = (typeof window !== 'undefined' ? window.syncLifecycleState : syncLifecycleState);
 
-      if (!currentToken || currentState === 'LOGGED_OUT' || currentToken !== requestToken || currentSessionGen !== requestSessionGen) {
-        console.warn('[Sync Guard] Resposta de pull descartada: sessão foi encerrada ou alterada durante a requisição em voo.');
+      // Allow BOOTING state to receive pull data even if requestToken was empty at boot time (timing race fix)
+      const isBoot = currentState === 'BOOTING' || (prevState === 'BOOTING' && currentState === 'PULLING');
+      if (!currentToken || currentState === 'LOGGED_OUT') {
+        console.warn('[Sync Guard] Resposta de pull descartada: sessão encerrada ou usuário não autenticado.');
+        return;
+      }
+      if (!isBoot && (currentToken !== requestToken || currentSessionGen !== requestSessionGen)) {
+        console.warn('[Sync Guard] Resposta de pull descartada: sessão foi alterada durante a requisição em voo.');
         return;
       }
 
@@ -242,13 +248,19 @@ async function pullFromCloud(quiet = false) {
           const safeSet = (typeof window !== 'undefined' && typeof window.safeSetItem === 'function') ? window.safeSetItem : (typeof safeSetItem === 'function' ? safeSetItem : ((k, v) => { if (typeof localStorage !== 'undefined') localStorage.setItem(k, v); }));
           safeSet(kMatches, JSON.stringify(mergedMatches));
         }
-        if (Array.isArray(data.decks) && typeof safeSetItem === 'function') {
+        if (Array.isArray(data.decks) && data.decks.length > 0 && typeof safeSetItem === 'function') {
           const kDecks = (typeof window !== 'undefined' && window.KEY_DECKS) ? window.KEY_DECKS : (typeof getScopedKey === 'function' ? getScopedKey('jornada_decks') : 'jornada_decks');
-          safeSetItem(kDecks, JSON.stringify(data.decks));
+          const localDecks = (typeof window !== 'undefined' && typeof window.loadDecks === 'function') ? window.loadDecks() : (typeof loadDecks === 'function' ? loadDecks() : []);
+          // Merge: prefer remote if bigger or local empty; never destroy local decks with empty remote
+          const mergedDecks = localDecks.length >= data.decks.length ? localDecks : data.decks;
+          safeSetItem(kDecks, JSON.stringify(mergedDecks));
         }
-        if (Array.isArray(data.players) && typeof safeSetItem === 'function') {
+        if (Array.isArray(data.players) && data.players.length > 0 && typeof safeSetItem === 'function') {
           const kPlayers = (typeof window !== 'undefined' && window.KEY_PLAYERS) ? window.KEY_PLAYERS : (typeof getScopedKey === 'function' ? getScopedKey('jornada_players') : 'jornada_players');
-          safeSetItem(kPlayers, JSON.stringify(data.players));
+          const localPlayers = (typeof window !== 'undefined' && typeof window.loadPlayers === 'function') ? window.loadPlayers() : (typeof loadPlayers === 'function' ? loadPlayers() : []);
+          // Merge: use remote if it has more players, otherwise keep local
+          const mergedPlayers = localPlayers.length >= data.players.length ? localPlayers : data.players;
+          safeSetItem(kPlayers, JSON.stringify(mergedPlayers));
         }
         if (data.edits && typeof data.edits === 'object' && typeof safeSetItem === 'function') {
           const kEdits = (typeof window !== 'undefined' && window.KEY_EDITS) ? window.KEY_EDITS : (typeof getScopedKey === 'function' ? getScopedKey('jornada_edited_matches') : 'jornada_edited_matches');
