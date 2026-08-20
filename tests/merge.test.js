@@ -77,4 +77,37 @@ describe('Domain Logic - Deterministic Match Merge (GAP-P2)', () => {
     expect(merged.length).toBe(2);
     expect(merged.some(m => m.id === '200')).toBe(false);
   });
+
+  it('deve realizar merge comutativo e deduplicado de decks e players no executeAtomicCommit', async () => {
+    const { executeAtomicCommit } = await import('../api/sync.js');
+    const existing = {
+      revision: 1,
+      manualMatches: [{ id: 'm1', Player: 'Danilo' }],
+      decks: [{ id: 'd1', name: 'Charizard ex' }, { id: 'd2', name: 'Lugia VSTAR' }],
+      players: ['Danilo', 'Victor'],
+      locais: ['TCG Live'],
+      colecoes: ['SV01: Scarlet & Violet'],
+      deletedIds: ['del_old']
+    };
+    const incoming = {
+      manualMatches: [{ id: 'm2', Player: 'GuiVaz' }],
+      decks: [{ id: 'd2', name: 'Lugia VSTAR' }, { id: 'd3', name: 'Gardevoir ex' }],
+      players: ['victor', 'GuiVaz', 'Lipe'],
+      locais: ['Regional SP'],
+      colecoes: ['SV02: Paldea Evolved'],
+      deletedIds: ['del_new']
+    };
+
+    const commitResult = executeAtomicCommit(existing, incoming, 1, 'idem_test');
+    expect(commitResult.status).toBe('SUCCESS');
+    expect(commitResult.revision).toBe(2);
+
+    const consolidated = commitResult.consolidated;
+    expect(consolidated.manualMatches.length).toBe(2);
+    expect(consolidated.decks.map(d => d.name)).toEqual(['Charizard ex', 'Lugia VSTAR', 'Gardevoir ex']);
+    expect(consolidated.players).toEqual(['Danilo', 'Victor', 'GuiVaz', 'Lipe']);
+    expect(consolidated.locais).toEqual(['TCG Live', 'Regional SP']);
+    expect(consolidated.colecoes).toEqual(['SV01: Scarlet & Violet', 'SV02: Paldea Evolved']);
+    expect(consolidated.deletedIds).toEqual(['del_old', 'del_new']);
+  });
 });

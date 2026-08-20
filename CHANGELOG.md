@@ -3,6 +3,17 @@
 Todas as alteracoes notaveis neste projeto serao documentadas neste arquivo.
 O formato e baseado em Keep a Changelog e este projeto adere ao Versionamento Semantico.
 
+## [2.1.9] - 2026-08-20
+### Corrigido (Produção — Assets Estáticos, CSP, Aba Anônima & Multi-Device Sync)
+- **Cópia de Assets Estáticos na Raiz Pública:** Atualizado `scripts/build_bundle.cjs` para copiar recursivamente `rootDir/assets` e `logo.png` diretamente para `public/assets/` e `public/logo.png`. Corrige o erro 404 de `/assets/trainer-avatar.svg` e `auth_background.jpg` na Vercel.
+- **CSP Permissão de Sourcemaps:** Adicionado `https://cdn.jsdelivr.net` à diretiva `connect-src` no `vercel.json`, eliminando violações de CSP no carregamento de sourcemaps do Chart.js.
+- **Reatividade de Filtros em Aba Anônima:** Inclusão de `populateFilters()`, `populateDeckSelects()`, `populatePlayerSelects()` e `populateQuickLogDropdowns()` após o `pullFromCloud()` e no `updateAuthUI()`, garantindo que novos logins em aba anônima populam `window.selectedDecks` e `window.selectedPlayers` e renderizam todas as partidas imediatamente.
+- **Fusão Atômica e Deduplicada de Entidades Multi-Device:**
+  - Substituída a comparação destrutiva `.length >= .length` no cliente (`pullFromCloud`) por fusão comutativa e deduplicada de `decks`, `players`, `locais` e `colecoes`.
+  - Atualizado o script Lua do Redis (`LUA_SYNC_COMMIT`) e o fallback JS (`executeAtomicCommit`) no `api/sync.js` para mesclar decks, players, locais e coleções sem sobrescrever cadastros de outros integrantes do time.
+  - Implementado cruzamento bidirecional de tombstones (`deletedIds`) no Redis e cliente para impedir ressuscitação de partidas deletadas.
+- **Payload Completo no Push:** Inclusão de `locais` e `colecoes` customizados no payload de `pushToCloud()`.
+
 ---
 
 ## [2.1.8] - 2026-08-20

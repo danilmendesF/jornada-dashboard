@@ -141,11 +141,29 @@ if #existingMatches > 0 and #incomingMatches == 0 then
     })
 end
 
--- 4. Server-Side Merge
+-- 4. Server-Side Merge & Cross-Tombstone Filtering
 local deletedSet = {}
-if incomingData.deletedIds and type(incomingData.deletedIds) == 'table' then
+local combinedDeleted = {}
+local delSeen = {}
+
+if currentData and currentData.deletedIds and type(currentData.deletedIds) == 'table' then
+    for _, delId in ipairs(currentData.deletedIds) do
+        local sid = tostring(delId)
+        deletedSet[sid] = true
+        if not delSeen[sid] then
+            delSeen[sid] = true
+            table.insert(combinedDeleted, sid)
+        end
+    end
+end
+if incomingData and incomingData.deletedIds and type(incomingData.deletedIds) == 'table' then
     for _, delId in ipairs(incomingData.deletedIds) do
-        deletedSet[tostring(delId)] = true
+        local sid = tostring(delId)
+        deletedSet[sid] = true
+        if not delSeen[sid] then
+            delSeen[sid] = true
+            table.insert(combinedDeleted, sid)
+        end
     end
 end
 
@@ -190,25 +208,106 @@ for _, mid in ipairs(matchOrder) do
     end
 end
 
--- 5. Cumulative Tombstones & New Consolidated State
-local combinedDeleted = {}
-local delSeen = {}
-if currentData and currentData.deletedIds and type(currentData.deletedIds) == 'table' then
-    for _, delId in ipairs(currentData.deletedIds) do
-        local sid = tostring(delId)
-        if not delSeen[sid] then
-            delSeen[sid] = true
-            table.insert(combinedDeleted, sid)
+-- 5. Deduplicated Merge of Auxiliary Entities (Decks, Players, Locais, Coleções)
+local mergedDecks = {}
+local deckSeen = {}
+if currentData and currentData.decks and type(currentData.decks) == 'table' then
+    for _, d in ipairs(currentData.decks) do
+        local dKey = (type(d) == 'table' and (d.id or d.name or d.arquetipo)) or tostring(d)
+        if dKey and not deckSeen[string.lower(tostring(dKey))] then
+            deckSeen[string.lower(tostring(dKey))] = true
+            table.insert(mergedDecks, d)
         end
     end
 end
-if incomingData and incomingData.deletedIds and type(incomingData.deletedIds) == 'table' then
-    for _, delId in ipairs(incomingData.deletedIds) do
-        local sid = tostring(delId)
-        if not delSeen[sid] then
-            delSeen[sid] = true
-            table.insert(combinedDeleted, sid)
+if incomingData and incomingData.decks and type(incomingData.decks) == 'table' then
+    for _, d in ipairs(incomingData.decks) do
+        local dKey = (type(d) == 'table' and (d.id or d.name or d.arquetipo)) or tostring(d)
+        if dKey and not deckSeen[string.lower(tostring(dKey))] then
+            deckSeen[string.lower(tostring(dKey))] = true
+            table.insert(mergedDecks, d)
         end
+    end
+end
+
+local mergedPlayers = {}
+local playerSeen = {}
+if currentData and currentData.players and type(currentData.players) == 'table' then
+    for _, p in ipairs(currentData.players) do
+        local pStr = tostring(p):match('^%s*(.-)%s*$')
+        local pLow = string.lower(pStr)
+        if pStr ~= '' and not playerSeen[pLow] then
+            playerSeen[pLow] = true
+            table.insert(mergedPlayers, pStr)
+        end
+    end
+end
+if incomingData and incomingData.players and type(incomingData.players) == 'table' then
+    for _, p in ipairs(incomingData.players) do
+        local pStr = tostring(p):match('^%s*(.-)%s*$')
+        local pLow = string.lower(pStr)
+        if pStr ~= '' and not playerSeen[pLow] then
+            playerSeen[pLow] = true
+            table.insert(mergedPlayers, pStr)
+        end
+    end
+end
+
+local mergedLocais = {}
+local localSeen = {}
+if currentData and currentData.locais and type(currentData.locais) == 'table' then
+    for _, l in ipairs(currentData.locais) do
+        local lStr = tostring(l):match('^%s*(.-)%s*$')
+        local lLow = string.lower(lStr)
+        if lStr ~= '' and not localSeen[lLow] then
+            localSeen[lLow] = true
+            table.insert(mergedLocais, lStr)
+        end
+    end
+end
+if incomingData and incomingData.locais and type(incomingData.locais) == 'table' then
+    for _, l in ipairs(incomingData.locais) do
+        local lStr = tostring(l):match('^%s*(.-)%s*$')
+        local lLow = string.lower(lStr)
+        if lStr ~= '' and not localSeen[lLow] then
+            localSeen[lLow] = true
+            table.insert(mergedLocais, lStr)
+        end
+    end
+end
+
+local mergedColecoes = {}
+local colSeen = {}
+if currentData and currentData.colecoes and type(currentData.colecoes) == 'table' then
+    for _, c in ipairs(currentData.colecoes) do
+        local cStr = tostring(c):match('^%s*(.-)%s*$')
+        local cLow = string.lower(cStr)
+        if cStr ~= '' and not colSeen[cLow] then
+            colSeen[cLow] = true
+            table.insert(mergedColecoes, cStr)
+        end
+    end
+end
+if incomingData and incomingData.colecoes and type(incomingData.colecoes) == 'table' then
+    for _, c in ipairs(incomingData.colecoes) do
+        local cStr = tostring(c):match('^%s*(.-)%s*$')
+        local cLow = string.lower(cStr)
+        if cStr ~= '' and not colSeen[cLow] then
+            colSeen[cLow] = true
+            table.insert(mergedColecoes, cStr)
+        end
+    end
+end
+
+local mergedEdits = {}
+if currentData and currentData.editedMatches and type(currentData.editedMatches) == 'table' then
+    for k, v in pairs(currentData.editedMatches) do
+        mergedEdits[k] = v
+    end
+end
+if incomingData and incomingData.editedMatches and type(incomingData.editedMatches) == 'table' then
+    for k, v in pairs(incomingData.editedMatches) do
+        mergedEdits[k] = v
     end
 end
 
@@ -218,12 +317,13 @@ local consolidated = {
     lastIdempotencyKey = idempotencyKey,
     updatedAt = incomingData.updatedAt or (currentData and currentData.updatedAt) or '',
     manualMatches = mergedMatches,
-    decks = incomingData.decks or (currentData and currentData.decks) or {},
-    players = incomingData.players or (currentData and currentData.players) or {},
-    locais = incomingData.locais or (currentData and currentData.locais) or {},
-    colecoes = incomingData.colecoes or (currentData and currentData.colecoes) or {},
+    decks = mergedDecks,
+    players = mergedPlayers,
+    locais = mergedLocais,
+    colecoes = mergedColecoes,
     deletedIds = combinedDeleted,
-    editedMatches = incomingData.editedMatches or (currentData and currentData.editedMatches) or {}
+    editedMatches = mergedEdits,
+    archetypeUnifications = incomingData.archetypeUnifications or (currentData and currentData.archetypeUnifications) or {}
 }
 
 local finalJson = cjson.encode(consolidated)
@@ -262,7 +362,12 @@ export function executeAtomicCommit(existingData, incomingBody, baseRevision, id
 
   const existingMatches = (existingData && Array.isArray(existingData.manualMatches)) ? existingData.manualMatches : [];
   const incomingMatches = (incomingBody && Array.isArray(incomingBody.manualMatches)) ? incomingBody.manualMatches : [];
-  const deletedSet = new Set(Array.isArray(incomingBody?.deletedIds) ? incomingBody.deletedIds.map(String) : []);
+
+  const combinedDeleted = Array.from(new Set([
+    ...((existingData && Array.isArray(existingData.deletedIds)) ? existingData.deletedIds.map(String) : []),
+    ...((incomingBody && Array.isArray(incomingBody.deletedIds)) ? incomingBody.deletedIds.map(String) : [])
+  ])).slice(-500);
+  const deletedSet = new Set(combinedDeleted);
 
   if (existingMatches.length > 0 && incomingMatches.length === 0) {
     return {
@@ -294,10 +399,47 @@ export function executeAtomicCommit(existingData, incomingBody, baseRevision, id
   });
 
   const mergedMatches = Array.from(matchMap.values());
-  const combinedDeleted = Array.from(new Set([
-    ...((existingData && Array.isArray(existingData.deletedIds)) ? existingData.deletedIds.map(String) : []),
-    ...((incomingBody && Array.isArray(incomingBody.deletedIds)) ? incomingBody.deletedIds.map(String) : [])
-  ])).slice(-500);
+
+  // Deduplicated entity merge
+  const deckMap = new Map();
+  [...(Array.isArray(existingData?.decks) ? existingData.decks : []), ...(Array.isArray(incomingBody?.decks) ? incomingBody.decks : [])].forEach(d => {
+    if (!d) return;
+    const key = (typeof d === 'object' ? (d.id || d.name || d.arquetipo) : String(d)).toLowerCase().trim();
+    if (key && !deckMap.has(key)) deckMap.set(key, d);
+  });
+  const mergedDecks = Array.from(deckMap.values());
+
+  const playerMap = new Map();
+  [...(Array.isArray(existingData?.players) ? existingData.players : []), ...(Array.isArray(incomingBody?.players) ? incomingBody.players : [])].forEach(p => {
+    if (!p) return;
+    const pStr = String(p).trim();
+    const key = pStr.toLowerCase();
+    if (pStr && !playerMap.has(key)) playerMap.set(key, pStr);
+  });
+  const mergedPlayers = Array.from(playerMap.values());
+
+  const localMap = new Map();
+  [...(Array.isArray(existingData?.locais) ? existingData.locais : []), ...(Array.isArray(incomingBody?.locais) ? incomingBody.locais : [])].forEach(l => {
+    if (!l) return;
+    const lStr = String(l).trim();
+    const key = lStr.toLowerCase();
+    if (lStr && !localMap.has(key)) localMap.set(key, lStr);
+  });
+  const mergedLocais = Array.from(localMap.values());
+
+  const colMap = new Map();
+  [...(Array.isArray(existingData?.colecoes) ? existingData.colecoes : []), ...(Array.isArray(incomingBody?.colecoes) ? incomingBody.colecoes : [])].forEach(c => {
+    if (!c) return;
+    const cStr = String(c).trim();
+    const key = cStr.toLowerCase();
+    if (cStr && !colMap.has(key)) colMap.set(key, cStr);
+  });
+  const mergedColecoes = Array.from(colMap.values());
+
+  const mergedEdits = {
+    ...((existingData && existingData.editedMatches) || {}),
+    ...((incomingBody && (incomingBody.editedMatches || incomingBody.edits)) || {})
+  };
 
   const newRevision = currentRevision + 1;
   const consolidated = {
@@ -305,7 +447,12 @@ export function executeAtomicCommit(existingData, incomingBody, baseRevision, id
     revision: newRevision,
     lastIdempotencyKey: idempotencyKey,
     manualMatches: mergedMatches,
+    decks: mergedDecks,
+    players: mergedPlayers,
+    locais: mergedLocais,
+    colecoes: mergedColecoes,
     deletedIds: combinedDeleted,
+    editedMatches: mergedEdits,
     updatedAt: incomingBody?.updatedAt || new Date().toISOString()
   };
 
@@ -321,7 +468,11 @@ export function executeAtomicCommit(existingData, incomingBody, baseRevision, id
 export function emergencyServerMerge(existingData, incomingBody) {
   const existingMatches = (existingData && Array.isArray(existingData.manualMatches)) ? existingData.manualMatches : [];
   const incomingMatches = (incomingBody && Array.isArray(incomingBody.manualMatches)) ? incomingBody.manualMatches : [];
-  const deletedSet = new Set(Array.isArray(incomingBody?.deletedIds) ? incomingBody.deletedIds.map(String) : []);
+  const combinedDeleted = Array.from(new Set([
+    ...((existingData && Array.isArray(existingData.deletedIds)) ? existingData.deletedIds.map(String) : []),
+    ...((incomingBody && Array.isArray(incomingBody.deletedIds)) ? incomingBody.deletedIds.map(String) : [])
+  ])).slice(-500);
+  const deletedSet = new Set(combinedDeleted);
 
   const matchMap = new Map();
   existingMatches.forEach(m => {
@@ -349,6 +500,7 @@ export function emergencyServerMerge(existingData, incomingBody) {
   return {
     ...incomingBody,
     manualMatches: mergedMatches,
+    deletedIds: combinedDeleted,
     updatedAt: incomingBody?.updatedAt || new Date().toISOString()
   };
 }

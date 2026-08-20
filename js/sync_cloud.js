@@ -205,6 +205,8 @@ async function pullFromCloud(quiet = false) {
   const _kMatches  = (typeof window !== 'undefined' && window.KEY_MATCHES)  ? window.KEY_MATCHES  : (typeof getScopedKey === 'function' ? getScopedKey('jornada_manual_matches') : 'jornada_manual_matches');
   const _kDecks    = (typeof window !== 'undefined' && window.KEY_DECKS)    ? window.KEY_DECKS    : (typeof getScopedKey === 'function' ? getScopedKey('jornada_decks')          : 'jornada_decks');
   const _kPlayers  = (typeof window !== 'undefined' && window.KEY_PLAYERS)  ? window.KEY_PLAYERS  : (typeof getScopedKey === 'function' ? getScopedKey('jornada_players')        : 'jornada_players');
+  const _kLocais   = (typeof window !== 'undefined' && window.KEY_LOCAIS)   ? window.KEY_LOCAIS   : (typeof getScopedKey === 'function' ? getScopedKey('jornada_locais')         : 'jornada_locais');
+  const _kColecoes = (typeof window !== 'undefined' && window.KEY_COLECOES) ? window.KEY_COLECOES : (typeof getScopedKey === 'function' ? getScopedKey('jornada_colecoes')       : 'jornada_colecoes');
   const _kEdits    = (typeof window !== 'undefined' && window.KEY_EDITS)    ? window.KEY_EDITS    : (typeof getScopedKey === 'function' ? getScopedKey('jornada_edited_matches')  : 'jornada_edited_matches');
   const _kDeleted  = (typeof window !== 'undefined' && window.KEY_DELETED)  ? window.KEY_DELETED  : (typeof getScopedKey === 'function' ? getScopedKey('jornada_deleted_ids')     : 'jornada_deleted_ids');
   const _kArch     = (typeof window !== 'undefined' && typeof window.getScopedKey === 'function') ? window.getScopedKey('jornada_archetype_unifications') : 'jornada_archetype_unifications';
@@ -268,15 +270,52 @@ async function pullFromCloud(quiet = false) {
             safeSet(_kMatches, JSON.stringify(mergedMatches));
           }
         }
-        if (Array.isArray(data.decks) && data.decks.length > 0 && typeof safeSetItem === 'function') {
+        if (Array.isArray(data.decks) && typeof safeSetItem === 'function') {
           const localDecks = (typeof window !== 'undefined' && typeof window.loadDecks === 'function') ? window.loadDecks() : (typeof loadDecks === 'function' ? loadDecks() : []);
-          const mergedDecks = localDecks.length >= data.decks.length ? localDecks : data.decks;
-          safeSetItem(_kDecks, JSON.stringify(mergedDecks));
+          const deckMap = new Map();
+          [...localDecks, ...data.decks].forEach(d => {
+            if (!d) return;
+            const key = (typeof d === 'object' ? (d.id || d.name || d.arquetipo) : String(d)).toLowerCase().trim();
+            if (key && !deckMap.has(key)) deckMap.set(key, d);
+          });
+          const mergedDecks = Array.from(deckMap.values());
+          if (mergedDecks.length > 0) safeSetItem(_kDecks, JSON.stringify(mergedDecks));
         }
-        if (Array.isArray(data.players) && data.players.length > 0 && typeof safeSetItem === 'function') {
+        if (Array.isArray(data.players) && typeof safeSetItem === 'function') {
           const localPlayers = (typeof window !== 'undefined' && typeof window.loadPlayers === 'function') ? window.loadPlayers() : (typeof loadPlayers === 'function' ? loadPlayers() : []);
-          const mergedPlayers = localPlayers.length >= data.players.length ? localPlayers : data.players;
-          safeSetItem(_kPlayers, JSON.stringify(mergedPlayers));
+          const playerMap = new Map();
+          [...localPlayers, ...data.players].forEach(p => {
+            if (!p) return;
+            const pStr = String(p).trim();
+            const key = pStr.toLowerCase();
+            if (pStr && !playerMap.has(key)) playerMap.set(key, pStr);
+          });
+          const mergedPlayers = Array.from(playerMap.values());
+          if (mergedPlayers.length > 0) safeSetItem(_kPlayers, JSON.stringify(mergedPlayers));
+        }
+        if (Array.isArray(data.locais) && typeof safeSetItem === 'function') {
+          const localLocais = (typeof window !== 'undefined' && typeof window.loadLocais === 'function') ? window.loadLocais() : (typeof loadLocais === 'function' ? loadLocais() : []);
+          const localMap = new Map();
+          [...localLocais, ...data.locais].forEach(l => {
+            if (!l) return;
+            const lStr = String(l).trim();
+            const key = lStr.toLowerCase();
+            if (lStr && !localMap.has(key)) localMap.set(key, lStr);
+          });
+          const mergedLocais = Array.from(localMap.values());
+          if (mergedLocais.length > 0) safeSetItem(_kLocais, JSON.stringify(mergedLocais));
+        }
+        if (Array.isArray(data.colecoes) && typeof safeSetItem === 'function') {
+          const localColecoes = (typeof window !== 'undefined' && typeof window.loadColecoes === 'function') ? window.loadColecoes() : (typeof loadColecoes === 'function' ? loadColecoes() : []);
+          const colMap = new Map();
+          [...localColecoes, ...data.colecoes].forEach(c => {
+            if (!c) return;
+            const cStr = String(c).trim();
+            const key = cStr.toLowerCase();
+            if (cStr && !colMap.has(key)) colMap.set(key, cStr);
+          });
+          const mergedColecoes = Array.from(colMap.values());
+          if (mergedColecoes.length > 0) safeSetItem(_kColecoes, JSON.stringify(mergedColecoes));
         }
         if (data.edits && typeof data.edits === 'object' && typeof safeSetItem === 'function') {
           safeSetItem(_kEdits, JSON.stringify(data.edits));
@@ -289,6 +328,14 @@ async function pullFromCloud(quiet = false) {
         }
 
         if (typeof initializeData === 'function') initializeData();
+        if (typeof populateFilters === 'function') populateFilters();
+        if (typeof populateDeckSelects === 'function') populateDeckSelects();
+        if (typeof populatePlayerSelects === 'function') populatePlayerSelects();
+        if (typeof populateQuickLogDropdowns === 'function') populateQuickLogDropdowns();
+        if (typeof renderDecksList === 'function') renderDecksList();
+        if (typeof renderPlayersList === 'function') renderPlayersList();
+        if (typeof renderLocaisList === 'function') renderLocaisList();
+        if (typeof renderColecoesList === 'function') renderColecoesList();
         if (typeof applyFilters === 'function') applyFilters();
 
         const activeState = (typeof window !== 'undefined' ? window.syncLifecycleState : syncLifecycleState);
@@ -384,6 +431,8 @@ async function pushToCloud(attempt = 0, preservedIdempotencyKey = null) {
       manualMatches: manual,
       decks: (typeof window !== 'undefined' && typeof window.loadDecks === 'function') ? window.loadDecks() : (typeof loadDecks === 'function' ? loadDecks() : []),
       players: (typeof window !== 'undefined' && typeof window.loadPlayers === 'function') ? window.loadPlayers() : (typeof loadPlayers === 'function' ? loadPlayers() : []),
+      locais: (typeof window !== 'undefined' && typeof window.loadLocais === 'function') ? window.loadLocais() : (typeof loadLocais === 'function' ? loadLocais() : []),
+      colecoes: (typeof window !== 'undefined' && typeof window.loadColecoes === 'function') ? window.loadColecoes() : (typeof loadColecoes === 'function' ? loadColecoes() : []),
       edits: (typeof window !== 'undefined' && typeof window.loadEdits === 'function') ? window.loadEdits() : (typeof loadEdits === 'function' ? loadEdits() : {}),
       deletedIds: (typeof window !== 'undefined' && typeof window.loadDeleted === 'function') ? Array.from(window.loadDeleted()).slice(-300) : (typeof loadDeleted === 'function' ? Array.from(loadDeleted()).slice(-300) : []),
       deletedDecks: (typeof window !== 'undefined' && typeof window.loadDeletedDecks === 'function') ? Array.from(window.loadDeletedDecks()).slice(-300) : (typeof loadDeletedDecks === 'function' ? Array.from(loadDeletedDecks()).slice(-300) : []),

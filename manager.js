@@ -2157,6 +2157,9 @@ window.addEventListener('DOMContentLoaded', () => {
   window.loadManual  = loadManual;
   window.showToast   = showToast;
 
+  if (typeof initAuthSession === 'function') initAuthSession();
+  if (typeof initializeData === 'function') initializeData();
+  if (typeof populateFilters === 'function') populateFilters();
   populatePlayerSelects();
   populateDeckSelects();
   renderDecksList();

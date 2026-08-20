@@ -38,5 +38,6 @@ describe('HTTP Security Headers & Hardened CSP (SEC-002 / SEC-NEW-004 / ADR 0010
     expect(cspValue).toContain("frame-ancestors 'none'");
     expect(cspValue).toContain("object-src 'none'");
     expect(cspValue).toContain('https://fonts.googleapis.com');
+    expect(cspValue).toContain("connect-src 'self' https://www.jornadatcgteam.com.br https://cdn.jsdelivr.net");
   });
 });

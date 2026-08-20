@@ -102,15 +102,19 @@ async function build() {
   // ── 4. COPY ASSETS & LOGO ───────────────────────────────────────────────────
   if (fs.existsSync(path.join(rootDir, 'logo.png'))) {
     fs.copyFileSync(path.join(rootDir, 'logo.png'), path.join(distDir, 'logo.png'));
+    fs.copyFileSync(path.join(rootDir, 'logo.png'), path.join(publicDir, 'logo.png'));
   }
   const assetsDir = path.join(rootDir, 'assets');
   const distAssetsDir = path.join(distDir, 'assets');
+  const publicAssetsDir = path.join(publicDir, 'assets');
   if (fs.existsSync(assetsDir)) {
     if (!fs.existsSync(distAssetsDir)) fs.mkdirSync(distAssetsDir, { recursive: true });
+    if (!fs.existsSync(publicAssetsDir)) fs.mkdirSync(publicAssetsDir, { recursive: true });
     fs.readdirSync(assetsDir).forEach(file => {
       fs.copyFileSync(path.join(assetsDir, file), path.join(distAssetsDir, file));
+      fs.copyFileSync(path.join(assetsDir, file), path.join(publicAssetsDir, file));
     });
-    console.log('✅ Assets copiados para dist/assets com sucesso!');
+    console.log('✅ Assets copiados para dist/assets e public/assets com sucesso!');
   }
 
   // ── 5. GENERATE & INJECT VERSION DERIVED ARTIFACTS (CHG-003) ────────────────

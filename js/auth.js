@@ -160,8 +160,14 @@ _rootAuth.updateAuthUI = function() {
       `;
     }
 
+    if (typeof populateFilters === 'function') populateFilters();
     if (typeof populateQuickLogDropdowns === 'function') populateQuickLogDropdowns();
     if (typeof populatePlayerSelects === 'function') populatePlayerSelects();
+    if (typeof populateDeckSelects === 'function') populateDeckSelects();
+    if (typeof renderDecksList === 'function') renderDecksList();
+    if (typeof renderPlayersList === 'function') renderPlayersList();
+    if (typeof renderLocaisList === 'function') renderLocaisList();
+    if (typeof renderColecoesList === 'function') renderColecoesList();
     if (typeof applyFilters === 'function') applyFilters();
 
     const btnManager = document.getElementById('btnOpenManager');
