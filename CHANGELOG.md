@@ -5,6 +5,14 @@ O formato e baseado em Keep a Changelog e este projeto adere ao Versionamento Se
 
 ---
 
+## [2.1.8] - 2026-08-20
+### Corrigido
+- **`loadManual()` Fallback Chain:** Quando a chave primária retorna `[]` (namespace `anonymous` por race condition no boot), o sistema agora varre todas as chaves `jornada_u_*_matches` no localStorage e retorna o maior conjunto encontrado. Ao encontrar dados via fallback, migra automaticamente para a chave primária. Elimina definitivamente o bug `511 → 0`.
+- **`executeForcedLogout` preserva auth no reload de versão:** O reload automático por nova versão detectada **não remove mais** `jornada_auth_token` nem `jornada_user_profile` do localStorage. Isso era uma causa raiz secundária do bug: o reload de versão forçava um boot sem perfil → namespace `anonymous` → dados invisíveis. Agora apenas limpa dados de sessão transitórios.
+- **Detecção de versão imediata no boot:** `checkAppVersion()` agora roda 3 segundos após o carregamento da página, além do intervalo normal de 60s. Novas versões são detectadas assim que o usuário abre o app.
+
+---
+
 ## [2.1.7] - 2026-08-20
 ### Corrigido (P0 Incident — Data Preservation)
 - **FIX 1 — Namespace Race Condition no `pullFromCloud`:** As chaves de storage (`KEY_MATCHES`, `KEY_DECKS`, etc.) eram resolvidas de forma assíncrona após o `await fetch()`, quando `getActiveUserId()` ainda podia retornar `'anonymous'`. Resultado: o merge era salvo na chave errada (`jornada_u_anonymous_matches`), causando 511 → 0 na UI. Corrigido capturando todos os `_k*` de forma **síncrona antes do `fetch()`**, garantindo o UID correto.

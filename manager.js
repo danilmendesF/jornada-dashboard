@@ -2784,12 +2784,15 @@ window.executeForcedLogout = function() {
   const overlay = document.getElementById('versionReloadOverlay');
   if (overlay) overlay.classList.add('show');
   
-  // Força logout removendo os tokens vitais de autenticação do usuário
-  localStorage.removeItem('jornada_auth_token');
-  localStorage.removeItem('jornada_user_profile');
+  // ── FIX: Version reload should NOT destroy auth state ───────────────────
+  // Removing jornada_user_profile and jornada_auth_token here caused a
+  // namespace race on next boot (getActiveUserId() → 'anonymous' → 0 matches).
+  // Version updates are not security events — just do a hard reload.
+  // Only remove session-level data that should not persist across deploys.
   localStorage.removeItem('jornada_sync_token');
   localStorage.removeItem(KEY_ADMIN_PIN);
   sessionStorage.removeItem('jornada_admin_unlocked');
+  // ─────────────────────────────────────────────────────────────────────────
   
   setTimeout(() => {
     window.location.href = window.location.pathname + '?v=' + Date.now();
@@ -2817,6 +2820,8 @@ setInterval(() => {
 }, 3000);
 
 startVersionInterval();
+// Checa imediatamente na carga, não esperar o primeiro intervalo de 60s
+setTimeout(checkAppVersion, 3000);
 
 
 
