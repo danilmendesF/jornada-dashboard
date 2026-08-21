@@ -3,6 +3,14 @@
 Todas as alteracoes notaveis neste projeto serao documentadas neste arquivo.
 O formato e baseado em Keep a Changelog e este projeto adere ao Versionamento Semantico.
 
+## [2.1.21] - 2026-08-21
+### Correção de Alinhamento OCC 409 & Snapshot Autoritativo
+- **Alinhamento Imediato de Revisão em 409:** O cliente agora extrai diretamente a revisão real da nuvem enviada no corpo do erro 409 (`errJson.currentRevision`), realinhando a `baseRevision` imediatamente no retry e eliminando loops de conflito de revisão.
+- **Fallback Seguro de Revisão Não-Numérica:** `pullFromCloud` agora redefine `_currentCloudRevision = 0` caso o payload retornado da nuvem ainda não possua número de revisão formal.
+- **Commit Autoritativo no Servidor (api/sync.js):** Ajustado o script Lua do Redis e o backend para persistir o snapshot canônico enviado pelo cliente em vez de re-unir duplicatas antigas por ID, permitindo a limpeza definitiva das 2885 partidas legadas para as 485 partidas canônicas.
+
+---
+
 ## [2.1.20] - 2026-08-21
 ### Auto-Flush & Sanitização Automática do Redis Cloud
 - **Auto-Flush de Duplicatas na Nuvem:** Implementada a sanitização automática do banco de dados na nuvem. Sempre que o cliente detecta que o Redis possui partidas duplicadas legadas (`cloudCount !== localManual.length`), o sistema faz um push transparente e substitui o snapshot inflado pelas 485 partidas canônicas consolidadas, reduzindo o tamanho do payload e mantendo todos os dispositivos em perfeita sincronia.

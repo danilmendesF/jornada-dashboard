@@ -261,8 +261,10 @@ async function pullFromCloud(quiet = false) {
             hasDataChanged = true;
           }
           _currentCloudRevision = data.revision;
-          if (typeof window !== 'undefined') window._currentCloudRevision = _currentCloudRevision;
+        } else {
+          _currentCloudRevision = 0;
         }
+        if (typeof window !== 'undefined') window._currentCloudRevision = _currentCloudRevision;
 
         const localDeleted = (typeof window !== 'undefined' && typeof window.loadDeleted === 'function') ? window.loadDeleted() : (typeof loadDeleted === 'function' ? loadDeleted() : new Set());
         const remoteDeleted = Array.isArray(data.deletedIds) ? new Set(data.deletedIds) : new Set();
@@ -558,6 +560,11 @@ async function pushToCloud(attempt = 0, preservedIdempotencyKey = null) {
 
         console.warn(`[Jornada Sync] ⚠️ PUSH Conflito OCC 409 (tentativa ${attempt + 1}/${MAX_RETRY_ATTEMPTS}):`, errJson);
 
+        if (typeof errJson.currentRevision === 'number') {
+          _currentCloudRevision = errJson.currentRevision;
+          if (typeof window !== 'undefined') window._currentCloudRevision = _currentCloudRevision;
+        }
+
         if (attempt < MAX_RETRY_ATTEMPTS) {
           _syncRetryCount = attempt + 1;
           if (typeof window !== 'undefined') window._syncRetryCount = _syncRetryCount;
@@ -571,11 +578,16 @@ async function pushToCloud(attempt = 0, preservedIdempotencyKey = null) {
           // 2. Immediate silent pull to merge remote state & update _currentCloudRevision
           await pullFromCloud(true);
 
-          // 3. Single retry push with reconciled merged state & new idempotency key
+          if (typeof errJson.currentRevision === 'number') {
+            _currentCloudRevision = errJson.currentRevision;
+            if (typeof window !== 'undefined') window._currentCloudRevision = _currentCloudRevision;
+          }
+
+          // 3. Retry push with reconciled merged state & new idempotency key
           return await pushToCloud(attempt + 1, null);
         } else {
-          // Max retries exceeded (1 retry limit for emergency convergence): keep local data, set pending sync and gracefully recover
-          console.warn('[Sync OCC Conflict] Limite máximo de retries atingido (1). STOP seguro: mantendo dados locais e sincronização pendente.');
+          // Max retries exceeded: keep local data, set pending sync and gracefully recover
+          console.warn('[Sync OCC Conflict] Limite máximo de retries atingido. STOP seguro: mantendo dados locais e sincronização pendente.');
           _syncRetryCount = 0;
           if (typeof window !== 'undefined') window._syncRetryCount = 0;
           setPendingSync(true);

@@ -275,8 +275,6 @@ if incomingData and incomingData.locais and type(incomingData.locais) == 'table'
         end
     end
 end
-
-local mergedColecoes = {}
 local colSeen = {}
 if currentData and currentData.colecoes and type(currentData.colecoes) == 'table' then
     for _, c in ipairs(currentData.colecoes) do
