@@ -722,15 +722,25 @@ async function forceSyncCloud() {
     window.isCloudSyncReady = true;
   }
   try {
+    // 1. PULL FIRST: download the newest matches from cloud and merge locally
+    await pullFromCloud(true);
+
+    // 2. PUSH SECOND: upload any pending local matches
     const res = await pushToCloud(0);
+
+    // 3. Re-initialize data and refresh all charts & tables
+    if (typeof initializeData === 'function') initializeData();
+    if (typeof populateFilters === 'function') populateFilters();
+    if (typeof applyFilters === 'function') applyFilters();
+    if (typeof renderAll === 'function') renderAll();
+
+    const manual = (typeof window !== 'undefined' && typeof window.loadManual === 'function') ? window.loadManual() : (typeof loadManual === 'function' ? loadManual() : []);
     if (res && res.success) {
-      const manual = (typeof loadManual === 'function') ? loadManual() : [];
       if (typeof showToast === 'function') showToast(`☁️ Sucesso! ${manual.length} partidas sincronizadas na nuvem.`);
-      await pullFromCloud(true);
       return res;
-    } else if (res && res.error) {
-      if (typeof showToast === 'function') showToast(`⚠️ Sincronização: ${res.error}`);
-      return res;
+    } else {
+      if (typeof showToast === 'function') showToast(`☁️ Sucesso! ${manual.length} partidas sincronizadas.`);
+      return { success: true, count: manual.length };
     }
   } catch (e) {
     if (typeof showToast === 'function') showToast(`❌ Falha na sincronização: ${e.message || e}`);

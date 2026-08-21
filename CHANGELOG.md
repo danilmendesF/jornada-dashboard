@@ -3,6 +3,13 @@
 Todas as alteracoes notaveis neste projeto serao documentadas neste arquivo.
 O formato e baseado em Keep a Changelog e este projeto adere ao Versionamento Semantico.
 
+## [2.1.13] - 2026-08-21
+### Corrigido (Fluxo de Sincronização Forçada e Re-renderização dos Gráficos)
+- **Pull First no `forceSyncCloud()`:** O botão "Sincronizar Nuvem" agora faz o download da nuvem (`pullFromCloud`) **antes** de enviar mutações locais e antes de exibir o toast, garantindo que o total exibido e mesclado reflita imediatamente a base completa (512 partidas).
+- **Atualização Forçada de Gráficos e Analytics:** Inclusão de `renderAll()` após o ciclo de sincronização forçada para que a aba "Analytics Avançado" e "Performance por Treinador" redesenhe as barras instantaneamente sem necessidade de F5 manual.
+
+---
+
 ## [2.1.12] - 2026-08-21
 ### Adicionado & Corrigido (Feedback Visual na UI e Botão Forçar Sincronização)
 - **Botão "Sincronizar Nuvem" na UI:** Adicionado item "🔄 Sincronizar Nuvem" diretamente no dropdown de perfil do usuário (`#profileDropdownContainer`), permitindo disparar a sincronização imediata (`forceSyncCloud()`) a qualquer momento com feedback visual explícito.
