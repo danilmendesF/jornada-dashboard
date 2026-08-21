@@ -3,6 +3,14 @@
 Todas as alteracoes notaveis neste projeto serao documentadas neste arquivo.
 O formato e baseado em Keep a Changelog e este projeto adere ao Versionamento Semantico.
 
+## [2.1.15] - 2026-08-21
+### Corrigido (Deduplicação de Partidas Espelho & Auto-Recuperação de Cota LocalStorage)
+- **Eliminação de Loop de Duplicação de Partidas Espelho:** Removidas as funções legadas `window.buildMirrorMatch` e `window.syncAllTeamMirrorMatches` duplicadas no `manager.js`, que geravam IDs não determinísticos (`Date.now() + 1`) e não ignoravam partidas espelho, causando a duplicação exponencial de partidas (512 ➔ 1024 ➔ 1536).
+- **Motor de Deduplicação Automática (`deduplicateMatches`):** Implementada sanitização determinística em `js/mirror.js`, `js/storage.js`, `js/sync_cloud.js` e `app.js` que colapsa partidas com a mesma assinatura de conteúdo e mantém apenas 1 espelho canônico por partida original.
+- **Auto-Recuperação de Cota LocalStorage (`QuotaExceededError`):** Adicionada a função `cleanStorageQuota()` em `safeSetItem()`, expurgando backups antigos redundantes e namespaces órfãos caso o navegador atinja o limite de 5MB do LocalStorage.
+
+---
+
 ## [2.1.14] - 2026-08-21
 ### Corrigido (Sincronização Multi-Device Mobile & Desbloqueio de Logs de Produção)
 - **Desbloqueio de Logs no Bundle de Produção:** Alterado `drop_console: false` no Terser dentro de `scripts/build_bundle.cjs`, permitindo diagnóstico detalhado no console do navegador tanto no PC quanto no Mobile.

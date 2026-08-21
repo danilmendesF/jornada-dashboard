@@ -109,7 +109,10 @@ function initializeData() {
   if (typeof syncAllTeamMirrorMatches === 'function') {
     syncAllTeamMirrorMatches();
   }
-  const manual = (typeof loadManual === 'function') ? loadManual() : [];
+  let manual = (typeof loadManual === 'function') ? loadManual() : [];
+  if (typeof deduplicateMatches === 'function') {
+    manual = deduplicateMatches(manual);
+  }
   allData = applyDataOverrides(manual);
   filtered = [...allData];
   if (typeof window !== 'undefined') {

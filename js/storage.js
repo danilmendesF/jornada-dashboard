@@ -1,15 +1,78 @@
-// ── JS/STORAGE.JS ────────────────────────────────────────────────────────────
-// Safe LocalStorage wrappers, Legacy Migration & User Storage Namespaces (CHG-006.2)
+function cleanStorageQuota() {
+  if (typeof localStorage === 'undefined') return;
+  console.warn('[Jornada Storage] 🧹 Limpando dados redundantes do LocalStorage para liberar cota...');
+
+  // 1. Clean old auto backups (keep only 1 latest)
+  try {
+    const backupsRaw = localStorage.getItem('jornada_auto_backups');
+    if (backupsRaw) {
+      const backups = JSON.parse(backupsRaw);
+      if (Array.isArray(backups) && backups.length > 1) {
+        localStorage.setItem('jornada_auto_backups', JSON.stringify([backups[backups.length - 1]]));
+      }
+    }
+  } catch (e) {}
+
+  // 2. Remove orphan/temporary namespaces and safety backups
+  const keysToRemove = [];
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (!k) continue;
+      if (k.startsWith('jornada_u_anonymous_') || k.includes('_safety_backup') || k === 'jornada_safety_backup') {
+        keysToRemove.push(k);
+      }
+    }
+    keysToRemove.forEach(k => {
+      try { localStorage.removeItem(k); } catch (e) {}
+    });
+  } catch (e) {}
+
+  // 3. Remove legacy unprefixed keys if active user namespace exists
+  const activeUid = (typeof window !== 'undefined' && typeof window.getActiveUserId === 'function') 
+    ? window.getActiveUserId() 
+    : (typeof getActiveUserId === 'function' ? getActiveUserId() : null);
+  if (activeUid && activeUid !== 'anonymous') {
+    const legacyKeys = ['jornada_manual_matches', 'jornada_decks', 'jornada_players', 'jornada_locais', 'jornada_colecoes', 'jornada_deleted_ids', 'jornada_edited_matches'];
+    legacyKeys.forEach(k => {
+      try { localStorage.removeItem(k); } catch (e) {}
+    });
+  }
+}
 
 function safeSetItem(key, val) {
   try {
     if (typeof localStorage !== 'undefined') {
       localStorage.setItem(key, val);
     }
+    return true;
   } catch (e) {
-    console.error('[Jornada Storage] LocalStorage error ao salvar:', key, e);
-    if (typeof showToast === 'function') {
-      showToast('⚠️ Erro ao salvar dados no navegador!');
+    console.warn('[Jornada Storage] Erro ao salvar chave no localStorage, executando recuperação de cota:', key, e);
+    try {
+      cleanStorageQuota();
+      // If val is matches array, deduplicate before retrying
+      if (typeof key === 'string' && key.includes('_matches')) {
+        try {
+          const parsed = JSON.parse(val);
+          if (Array.isArray(parsed)) {
+            const dedupFn = (typeof window !== 'undefined' && typeof window.deduplicateMatches === 'function')
+              ? window.deduplicateMatches
+              : (typeof deduplicateMatches === 'function' ? deduplicateMatches : null);
+            if (dedupFn) {
+              val = JSON.stringify(dedupFn(parsed));
+            }
+          }
+        } catch (pe) {}
+      }
+      localStorage.setItem(key, val);
+      console.log('[Jornada Storage] ✅ Recuperação de cota com sucesso para chave:', key);
+      return true;
+    } catch (retryErr) {
+      console.error('[Jornada Storage] Falha crítica de cota no LocalStorage:', key, retryErr);
+      if (typeof showToast === 'function') {
+        showToast('⚠️ Armazenamento local do navegador cheio.');
+      }
+      return false;
     }
   }
 }
@@ -175,9 +238,13 @@ function loadManual() {
   try {
     let m = JSON.parse(localStorage.getItem(k)) || [];
     if (Array.isArray(m) && m.length > 0) {
-      // Primary key has data — apply migrations and return
+      // Primary key has data — apply migrations, deduplicate and return
       const originalJson = JSON.stringify(m);
       m = migrateLegacyMatches(m);
+      const dedupFn = (typeof window !== 'undefined' && typeof window.deduplicateMatches === 'function')
+        ? window.deduplicateMatches
+        : (typeof deduplicateMatches === 'function' ? deduplicateMatches : null);
+      if (dedupFn) m = dedupFn(m);
       if (typeof ensureMatchSequence === 'function') ensureMatchSequence(m);
       if (JSON.stringify(m) !== originalJson) safeSetItem(k, JSON.stringify(m));
       return m;
@@ -221,6 +288,10 @@ function loadManual() {
       if (bestData.length > 0) {
         console.warn(`[Jornada Storage] Primary key "${k}" vazia. Encontradas ${bestData.length} partidas no fallback "${bestKey}". Migrando.`);
         bestData = migrateLegacyMatches(bestData);
+        const dedupFn = (typeof window !== 'undefined' && typeof window.deduplicateMatches === 'function')
+          ? window.deduplicateMatches
+          : (typeof deduplicateMatches === 'function' ? deduplicateMatches : null);
+        if (dedupFn) bestData = dedupFn(bestData);
         if (typeof ensureMatchSequence === 'function') ensureMatchSequence(bestData);
         safeSetItem(k, JSON.stringify(bestData));
         return bestData;
@@ -235,6 +306,10 @@ function saveManual(m) {
   const k = (typeof window !== 'undefined' && window.KEY_MATCHES) ? window.KEY_MATCHES : (typeof getScopedKey === 'function' ? getScopedKey('jornada_manual_matches') : 'jornada_manual_matches');
   if (Array.isArray(m)) {
     m = migrateLegacyMatches(m);
+    const dedupFn = (typeof window !== 'undefined' && typeof window.deduplicateMatches === 'function')
+      ? window.deduplicateMatches
+      : (typeof deduplicateMatches === 'function' ? deduplicateMatches : null);
+    if (dedupFn) m = dedupFn(m);
     if (typeof ensureMatchSequence === 'function') {
       ensureMatchSequence(m);
     }

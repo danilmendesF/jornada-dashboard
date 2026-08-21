@@ -147,7 +147,14 @@ function deterministicMergeMatches(listA, listB, deletedIdsSet = new Set()) {
     }
   });
 
-  const merged = Array.from(map.values());
+  let merged = Array.from(map.values());
+  const dedupFn = (typeof window !== 'undefined' && typeof window.deduplicateMatches === 'function')
+    ? window.deduplicateMatches
+    : (typeof deduplicateMatches === 'function' ? deduplicateMatches : null);
+  if (dedupFn) {
+    merged = dedupFn(merged);
+  }
+
   if (typeof ensureMatchSequence === 'function') {
     return ensureMatchSequence(merged);
   }
