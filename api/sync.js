@@ -309,6 +309,10 @@ if incomingData and incomingData.editedMatches and type(incomingData.editedMatch
     for k, v in pairs(incomingData.editedMatches) do
         mergedEdits[k] = v
     end
+elseif incomingData and incomingData.edits and type(incomingData.edits) == 'table' then
+    for k, v in pairs(incomingData.edits) do
+        mergedEdits[k] = v
+    end
 end
 
 local newRevision = currentRevision + 1

@@ -233,13 +233,14 @@ async function pullFromCloud(quiet = false) {
       const currentSessionGen = (typeof window !== 'undefined' && window._authSessionGen !== undefined) ? window._authSessionGen : _authSessionGen;
       const currentState = (typeof window !== 'undefined' ? window.syncLifecycleState : syncLifecycleState);
 
-      // Allow BOOTING state to receive pull data even if requestToken was empty at boot time (timing race fix)
+      // Allow BOOTING and READONLY states to receive pull data even if requestToken was empty at boot time (timing race fix)
       const isBoot = currentState === 'BOOTING' || (prevState === 'BOOTING' && currentState === 'PULLING');
-      if (!currentToken || currentState === 'LOGGED_OUT') {
+      const isReadonly = currentState === 'READONLY' || prevState === 'READONLY';
+      if (!isReadonly && !isBoot && (!currentToken || currentState === 'LOGGED_OUT')) {
         console.warn('[Sync Guard] Resposta de pull descartada: sessão encerrada ou usuário não autenticado.');
         return;
       }
-      if (!isBoot && (currentToken !== requestToken || currentSessionGen !== requestSessionGen)) {
+      if (!isBoot && !isReadonly && (currentToken !== requestToken || currentSessionGen !== requestSessionGen)) {
         console.warn('[Sync Guard] Resposta de pull descartada: sessão foi alterada durante a requisição em voo.');
         return;
       }
@@ -317,8 +318,9 @@ async function pullFromCloud(quiet = false) {
           const mergedColecoes = Array.from(colMap.values());
           if (mergedColecoes.length > 0) safeSetItem(_kColecoes, JSON.stringify(mergedColecoes));
         }
-        if (data.edits && typeof data.edits === 'object' && typeof safeSetItem === 'function') {
-          safeSetItem(_kEdits, JSON.stringify(data.edits));
+        const cloudEdits = data.editedMatches || data.edits;
+        if (cloudEdits && typeof cloudEdits === 'object' && typeof safeSetItem === 'function') {
+          safeSetItem(_kEdits, JSON.stringify(cloudEdits));
         }
         if (Array.isArray(data.deletedIds) && typeof safeSetItem === 'function') {
           safeSetItem(_kDeleted, JSON.stringify(Array.from(combinedDeleted)));
@@ -372,6 +374,25 @@ async function pullFromCloud(quiet = false) {
         window.isCloudSyncReady = false;
       }
       setSyncStatus('offline', 'Modo Offline (dados locais protegidos)');
+
+      // Fix #3: If there is pending sync data, schedule a retry with backoff
+      const hasPendingOnFail = _hasPendingSync || (typeof window !== 'undefined' && window._hasPendingSync) || (typeof localStorage !== 'undefined' && localStorage.getItem('jornada_sync_pending') === '1');
+      if (hasPendingOnFail) {
+        const retryDelay = calculateBackoffDelay(_syncRetryCount, 3000, 30000);
+        console.warn(`[Sync Retry] Pull falhou com sync pendente. Retry em ${Math.round(retryDelay)}ms`);
+        if (_syncBackoffTimer) clearTimeout(_syncBackoffTimer);
+        _syncBackoffTimer = setTimeout(() => {
+          _syncBackoffTimer = null;
+          const curState = (typeof window !== 'undefined' ? window.syncLifecycleState : syncLifecycleState);
+          if (curState !== 'LOGGED_OUT') {
+            pullFromCloud(true).then(() => {
+              const isNowReady = (typeof window !== 'undefined' ? window.isCloudSyncReady : isCloudSyncReady);
+              if (isNowReady) triggerSyncPush();
+            });
+          }
+        }, retryDelay);
+        if (typeof window !== 'undefined') window._syncBackoffTimer = _syncBackoffTimer;
+      }
     } finally {
       _activePullPromise = null;
     }
@@ -435,7 +456,7 @@ async function pushToCloud(attempt = 0, preservedIdempotencyKey = null) {
       players: (typeof window !== 'undefined' && typeof window.loadPlayers === 'function') ? window.loadPlayers() : (typeof loadPlayers === 'function' ? loadPlayers() : []),
       locais: (typeof window !== 'undefined' && typeof window.loadLocais === 'function') ? window.loadLocais() : (typeof loadLocais === 'function' ? loadLocais() : []),
       colecoes: (typeof window !== 'undefined' && typeof window.loadColecoes === 'function') ? window.loadColecoes() : (typeof loadColecoes === 'function' ? loadColecoes() : []),
-      edits: (typeof window !== 'undefined' && typeof window.loadEdits === 'function') ? window.loadEdits() : (typeof loadEdits === 'function' ? loadEdits() : {}),
+      editedMatches: (typeof window !== 'undefined' && typeof window.loadEdits === 'function') ? window.loadEdits() : (typeof loadEdits === 'function' ? loadEdits() : {}),
       deletedIds: (typeof window !== 'undefined' && typeof window.loadDeleted === 'function') ? Array.from(window.loadDeleted()).slice(-300) : (typeof loadDeleted === 'function' ? Array.from(loadDeleted()).slice(-300) : []),
       deletedDecks: (typeof window !== 'undefined' && typeof window.loadDeletedDecks === 'function') ? Array.from(window.loadDeletedDecks()).slice(-300) : (typeof loadDeletedDecks === 'function' ? Array.from(loadDeletedDecks()).slice(-300) : []),
       deletedPlayers: (typeof window !== 'undefined' && typeof window.loadDeletedPlayers === 'function') ? Array.from(window.loadDeletedPlayers()).slice(-300) : (typeof loadDeletedPlayers === 'function' ? Array.from(loadDeletedPlayers()).slice(-300) : []),
@@ -596,12 +617,16 @@ function initSyncUI() {
     });
 
   } else {
-    syncLifecycleState = 'LOGGED_OUT';
+    // Fix #2: Even without auth token, pull cloud data in read-only mode.
+    // GET /api/sync is public (no JWT required), so unauthenticated sessions
+    // (incognito tabs, new devices) can still READ the team's shared data.
+    syncLifecycleState = 'READONLY';
     isCloudSyncReady = false;
     if (typeof window !== 'undefined') {
-      window.syncLifecycleState = 'LOGGED_OUT';
+      window.syncLifecycleState = 'READONLY';
       window.isCloudSyncReady = false;
     }
+    pullFromCloud(true);
   }
 }
 

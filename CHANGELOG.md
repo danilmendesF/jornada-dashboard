@@ -3,6 +3,15 @@
 Todas as alteracoes notaveis neste projeto serao documentadas neste arquivo.
 O formato e baseado em Keep a Changelog e este projeto adere ao Versionamento Semantico.
 
+## [2.1.11] - 2026-08-21
+### Corrigido (Causas Raiz — Sincronização Multi-Device e Aba Anônima)
+- **🔴 Campo `edits` vs `editedMatches` Mismatch (BUG CRÍTICO):** O `pushToCloud()` enviava o campo como `edits`, mas o Redis armazenava como `editedMatches`. O `pullFromCloud()` verificava `data.edits` que era sempre `undefined`. Resultado: edições de partidas nunca eram sincronizadas entre dispositivos. Corrigido em `js/sync_cloud.js` (push envia `editedMatches`, pull lê `data.editedMatches || data.edits`) e `api/sync.js` (Lua aceita ambos os nomes).
+- **🔴 Aba Anônima Sem Pull da Nuvem (BUG CRÍTICO):** `initSyncUI()` entrava em `LOGGED_OUT` sem token e nunca chamava `pullFromCloud()`, mesmo que o GET `/api/sync` seja público. Aba anônima exibia 0 partidas. Corrigido: novo estado `READONLY` que faz pull read-only sem exigir JWT.
+- **Sync Guard Bloqueava Dados em Modo READONLY:** O guard em `pullFromCloud()` descartava respostas quando `!currentToken`. Agora estados `READONLY` e `BOOTING` são isentos do guard de token.
+- **Retry com Backoff para Sync Pendente após Pull Failure:** Se o pull falhasse com sync pendente, os dados ficavam presos no localStorage indefinidamente. Agora agenda retry automático com backoff exponencial (3s-30s).
+
+---
+
 ## [2.1.10] - 2026-08-20
 ### Corrigido (Convergência Multi-Device, Auto-Push e Blindagem de Filtros)
 - **Auto-Upload de Partidas Pendentes:** Adicionada verificação no `pullFromCloud()` que detecta se a base local possui mais partidas que a nuvem (`localManual.length > cloudCount`) e dispara automaticamente o `pushToCloud()`, convergindo as 692 partidas na nuvem.
