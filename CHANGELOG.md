@@ -3,6 +3,14 @@
 Todas as alteracoes notaveis neste projeto serao documentadas neste arquivo.
 O formato e baseado em Keep a Changelog e este projeto adere ao Versionamento Semantico.
 
+## [2.1.18] - 2026-08-21
+### Sincronização em Tempo Real Multi-Aparelho & Background Polling
+- **Auto-Sync Polling em Segundo Plano (10s):** Implementada a função `startSyncInterval()` com fallback resiliente para obtenção do token JWT e execução contínua a cada 10 segundos, garantindo que novas partidas registradas por outros membros do time apareçam automaticamente na tela sem necessidade de recarregar a página.
+- **Sincronização ao Focar na Aba / Desbloquear Celular:** Adicionados listeners para `window.onfocus` e `visibilitychange`, puxando dados imediatamente ao reabrir ou focar na aba do painel.
+- **Notificação de Novas Partidas:** Disparo automático de toast informativo no topo da tela (`✨ X nova(s) partida(s) da equipe sincronizada(s)!`) sempre que partidas remotas forem integradas em tempo real.
+
+---
+
 ## [2.1.17] - 2026-08-21
 ### Bump de Versão & Atualização de Cache
 - **Bump de Versão para v2.1.17:** Força a invalidação de cache de navegadores e CDNs para carregar a interface limpa (sem o botão temporário de restauração) e com a correção de `deleteMatch` ativa.

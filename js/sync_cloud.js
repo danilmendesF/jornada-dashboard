@@ -277,6 +277,9 @@ async function pullFromCloud(quiet = false) {
             console.log(`[Sync Pull] localBefore=${localManual.length} cloud=${cloudMatches.length} merged=${mergedMatches.length} key=${_kMatches}`);
             const safeSet = (typeof window !== 'undefined' && typeof window.safeSetItem === 'function') ? window.safeSetItem : (typeof safeSetItem === 'function' ? safeSetItem : ((k, v) => { if (typeof localStorage !== 'undefined') localStorage.setItem(k, v); }));
             safeSet(_kMatches, JSON.stringify(mergedMatches));
+            if (mergedMatches.length > localManual.length && localManual.length > 0 && typeof showToast === 'function') {
+              showToast(`✨ ${mergedMatches.length - localManual.length} nova(s) partida(s) da equipe sincronizada(s)!`);
+            }
           }
         }
         if (Array.isArray(data.decks) && typeof safeSetItem === 'function') {
@@ -576,14 +579,30 @@ async function pushToCloud(attempt = 0, preservedIdempotencyKey = null) {
   return pushCycle;
 }
 
+const SYNC_POLL_INTERVAL_MS = 10000; // 10s auto-refresh for real-time multiplayer feel
+
 function startSyncInterval() {
   stopSyncInterval();
-  if (typeof getAuthToken === 'function' && getAuthToken()) {
-    _syncIntervalTimer = setInterval(() => {
-      pullFromCloud(true);
-    }, 15000);
-    if (typeof window !== 'undefined') window._syncIntervalTimer = _syncIntervalTimer;
-  }
+  const getTok = () => {
+    if (typeof window !== 'undefined' && typeof window.getAuthToken === 'function') return window.getAuthToken();
+    if (typeof getAuthToken === 'function') return getAuthToken();
+    if (typeof localStorage !== 'undefined') return localStorage.getItem('jornada_auth_token') || '';
+    return '';
+  };
+
+  _syncIntervalTimer = setInterval(() => {
+    if (typeof document !== 'undefined' && document.hidden) return;
+    const token = getTok();
+    const state = (typeof window !== 'undefined' ? window.syncLifecycleState : syncLifecycleState);
+    if (state === 'LOGGED_OUT') return;
+
+    pullFromCloud(true).catch(e => {
+      console.warn('[Sync Poll] Erro no background pull:', e);
+    });
+  }, SYNC_POLL_INTERVAL_MS);
+
+  if (typeof window !== 'undefined') window._syncIntervalTimer = _syncIntervalTimer;
+  console.log(`[Jornada Sync] ⏱️ Auto-sync polling ativado (${SYNC_POLL_INTERVAL_MS / 1000}s).`);
 }
 
 function stopSyncInterval() {
@@ -615,47 +634,55 @@ function initSyncUI() {
     }
   }
 
-  const token = typeof getAuthToken === 'function' ? getAuthToken() : (typeof localStorage !== 'undefined' ? localStorage.getItem('jornada_auth_token') : '');
+  const getTok = () => {
+    if (typeof window !== 'undefined' && typeof window.getAuthToken === 'function') return window.getAuthToken();
+    if (typeof getAuthToken === 'function') return getAuthToken();
+    if (typeof localStorage !== 'undefined') return localStorage.getItem('jornada_auth_token') || '';
+    return '';
+  };
+  const token = getTok();
+
   if (token) {
-    // ── FIX: Ensure auth session (user profile + namespace) is resolved ───────
-    // initAuthSession() reads jornada_user_profile synchronously from localStorage,
-    // setting window.currentUser so getActiveUserId() returns the correct UID
-    // BEFORE the first pullFromCloud() resolves storage keys.
     if (typeof initAuthSession === 'function') {
       try { initAuthSession(); } catch (e) {}
     }
-    // ─────────────────────────────────────────────────────────────────────────
     syncLifecycleState = 'BOOTING';
     if (typeof window !== 'undefined') window.syncLifecycleState = 'BOOTING';
     pullFromCloud(true).then(() => {
       startSyncInterval();
     });
-
   } else {
-    // Fix #2: Even without auth token, pull cloud data in read-only mode.
-    // GET /api/sync is public (no JWT required), so unauthenticated sessions
-    // (incognito tabs, new devices) can still READ the team's shared data.
     syncLifecycleState = 'READONLY';
     isCloudSyncReady = false;
     if (typeof window !== 'undefined') {
       window.syncLifecycleState = 'READONLY';
       window.isCloudSyncReady = false;
     }
-    pullFromCloud(true);
+    pullFromCloud(true).then(() => {
+      startSyncInterval();
+    });
   }
 }
 
-if (typeof document !== 'undefined') {
+if (typeof document !== 'undefined' && typeof document.addEventListener === 'function') {
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
       stopSyncInterval();
     } else {
-      const token = typeof getAuthToken === 'function' ? getAuthToken() : '';
       const state = (typeof window !== 'undefined' ? window.syncLifecycleState : syncLifecycleState);
-      if (token && state !== 'LOGGED_OUT') {
+      if (state !== 'LOGGED_OUT') {
         pullFromCloud(true);
         startSyncInterval();
       }
+    }
+  });
+}
+
+if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+  window.addEventListener('focus', () => {
+    const state = window.syncLifecycleState || syncLifecycleState;
+    if (state !== 'LOGGED_OUT') {
+      pullFromCloud(true);
     }
   });
 }

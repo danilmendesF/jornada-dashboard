@@ -1,6 +1,29 @@
 // ── JS/CONFIG.JS ─────────────────────────────────────────────────────────────
 // Global constants, storage keys, namespaces, themes, and score rules (CHG-006.2)
 
+window.getAuthToken = function() {
+  try {
+    if (typeof localStorage !== 'undefined') {
+      return localStorage.getItem('jornada_auth_token') || '';
+    }
+  } catch (e) {}
+  return '';
+};
+
+window.getCurrentUser = function() {
+  if (typeof window !== 'undefined' && window.currentUser) return window.currentUser;
+  try {
+    if (typeof localStorage !== 'undefined') {
+      const raw = localStorage.getItem('jornada_user_profile');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        return parsed?.user ? parsed.user : parsed;
+      }
+    }
+  } catch (e) {}
+  return null;
+};
+
 window.getActiveUserId = function() {
   let user = typeof getCurrentUser === 'function' ? getCurrentUser() : window.currentUser;
   if (!user) {
