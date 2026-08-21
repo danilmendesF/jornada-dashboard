@@ -73,7 +73,7 @@ async function build() {
 
   const minifyResult = await minify(bundledJS, {
     compress: {
-      drop_console: true,
+      drop_console: false,
       passes: 2
     },
     mangle: {

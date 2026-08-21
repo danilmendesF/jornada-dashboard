@@ -3,6 +3,15 @@
 Todas as alteracoes notaveis neste projeto serao documentadas neste arquivo.
 O formato e baseado em Keep a Changelog e este projeto adere ao Versionamento Semantico.
 
+## [2.1.14] - 2026-08-21
+### Corrigido (Sincronização Multi-Device Mobile & Desbloqueio de Logs de Produção)
+- **Desbloqueio de Logs no Bundle de Produção:** Alterado `drop_console: false` no Terser dentro de `scripts/build_bundle.cjs`, permitindo diagnóstico detalhado no console do navegador tanto no PC quanto no Mobile.
+- **Eliminação de Shadowing de Storage no `manager.js`:** Removidas declarações estáticas locais de `KEY_*` e funções legadas `loadManual`/`saveManual` que ofuscavam os getters de namespace dinâmico de usuário do `js/storage.js`, eliminando a causa raiz da divergência de dados no celular.
+- **Migração de Namespace Anônimo no Login:** Aprimorado `migrateLegacyUserStorage(userId)` em `js/storage.js` para migrar automaticamente as chaves temporárias `jornada_u_anonymous_*` para o namespace do usuário autenticado no primeiro login mobile.
+- **Funções de Exclusão de Entidades com Escopo:** Implementados helpers completos de deleção escopada (`loadDeletedDecks`, `loadDeletedPlayers`, `loadDeletedLocais`, `loadDeletedColecoes`) em `js/storage.js`.
+
+---
+
 ## [2.1.13] - 2026-08-21
 ### Corrigido (Fluxo de Sincronização Forçada e Re-renderização dos Gráficos)
 - **Pull First no `forceSyncCloud()`:** O botão "Sincronizar Nuvem" agora faz o download da nuvem (`pullFromCloud`) **antes** de enviar mutações locais e antes de exibir o toast, garantindo que o total exibido e mesclado reflita imediatamente a base completa (512 partidas).

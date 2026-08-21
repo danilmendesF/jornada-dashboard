@@ -221,6 +221,7 @@ async function pullFromCloud(quiet = false) {
     syncLifecycleState = 'PULLING';
     if (typeof window !== 'undefined') window.syncLifecycleState = 'PULLING';
   }
+  console.log(`[Jornada Sync] ⬇️ PULL Iniciado: url=${url}, quiet=${quiet}, kMatches="${_kMatches}"`);
 
   _activePullPromise = (async () => {
     try {
@@ -450,6 +451,7 @@ async function pushToCloud(attempt = 0, preservedIdempotencyKey = null) {
     if (typeof window !== 'undefined') window._lastOperationIdempotencyKey = idempotencyKey;
 
     const curRev = (typeof window !== 'undefined' && typeof window._currentCloudRevision === 'number') ? window._currentCloudRevision : (_currentCloudRevision || 0);
+    console.log(`[Jornada Sync] ⬆️ PUSH Iniciado (tentativa ${attempt}): baseRevision=${curRev}, localMatches=${manual.length}, key="${idempotencyKey}"`);
 
     const payload = {
       baseRevision: curRev,
@@ -491,12 +493,13 @@ async function pushToCloud(attempt = 0, preservedIdempotencyKey = null) {
         syncLifecycleState = 'READY';
         if (typeof window !== 'undefined') window.syncLifecycleState = 'READY';
         setSyncStatus('success', 'Dados salvos na nuvem!');
+        console.log(`[Jornada Sync] ⬆️ PUSH Sucesso: newRevision=${_currentCloudRevision}, partidas=${manual.length}`);
         if (typeof showToast === 'function') showToast(`☁️ Dados salvos na nuvem (${manual.length} partidas)!`);
         return { success: true, revision: _currentCloudRevision };
       }
 
       if (res.status === 401 || res.status === 403) {
-        console.error('[Sync Auth Error] Não autorizado a sincronizar na nuvem (HTTP ' + res.status + ')');
+        console.error(`[Jornada Sync] ❌ PUSH Erro de Autenticação (HTTP ${res.status}): Não autorizado a sincronizar.`);
         _syncRetryCount = 0;
         if (typeof window !== 'undefined') window._syncRetryCount = 0;
         setSyncStatus('error', 'Sessão expirada. Faça login novamente.');
@@ -508,7 +511,7 @@ async function pushToCloud(attempt = 0, preservedIdempotencyKey = null) {
         let errJson = {};
         try { errJson = await res.json(); } catch (e) {}
 
-        console.warn(`[Sync OCC Conflict] Conflito de revisão detectado (tentativa ${attempt + 1}/${MAX_RETRY_ATTEMPTS}):`, errJson);
+        console.warn(`[Jornada Sync] ⚠️ PUSH Conflito OCC 409 (tentativa ${attempt + 1}/${MAX_RETRY_ATTEMPTS}):`, errJson);
 
         if (attempt < MAX_RETRY_ATTEMPTS) {
           _syncRetryCount = attempt + 1;

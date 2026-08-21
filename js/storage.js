@@ -7,7 +7,7 @@ function safeSetItem(key, val) {
       localStorage.setItem(key, val);
     }
   } catch (e) {
-    console.error('LocalStorage error:', e);
+    console.error('[Jornada Storage] LocalStorage error ao salvar:', key, e);
     if (typeof showToast === 'function') {
       showToast('⚠️ Erro ao salvar dados no navegador!');
     }
@@ -66,61 +66,67 @@ function migrateLegacyMatches(matches) {
 function migrateLegacyUserStorage(userId) {
   if (!userId || userId === 'anonymous' || typeof localStorage === 'undefined') return;
   const targetNs = `jornada_u_${userId}`;
+  console.log(`[Jornada Storage] Executando migração de namespaces para o usuário "${userId}" (${targetNs})`);
 
-  // 1. Matches migration
-  const legacyMatchesRaw = localStorage.getItem('jornada_manual_matches');
-  const targetMatchesRaw = localStorage.getItem(`${targetNs}_matches`);
-
-  if (legacyMatchesRaw && !targetMatchesRaw) {
-    try {
-      let legacyMatches = JSON.parse(legacyMatchesRaw);
-      if (Array.isArray(legacyMatches) && legacyMatches.length > 0) {
-        legacyMatches = migrateLegacyMatches(legacyMatches);
-        localStorage.setItem(`${targetNs}_matches`, JSON.stringify(legacyMatches));
-        localStorage.removeItem('jornada_manual_matches');
+  const copyIfMissing = (sourceKey, targetKey, isMatches = false) => {
+    const srcRaw = localStorage.getItem(sourceKey);
+    const tgtRaw = localStorage.getItem(targetKey);
+    if (srcRaw) {
+      if (!tgtRaw) {
+        try {
+          if (isMatches) {
+            let parsed = JSON.parse(srcRaw);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              parsed = migrateLegacyMatches(parsed);
+              localStorage.setItem(targetKey, JSON.stringify(parsed));
+            }
+          } else {
+            localStorage.setItem(targetKey, srcRaw);
+          }
+          console.log(`[Jornada Storage] Migrado "${sourceKey}" ➔ "${targetKey}"`);
+        } catch (e) {
+          console.warn(`[Jornada Storage] Erro ao migrar "${sourceKey}" para "${targetKey}":`, e);
+        }
       }
-    } catch (e) {
-      console.warn('[Storage Migration] Erro ao migrar matches legadas:', e);
+      try {
+        localStorage.removeItem(sourceKey);
+      } catch (e) {}
     }
-  }
+  };
+
+  // 1. Matches migration (from legacy key and anonymous namespace)
+  copyIfMissing('jornada_manual_matches', `${targetNs}_matches`, true);
+  copyIfMissing('jornada_u_anonymous_matches', `${targetNs}_matches`, true);
 
   // 2. Decks migration
-  const legacyDecks = localStorage.getItem('jornada_decks');
-  if (legacyDecks && !localStorage.getItem(`${targetNs}_decks`)) {
-    localStorage.setItem(`${targetNs}_decks`, legacyDecks);
-    localStorage.removeItem('jornada_decks');
-  }
+  copyIfMissing('jornada_decks', `${targetNs}_decks`);
+  copyIfMissing('jornada_u_anonymous_decks', `${targetNs}_decks`);
 
   // 3. Players migration
-  const legacyPlayers = localStorage.getItem('jornada_players');
-  if (legacyPlayers && !localStorage.getItem(`${targetNs}_players`)) {
-    localStorage.setItem(`${targetNs}_players`, legacyPlayers);
-    localStorage.removeItem('jornada_players');
-  }
+  copyIfMissing('jornada_players', `${targetNs}_players`);
+  copyIfMissing('jornada_u_anonymous_players', `${targetNs}_players`);
 
   // 4. Locais & Colecoes
-  const legacyLocais = localStorage.getItem('jornada_locais');
-  if (legacyLocais && !localStorage.getItem(`${targetNs}_locais`)) {
-    localStorage.setItem(`${targetNs}_locais`, legacyLocais);
-    localStorage.removeItem('jornada_locais');
-  }
-  const legacyColecoes = localStorage.getItem('jornada_colecoes');
-  if (legacyColecoes && !localStorage.getItem(`${targetNs}_colecoes`)) {
-    localStorage.setItem(`${targetNs}_colecoes`, legacyColecoes);
-    localStorage.removeItem('jornada_colecoes');
-  }
+  copyIfMissing('jornada_locais', `${targetNs}_locais`);
+  copyIfMissing('jornada_u_anonymous_locais', `${targetNs}_locais`);
+  copyIfMissing('jornada_colecoes', `${targetNs}_colecoes`);
+  copyIfMissing('jornada_u_anonymous_colecoes', `${targetNs}_colecoes`);
 
-  // 5. Deleted IDs & Edits
-  const legacyDeleted = localStorage.getItem('jornada_deleted_ids');
-  if (legacyDeleted && !localStorage.getItem(`${targetNs}_deleted_ids`)) {
-    localStorage.setItem(`${targetNs}_deleted_ids`, legacyDeleted);
-    localStorage.removeItem('jornada_deleted_ids');
-  }
-  const legacyEdits = localStorage.getItem('jornada_edited_matches');
-  if (legacyEdits && !localStorage.getItem(`${targetNs}_edited_matches`)) {
-    localStorage.setItem(`${targetNs}_edited_matches`, legacyEdits);
-    localStorage.removeItem('jornada_edited_matches');
-  }
+  // 5. Deleted IDs & Edits & Archetype Unifications
+  copyIfMissing('jornada_deleted_ids', `${targetNs}_deleted_ids`);
+  copyIfMissing('jornada_u_anonymous_deleted_ids', `${targetNs}_deleted_ids`);
+  copyIfMissing('jornada_deleted_decks', `${targetNs}_deleted_decks`);
+  copyIfMissing('jornada_u_anonymous_deleted_decks', `${targetNs}_deleted_decks`);
+  copyIfMissing('jornada_deleted_players', `${targetNs}_deleted_players`);
+  copyIfMissing('jornada_u_anonymous_deleted_players', `${targetNs}_deleted_players`);
+  copyIfMissing('jornada_deleted_locais', `${targetNs}_deleted_locais`);
+  copyIfMissing('jornada_u_anonymous_deleted_locais', `${targetNs}_deleted_locais`);
+  copyIfMissing('jornada_deleted_colecoes', `${targetNs}_deleted_colecoes`);
+  copyIfMissing('jornada_u_anonymous_deleted_colecoes', `${targetNs}_deleted_colecoes`);
+  copyIfMissing('jornada_edited_matches', `${targetNs}_edited_matches`);
+  copyIfMissing('jornada_u_anonymous_edited_matches', `${targetNs}_edited_matches`);
+  copyIfMissing('jornada_archetype_unifications', `${targetNs}_archetype_unifications`);
+  copyIfMissing('jornada_u_anonymous_archetype_unifications', `${targetNs}_archetype_unifications`);
 }
 
 function loadDecks() {
@@ -178,9 +184,6 @@ function loadManual() {
     }
 
     // ── FALLBACK CHAIN: primary key was empty (likely namespace race on boot) ──
-    // Scan localStorage for any jornada_u_*_matches key with data.
-    // This handles the case where getActiveUserId() returned 'anonymous'
-    // because jornada_user_profile hadn't been written yet by verifyAuthToken().
     if (typeof localStorage !== 'undefined') {
       let bestKey = null;
       let bestData = [];
@@ -216,15 +219,13 @@ function loadManual() {
       } catch (e) {}
 
       if (bestData.length > 0) {
-        console.warn(`[loadManual] Primary key "${k}" was empty. Found ${bestData.length} matches in fallback key "${bestKey}". Migrating to primary key.`);
+        console.warn(`[Jornada Storage] Primary key "${k}" vazia. Encontradas ${bestData.length} partidas no fallback "${bestKey}". Migrando.`);
         bestData = migrateLegacyMatches(bestData);
         if (typeof ensureMatchSequence === 'function') ensureMatchSequence(bestData);
-        // Migrate data to the current primary key so future reads find it directly
         safeSetItem(k, JSON.stringify(bestData));
         return bestData;
       }
     }
-    // ── END FALLBACK CHAIN ────────────────────────────────────────────────────
 
     return [];
   } catch(e) { return []; }
@@ -239,6 +240,7 @@ function saveManual(m) {
     }
   }
   safeSetItem(k, JSON.stringify(m));
+  console.log(`[Jornada Storage] saveManual: ${Array.isArray(m) ? m.length : 0} partidas salvas na chave "${k}"`);
   if (typeof triggerSyncPush === 'function') triggerSyncPush();
 }
 
@@ -285,7 +287,24 @@ function savePlayers(p) {
 
 function loadLocais() {
   const k = (typeof window !== 'undefined' && window.KEY_LOCAIS) ? window.KEY_LOCAIS : (typeof getScopedKey === 'function' ? getScopedKey('jornada_locais') : 'jornada_locais');
-  try { return JSON.parse(localStorage.getItem(k)) || ['TCG Live', 'Liga Local', 'Regional', 'Treino', 'Outro']; } catch(e) { return ['TCG Live', 'Liga Local', 'Regional', 'Treino', 'Outro']; }
+  try {
+    const raw = localStorage.getItem(k);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+    if (typeof localStorage !== 'undefined') {
+      const anonRaw = localStorage.getItem('jornada_u_anonymous_locais') || localStorage.getItem('jornada_locais');
+      if (anonRaw) {
+        const aData = JSON.parse(anonRaw);
+        if (Array.isArray(aData) && aData.length > 0) {
+          safeSetItem(k, JSON.stringify(aData));
+          return aData;
+        }
+      }
+    }
+    return ['TCG Live', 'Liga Local', 'Regional', 'Treino', 'Outro'];
+  } catch(e) { return ['TCG Live', 'Liga Local', 'Regional', 'Treino', 'Outro']; }
 }
 function saveLocais(l) {
   const k = (typeof window !== 'undefined' && window.KEY_LOCAIS) ? window.KEY_LOCAIS : (typeof getScopedKey === 'function' ? getScopedKey('jornada_locais') : 'jornada_locais');
@@ -295,7 +314,24 @@ function saveLocais(l) {
 
 function loadColecoes() {
   const k = (typeof window !== 'undefined' && window.KEY_COLECOES) ? window.KEY_COLECOES : (typeof getScopedKey === 'function' ? getScopedKey('jornada_colecoes') : 'jornada_colecoes');
-  try { return JSON.parse(localStorage.getItem(k)) || ['SV01: Scarlet & Violet', 'SV02: Paldea Evolved', 'SV03: Obsidian Flames', 'SV04: Paradox Rift', 'SV05: Temporal Forces']; } catch(e) { return ['SV01: Scarlet & Violet', 'SV02: Paldea Evolved', 'SV03: Obsidian Flames', 'SV04: Paradox Rift', 'SV05: Temporal Forces']; }
+  try {
+    const raw = localStorage.getItem(k);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+    if (typeof localStorage !== 'undefined') {
+      const anonRaw = localStorage.getItem('jornada_u_anonymous_colecoes') || localStorage.getItem('jornada_colecoes');
+      if (anonRaw) {
+        const aData = JSON.parse(anonRaw);
+        if (Array.isArray(aData) && aData.length > 0) {
+          safeSetItem(k, JSON.stringify(aData));
+          return aData;
+        }
+      }
+    }
+    return ['SV01: Scarlet & Violet', 'SV02: Paldea Evolved', 'SV03: Obsidian Flames', 'SV04: Paradox Rift', 'SV05: Temporal Forces'];
+  } catch(e) { return ['SV01: Scarlet & Violet', 'SV02: Paldea Evolved', 'SV03: Obsidian Flames', 'SV04: Paradox Rift', 'SV05: Temporal Forces']; }
 }
 function saveColecoes(c) {
   const k = (typeof window !== 'undefined' && window.KEY_COLECOES) ? window.KEY_COLECOES : (typeof getScopedKey === 'function' ? getScopedKey('jornada_colecoes') : 'jornada_colecoes');
@@ -305,7 +341,21 @@ function saveColecoes(c) {
 
 function loadDeleted() {
   const k = (typeof window !== 'undefined' && window.KEY_DELETED) ? window.KEY_DELETED : (typeof getScopedKey === 'function' ? getScopedKey('jornada_deleted_ids') : 'jornada_deleted_ids');
-  try { return new Set(JSON.parse(localStorage.getItem(k)) || []); } catch(e) { return new Set(); }
+  try {
+    const raw = localStorage.getItem(k);
+    if (raw) return new Set(JSON.parse(raw) || []);
+    if (typeof localStorage !== 'undefined') {
+      const anonRaw = localStorage.getItem('jornada_u_anonymous_deleted_ids') || localStorage.getItem('jornada_deleted_ids');
+      if (anonRaw) {
+        const aSet = new Set(JSON.parse(anonRaw) || []);
+        if (aSet.size > 0) {
+          safeSetItem(k, JSON.stringify(Array.from(aSet)));
+          return aSet;
+        }
+      }
+    }
+    return new Set();
+  } catch(e) { return new Set(); }
 }
 function saveDeleted(s) {
   const k = (typeof window !== 'undefined' && window.KEY_DELETED) ? window.KEY_DELETED : (typeof getScopedKey === 'function' ? getScopedKey('jornada_deleted_ids') : 'jornada_deleted_ids');
@@ -313,9 +363,63 @@ function saveDeleted(s) {
   if (typeof triggerSyncPush === 'function') triggerSyncPush();
 }
 
+function loadDeletedDecks() {
+  const k = (typeof window !== 'undefined' && window.KEY_DELETED_DECKS) ? window.KEY_DELETED_DECKS : (typeof getScopedKey === 'function' ? getScopedKey('jornada_deleted_decks') : 'jornada_deleted_decks');
+  try { return new Set(JSON.parse(localStorage.getItem(k)) || []); } catch(e) { return new Set(); }
+}
+function saveDeletedDecks(s) {
+  const k = (typeof window !== 'undefined' && window.KEY_DELETED_DECKS) ? window.KEY_DELETED_DECKS : (typeof getScopedKey === 'function' ? getScopedKey('jornada_deleted_decks') : 'jornada_deleted_decks');
+  safeSetItem(k, JSON.stringify(Array.from(s)));
+  if (typeof triggerSyncPush === 'function') triggerSyncPush();
+}
+
+function loadDeletedPlayers() {
+  const k = (typeof window !== 'undefined' && window.KEY_DELETED_PLAYERS) ? window.KEY_DELETED_PLAYERS : (typeof getScopedKey === 'function' ? getScopedKey('jornada_deleted_players') : 'jornada_deleted_players');
+  try { return new Set(JSON.parse(localStorage.getItem(k)) || []); } catch(e) { return new Set(); }
+}
+function saveDeletedPlayers(s) {
+  const k = (typeof window !== 'undefined' && window.KEY_DELETED_PLAYERS) ? window.KEY_DELETED_PLAYERS : (typeof getScopedKey === 'function' ? getScopedKey('jornada_deleted_players') : 'jornada_deleted_players');
+  safeSetItem(k, JSON.stringify(Array.from(s)));
+  if (typeof triggerSyncPush === 'function') triggerSyncPush();
+}
+
+function loadDeletedLocais() {
+  const k = (typeof window !== 'undefined' && window.KEY_LOCAIS ? window.KEY_DELETED_LOCAIS : null) || (typeof getScopedKey === 'function' ? getScopedKey('jornada_deleted_locais') : 'jornada_deleted_locais');
+  try { return new Set(JSON.parse(localStorage.getItem(k)) || []); } catch(e) { return new Set(); }
+}
+function saveDeletedLocais(s) {
+  const k = (typeof window !== 'undefined' && window.KEY_LOCAIS ? window.KEY_DELETED_LOCAIS : null) || (typeof getScopedKey === 'function' ? getScopedKey('jornada_deleted_locais') : 'jornada_deleted_locais');
+  safeSetItem(k, JSON.stringify(Array.from(s)));
+  if (typeof triggerSyncPush === 'function') triggerSyncPush();
+}
+
+function loadDeletedColecoes() {
+  const k = (typeof window !== 'undefined' && window.KEY_COLECOES ? window.KEY_DELETED_COLECOES : null) || (typeof getScopedKey === 'function' ? getScopedKey('jornada_deleted_colecoes') : 'jornada_deleted_colecoes');
+  try { return new Set(JSON.parse(localStorage.getItem(k)) || []); } catch(e) { return new Set(); }
+}
+function saveDeletedColecoes(s) {
+  const k = (typeof window !== 'undefined' && window.KEY_COLECOES ? window.KEY_DELETED_COLECOES : null) || (typeof getScopedKey === 'function' ? getScopedKey('jornada_deleted_colecoes') : 'jornada_deleted_colecoes');
+  safeSetItem(k, JSON.stringify(Array.from(s)));
+  if (typeof triggerSyncPush === 'function') triggerSyncPush();
+}
+
 function loadEdits() {
   const k = (typeof window !== 'undefined' && window.KEY_EDITS) ? window.KEY_EDITS : (typeof getScopedKey === 'function' ? getScopedKey('jornada_edited_matches') : 'jornada_edited_matches');
-  try { return JSON.parse(localStorage.getItem(k)) || {}; } catch(e) { return {}; }
+  try {
+    const raw = localStorage.getItem(k);
+    if (raw) return JSON.parse(raw) || {};
+    if (typeof localStorage !== 'undefined') {
+      const anonRaw = localStorage.getItem('jornada_u_anonymous_edited_matches') || localStorage.getItem('jornada_edited_matches');
+      if (anonRaw) {
+        const aEdits = JSON.parse(anonRaw) || {};
+        if (Object.keys(aEdits).length > 0) {
+          safeSetItem(k, JSON.stringify(aEdits));
+          return aEdits;
+        }
+      }
+    }
+    return {};
+  } catch(e) { return {}; }
 }
 function saveEdits(e) {
   const k = (typeof window !== 'undefined' && window.KEY_EDITS) ? window.KEY_EDITS : (typeof getScopedKey === 'function' ? getScopedKey('jornada_edited_matches') : 'jornada_edited_matches');
@@ -349,6 +453,14 @@ if (typeof window !== 'undefined') {
   window.saveColecoes = saveColecoes;
   window.loadDeleted = loadDeleted;
   window.saveDeleted = saveDeleted;
+  window.loadDeletedDecks = loadDeletedDecks;
+  window.saveDeletedDecks = saveDeletedDecks;
+  window.loadDeletedPlayers = loadDeletedPlayers;
+  window.saveDeletedPlayers = saveDeletedPlayers;
+  window.loadDeletedLocais = loadDeletedLocais;
+  window.saveDeletedLocais = saveDeletedLocais;
+  window.loadDeletedColecoes = loadDeletedColecoes;
+  window.saveDeletedColecoes = saveDeletedColecoes;
   window.loadEdits = loadEdits;
   window.saveEdits = saveEdits;
   window.loadArchetypeUnifications = loadArchetypeUnifications;
@@ -370,6 +482,14 @@ if (typeof globalThis !== 'undefined') {
   globalThis.saveColecoes = saveColecoes;
   globalThis.loadDeleted = loadDeleted;
   globalThis.saveDeleted = saveDeleted;
+  globalThis.loadDeletedDecks = loadDeletedDecks;
+  globalThis.saveDeletedDecks = saveDeletedDecks;
+  globalThis.loadDeletedPlayers = loadDeletedPlayers;
+  globalThis.saveDeletedPlayers = saveDeletedPlayers;
+  globalThis.loadDeletedLocais = loadDeletedLocais;
+  globalThis.saveDeletedLocais = saveDeletedLocais;
+  globalThis.loadDeletedColecoes = loadDeletedColecoes;
+  globalThis.saveDeletedColecoes = saveDeletedColecoes;
   globalThis.loadEdits = loadEdits;
   globalThis.saveEdits = saveEdits;
   globalThis.loadArchetypeUnifications = loadArchetypeUnifications;

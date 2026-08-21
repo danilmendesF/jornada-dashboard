@@ -117,11 +117,12 @@ async function verifyAuthToken(token) {
       if (data.valid && data.user) {
         _rootAuth.currentUser = data.user;
         localStorage.setItem('jornada_user_profile', JSON.stringify(data.user));
+        console.log(`[Jornada Auth] Token de sessão verificado: user="${data.user.name}", id="${data.user.id}"`);
         updateAuthUI();
       }
     }
   } catch (e) {
-    console.warn('Auth token verify offline check:', e);
+    console.warn('[Jornada Auth] Falha na verificação offline do token:', e);
   }
 }
 
@@ -283,8 +284,9 @@ async function executeLogin(email, password) {
     localStorage.setItem('jornada_auth_token', data.token);
     localStorage.setItem('jornada_user_profile', JSON.stringify(data.user));
     _rootAuth.currentUser = data.user;
+    console.log(`[Jornada Auth] Login realizado com sucesso: user="${data.user.name}", id="${data.user.id}", role="${data.user.role}"`);
 
-    // CHG-006.2: Migrate legacy storage to user namespace and re-initialize data
+    // CHG-006.2: Migrate legacy & anonymous storage to user namespace and re-initialize data
     if (typeof _rootAuth.migrateLegacyUserStorage === 'function') {
       _rootAuth.migrateLegacyUserStorage(data.user.id);
     }
@@ -297,9 +299,10 @@ async function executeLogin(email, password) {
     // Pre-Pull Obrigatório antes de declarar READY (CHG-005)
     if (typeof _rootAuth.pullFromCloud === 'function') {
       try {
+        console.log(`[Jornada Auth] Iniciando Pre-Pull obrigatório pós-login para o usuário "${data.user.name}"`);
         await _rootAuth.pullFromCloud(false);
       } catch (err) {
-        console.warn('[Login Sync] Pull offline fallback:', err);
+        console.warn('[Jornada Auth] Pre-Pull offline fallback pós-login:', err);
       }
     }
     if (typeof _rootAuth.startSyncInterval === 'function') {
@@ -406,6 +409,7 @@ function logoutUser() {
     localStorage.removeItem('jornada_user_profile');
   }
   _root.currentUser = null;
+  console.log('[Jornada Auth] 👋 Sessão encerrada (Logout). State -> LOGGED_OUT');
 
   if (typeof allData !== 'undefined') allData = [];
   if (typeof filtered !== 'undefined') filtered = [];

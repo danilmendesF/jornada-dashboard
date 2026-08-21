@@ -5,65 +5,19 @@
 
 'use strict';
 
-// ── STORAGE KEYS ─────────────────────────────────────────────────────────────
-const KEY_DECKS   = 'jornada_decks';
-const KEY_MATCHES = 'jornada_manual_matches';
-const KEY_PLAYERS = 'jornada_players';
-const KEY_LOCAIS  = 'jornada_locais';
-const KEY_COLECOES = 'jornada_colecoes';
-const KEY_DELETED = 'jornada_deleted_ids';
-const KEY_DELETED_DECKS   = 'jornada_deleted_decks';
-const KEY_DELETED_PLAYERS = 'jornada_deleted_players';
-const KEY_DELETED_LOCAIS  = 'jornada_deleted_locais';
-const KEY_DELETED_COLECOES = 'jornada_deleted_colecoes';
-const KEY_EDITS   = 'jornada_edited_matches';
-const KEY_ADMIN_PIN = 'jornada_admin_pin';
-
-// ── LOAD / SAVE ───────────────────────────────────────────────────────────────
-function loadDecks()   { try { return JSON.parse(localStorage.getItem(KEY_DECKS))   || []; } catch { return []; } }
-function loadManual()  { try { return JSON.parse(localStorage.getItem(KEY_MATCHES)) || []; } catch { return []; } }
-function loadPlayers() { try { return JSON.parse(localStorage.getItem(KEY_PLAYERS)) || ['Danilo', 'GuiVaz', 'Victor', 'Lipe']; } catch { return ['Danilo', 'GuiVaz', 'Victor', 'Lipe']; } }
-function loadLocais()  { try { return JSON.parse(localStorage.getItem(KEY_LOCAIS))  || ['Regional SP','Regional Curitiba','League Cup','Treino Interno','TCG Live Online']; } catch { return ['Regional SP','Regional Curitiba','League Cup','Treino Interno','TCG Live Online']; } }
-function loadColecoes(){ try { return JSON.parse(localStorage.getItem(KEY_COLECOES))|| ['SV8 Surging Sparks','SV7 Stellar Crown','SV6 Twilight Masquerade','SV5 Temporal Forces','SV4 Paradox Rift']; } catch { return ['SV8 Surging Sparks','SV7 Stellar Crown','SV6 Twilight Masquerade','SV5 Temporal Forces','SV4 Paradox Rift']; } }
-
-function safeSetItem(key, val) {
-  try {
-    localStorage.setItem(key, val);
-    return true;
-  } catch (err) {
-    console.error(`❌ Erro ao salvar "${key}" no localStorage:`, err);
-    if (typeof showToast === 'function') {
-      showToast('⚠️ Erro ao salvar dados no navegador (armazenamento cheio)');
-    }
-    return false;
-  }
+// ── STORAGE & DATASET ALIASES (DELEGATED TO JS/STORAGE.JS) ───────────────────
+function refreshManagerDatasets() {
+  decks    = typeof loadDecks === 'function' ? loadDecks() : [];
+  players  = typeof loadPlayers === 'function' ? loadPlayers() : ['Danilo', 'GuiVaz', 'Victor', 'Lipe'];
+  locais   = typeof loadLocais === 'function' ? loadLocais() : ['Regional SP','Regional Curitiba','League Cup','Treino Interno','TCG Live Online'];
+  colecoes = typeof loadColecoes === 'function' ? loadColecoes() : ['SV8 Surging Sparks','SV7 Stellar Crown','SV6 Twilight Masquerade','SV5 Temporal Forces','SV4 Paradox Rift'];
 }
 
-function saveDecks(d)   { safeSetItem(KEY_DECKS,   JSON.stringify(d)); if (typeof triggerSyncPush === 'function') triggerSyncPush(); }
-function saveManual(m)  { safeSetItem(KEY_MATCHES, JSON.stringify(m)); if (typeof triggerSyncPush === 'function') triggerSyncPush(); }
-function savePlayers(p) { safeSetItem(KEY_PLAYERS, JSON.stringify(p)); if (typeof triggerSyncPush === 'function') triggerSyncPush(); }
-function saveLocais(l)  { safeSetItem(KEY_LOCAIS,  JSON.stringify(l)); if (typeof triggerSyncPush === 'function') triggerSyncPush(); }
-function saveColecoes(c){ safeSetItem(KEY_COLECOES,JSON.stringify(c)); if (typeof triggerSyncPush === 'function') triggerSyncPush(); }
+let decks    = typeof loadDecks === 'function' ? loadDecks() : [];
+let players  = typeof loadPlayers === 'function' ? loadPlayers() : ['Danilo', 'GuiVaz', 'Victor', 'Lipe'];
+let locais   = typeof loadLocais === 'function' ? loadLocais() : ['Regional SP','Regional Curitiba','League Cup','Treino Interno','TCG Live Online'];
+let colecoes = typeof loadColecoes === 'function' ? loadColecoes() : ['SV8 Surging Sparks','SV7 Stellar Crown','SV6 Twilight Masquerade','SV5 Temporal Forces','SV4 Paradox Rift'];
 
-function loadDeleted()         { try { return new Set(JSON.parse(localStorage.getItem(KEY_DELETED))          || []); } catch { return new Set(); } }
-function loadDeletedDecks()    { try { return new Set(JSON.parse(localStorage.getItem(KEY_DELETED_DECKS))    || []); } catch { return new Set(); } }
-function loadDeletedPlayers()  { try { return new Set(JSON.parse(localStorage.getItem(KEY_DELETED_PLAYERS))  || []); } catch { return new Set(); } }
-function loadDeletedLocais()   { try { return new Set(JSON.parse(localStorage.getItem(KEY_DELETED_LOCAIS))   || []); } catch { return new Set(); } }
-function loadDeletedColecoes() { try { return new Set(JSON.parse(localStorage.getItem(KEY_DELETED_COLECOES)) || []); } catch { return new Set(); } }
-
-function loadEdits()           { try { return JSON.parse(localStorage.getItem(KEY_EDITS)) || {}; } catch { return {}; } }
-
-function saveDeleted(s)         { safeSetItem(KEY_DELETED,          JSON.stringify([...s])); if (typeof triggerSyncPush === 'function') triggerSyncPush(); }
-function saveDeletedDecks(s)    { safeSetItem(KEY_DELETED_DECKS,    JSON.stringify([...s])); if (typeof triggerSyncPush === 'function') triggerSyncPush(); }
-function saveDeletedPlayers(s)  { safeSetItem(KEY_DELETED_PLAYERS,  JSON.stringify([...s])); if (typeof triggerSyncPush === 'function') triggerSyncPush(); }
-function saveDeletedLocais(s)   { safeSetItem(KEY_DELETED_LOCAIS,   JSON.stringify([...s])); if (typeof triggerSyncPush === 'function') triggerSyncPush(); }
-function saveDeletedColecoes(s) { safeSetItem(KEY_DELETED_COLECOES, JSON.stringify([...s])); if (typeof triggerSyncPush === 'function') triggerSyncPush(); }
-function saveEdits(e)          { safeSetItem(KEY_EDITS,            JSON.stringify(e));      if (typeof triggerSyncPush === 'function') triggerSyncPush(); }
-
-let decks    = loadDecks();
-let players  = loadPlayers();
-let locais   = loadLocais();
-let colecoes = loadColecoes();
 
 // ── PTCGL PARSER ─────────────────────────────────────────────────────────────
 function parsePTCGL(raw) {
@@ -162,6 +116,7 @@ function closeModal(id, force = false) {
 
 // ── POPULATE PLAYER SELECTS ──────────────────────────────────────────────────
 function populatePlayerSelects() {
+  refreshManagerDatasets();
   const activeName = (typeof getActivePlayerName === 'function' ? getActivePlayerName() : null) || window.currentUser?.name || '';
 
   ['formDeckPlayer','filterPlayer'].forEach(id => {
@@ -321,6 +276,7 @@ window.syncAllTeamMirrorMatches = function() {
 
 // ── POPULATE DECK SELECTS ────────────────────────────────────────────────────
 function populateDeckSelects() {
+  refreshManagerDatasets();
   const selects = [
     { id: 'formMatchDeck', placeholder: 'Sem deck cadastrado' },
     { id: 'formMatchDeckAdv', placeholder: 'Selecione…' },
@@ -361,6 +317,7 @@ function populateDeckSelects() {
 
 // ── RENDER DECKS & ARCHETYPES LISTS ──────────────────────────────────────────
 function renderArchetypesList() {
+  refreshManagerDatasets();
   const container = document.getElementById('archetypesList');
   if (!container) return;
 
@@ -1614,6 +1571,7 @@ window.deletePlayer = function(name) {
 }
 
 function renderPlayersList() {
+  refreshManagerDatasets();
   const el = document.getElementById('playersList');
   if (!el) return;
   el.innerHTML = players.map(p => `
@@ -1689,6 +1647,7 @@ window.deleteLocal = function(name) {
 }
 
 function renderLocaisList() {
+  refreshManagerDatasets();
   const el = document.getElementById('locaisList');
   if (!el) return;
   el.innerHTML = locais.map(l => `
@@ -1700,6 +1659,7 @@ function renderLocaisList() {
 }
 
 function populateLocalSelects() {
+  refreshManagerDatasets();
   const customLocais = (typeof loadLocais === 'function') ? loadLocais() : [];
   const dataLocais   = (typeof allData !== 'undefined' && Array.isArray(allData)) ? allData.map(d => d.Local).filter(Boolean) : [];
   const allLocais    = [...new Set([...customLocais, ...dataLocais])].sort((a, b) => a.localeCompare(b));
@@ -1781,6 +1741,7 @@ window.deleteColecao = function(name) {
 }
 
 function renderColecoesList() {
+  refreshManagerDatasets();
   const el = document.getElementById('colecoesList');
   if (!el) return;
   el.innerHTML = colecoes.map(c => `
@@ -1792,6 +1753,7 @@ function renderColecoesList() {
 }
 
 function populateColecaoSelects() {
+  refreshManagerDatasets();
   const customColecoes = (typeof loadColecoes === 'function') ? loadColecoes() : [];
   const dataColecoes   = (typeof allData !== 'undefined' && Array.isArray(allData)) ? allData.map(d => d.Colecao).filter(Boolean) : [];
   const allColecoes    = [...new Set([...customColecoes, ...dataColecoes].map(c => c ? c.trim() : ''))].filter(Boolean).sort((a, b) => a.localeCompare(b));
@@ -2399,19 +2361,17 @@ window.importBackup = function(file) {
           throw new Error('Formato de backup inválido.');
         }
 
-        localStorage.setItem(KEY_DECKS, JSON.stringify(data.decks || []));
-        localStorage.setItem(KEY_MATCHES, JSON.stringify(data.manualMatches || []));
-        localStorage.setItem(KEY_PLAYERS, JSON.stringify(data.players || []));
-        localStorage.setItem(KEY_LOCAIS, JSON.stringify(data.locais || []));
-        localStorage.setItem(KEY_DELETED, JSON.stringify(data.deletedIds || []));
-        localStorage.setItem(KEY_DELETED_DECKS, JSON.stringify(data.deletedDecks || []));
-        localStorage.setItem(KEY_DELETED_PLAYERS, JSON.stringify(data.deletedPlayers || []));
-        localStorage.setItem(KEY_DELETED_LOCAIS, JSON.stringify(data.deletedLocais || []));
-        localStorage.setItem(KEY_EDITS, JSON.stringify(data.editedMatches || {}));
+        saveDecks(data.decks || []);
+        saveManual(data.manualMatches || []);
+        savePlayers(data.players || []);
+        saveLocais(data.locais || []);
+        saveDeleted(new Set(data.deletedIds || []));
+        saveDeletedDecks(new Set(data.deletedDecks || []));
+        saveDeletedPlayers(new Set(data.deletedPlayers || []));
+        saveDeletedLocais(new Set(data.deletedLocais || []));
+        saveEdits(data.editedMatches || {});
 
-        decks   = data.decks || [];
-        players = data.players || [];
-        locais  = data.locais || [];
+        refreshManagerDatasets();
 
         if (typeof resetAllFilters === 'function') resetAllFilters();
         else {
@@ -2589,22 +2549,19 @@ window.restoreAutoBackup = function(backupId) {
   if (!confirm(`Restaurar o backup do dia ${target.date}? Seus dados atuais serão substituídos pelo estado do dia ${target.date}.`)) return;
 
   const data = target.payload;
-  safeSetItem(KEY_DECKS, JSON.stringify(data.decks || []));
-  safeSetItem(KEY_MATCHES, JSON.stringify(data.manualMatches || []));
-  safeSetItem(KEY_PLAYERS, JSON.stringify(data.players || []));
-  safeSetItem(KEY_LOCAIS, JSON.stringify(data.locais || []));
-  safeSetItem(KEY_COLECOES, JSON.stringify(data.colecoes || []));
-  safeSetItem(KEY_DELETED, JSON.stringify(data.deletedIds || []));
-  safeSetItem(KEY_DELETED_DECKS, JSON.stringify(data.deletedDecks || []));
-  safeSetItem(KEY_DELETED_PLAYERS, JSON.stringify(data.deletedPlayers || []));
-  safeSetItem(KEY_DELETED_LOCAIS, JSON.stringify(data.deletedLocais || []));
-  safeSetItem(KEY_DELETED_COLECOES, JSON.stringify(data.deletedColecoes || []));
-  safeSetItem(KEY_EDITS, JSON.stringify(data.editedMatches || {}));
+  saveDecks(data.decks || []);
+  saveManual(data.manualMatches || []);
+  savePlayers(data.players || []);
+  saveLocais(data.locais || []);
+  saveColecoes(data.colecoes || []);
+  saveDeleted(new Set(data.deletedIds || []));
+  saveDeletedDecks(new Set(data.deletedDecks || []));
+  saveDeletedPlayers(new Set(data.deletedPlayers || []));
+  saveDeletedLocais(new Set(data.deletedLocais || []));
+  saveDeletedColecoes(new Set(data.deletedColecoes || []));
+  saveEdits(data.editedMatches || {});
 
-  decks = data.decks || [];
-  players = data.players || [];
-  locais = data.locais || [];
-  colecoes = data.colecoes || [];
+  refreshManagerDatasets();
 
   if (typeof resetAllFilters === 'function') resetAllFilters();
   else {
