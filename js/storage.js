@@ -125,7 +125,38 @@ function migrateLegacyUserStorage(userId) {
 
 function loadDecks() {
   const k = (typeof window !== 'undefined' && window.KEY_DECKS) ? window.KEY_DECKS : (typeof getScopedKey === 'function' ? getScopedKey('jornada_decks') : 'jornada_decks');
-  try { return JSON.parse(localStorage.getItem(k)) || []; } catch(e) { return []; }
+  try {
+    const raw = localStorage.getItem(k);
+    if (raw) {
+      const d = JSON.parse(raw);
+      if (Array.isArray(d) && d.length > 0) return d;
+    }
+    // Fallback chain across user namespaces
+    if (typeof localStorage !== 'undefined') {
+      let bestData = [];
+      const legacyRaw = localStorage.getItem('jornada_decks');
+      if (legacyRaw) {
+        try {
+          const lData = JSON.parse(legacyRaw);
+          if (Array.isArray(lData) && lData.length > bestData.length) bestData = lData;
+        } catch(e) {}
+      }
+      for (let i = 0; i < localStorage.length; i++) {
+        const candidateKey = localStorage.key(i);
+        if (candidateKey && candidateKey !== k && /^jornada_u_.+_decks$/.test(candidateKey)) {
+          try {
+            const cData = JSON.parse(localStorage.getItem(candidateKey)) || [];
+            if (Array.isArray(cData) && cData.length > bestData.length) bestData = cData;
+          } catch(e) {}
+        }
+      }
+      if (bestData.length > 0) {
+        safeSetItem(k, JSON.stringify(bestData));
+        return bestData;
+      }
+    }
+    return [];
+  } catch(e) { return []; }
 }
 function saveDecks(d) {
   const k = (typeof window !== 'undefined' && window.KEY_DECKS) ? window.KEY_DECKS : (typeof getScopedKey === 'function' ? getScopedKey('jornada_decks') : 'jornada_decks');
@@ -213,7 +244,38 @@ function saveManual(m) {
 
 function loadPlayers() {
   const k = (typeof window !== 'undefined' && window.KEY_PLAYERS) ? window.KEY_PLAYERS : (typeof getScopedKey === 'function' ? getScopedKey('jornada_players') : 'jornada_players');
-  try { return JSON.parse(localStorage.getItem(k)) || ['Danilo', 'GuiVaz', 'Victor', 'Lipe']; } catch(e) { return ['Danilo', 'GuiVaz', 'Victor', 'Lipe']; }
+  try {
+    const raw = localStorage.getItem(k);
+    if (raw) {
+      const p = JSON.parse(raw);
+      if (Array.isArray(p) && p.length > 0) return p;
+    }
+    // Fallback chain across user namespaces
+    if (typeof localStorage !== 'undefined') {
+      let bestData = [];
+      const legacyRaw = localStorage.getItem('jornada_players');
+      if (legacyRaw) {
+        try {
+          const lData = JSON.parse(legacyRaw);
+          if (Array.isArray(lData) && lData.length > bestData.length) bestData = lData;
+        } catch(e) {}
+      }
+      for (let i = 0; i < localStorage.length; i++) {
+        const candidateKey = localStorage.key(i);
+        if (candidateKey && candidateKey !== k && /^jornada_u_.+_players$/.test(candidateKey)) {
+          try {
+            const cData = JSON.parse(localStorage.getItem(candidateKey)) || [];
+            if (Array.isArray(cData) && cData.length > bestData.length) bestData = cData;
+          } catch(e) {}
+        }
+      }
+      if (bestData.length > 0) {
+        safeSetItem(k, JSON.stringify(bestData));
+        return bestData;
+      }
+    }
+    return ['Danilo', 'GuiVaz', 'Victor', 'Lipe'];
+  } catch(e) { return ['Danilo', 'GuiVaz', 'Victor', 'Lipe']; }
 }
 function savePlayers(p) {
   const k = (typeof window !== 'undefined' && window.KEY_PLAYERS) ? window.KEY_PLAYERS : (typeof getScopedKey === 'function' ? getScopedKey('jornada_players') : 'jornada_players');

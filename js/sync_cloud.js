@@ -350,7 +350,9 @@ async function pullFromCloud(quiet = false) {
           setSyncStatus('success', 'Sincronizado com a nuvem!');
           if (!quiet && typeof showToast === 'function') showToast('☁️ Dados sincronizados com a nuvem!');
 
-          const hasPending = _hasPendingSync || (typeof window !== 'undefined' && window._hasPendingSync) || (typeof localStorage !== 'undefined' && localStorage.getItem('jornada_sync_pending') === '1');
+          const localManual = (typeof window !== 'undefined' && typeof window.loadManual === 'function') ? window.loadManual() : (typeof loadManual === 'function' ? loadManual() : []);
+          const cloudCount = Array.isArray(data.manualMatches) ? data.manualMatches.length : 0;
+          const hasPending = _hasPendingSync || (typeof window !== 'undefined' && window._hasPendingSync) || (typeof localStorage !== 'undefined' && localStorage.getItem('jornada_sync_pending') === '1') || (localManual.length > cloudCount);
           if (hasPending) {
             triggerSyncPush();
           }

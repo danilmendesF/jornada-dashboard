@@ -430,10 +430,14 @@ function populateMultiPlayerFilter() {
   
   allAvailablePlayers = [...new Set([...dataPlayers, ...managerPlayers])].sort((a, b) => a.localeCompare(b));
 
-  if (!isExplicitPlayerSelection) {
+  if (!isExplicitPlayerSelection || selectedPlayers.size === 0) {
     selectedPlayers = new Set(allAvailablePlayers);
   } else {
     selectedPlayers = new Set([...selectedPlayers].filter(p => allAvailablePlayers.includes(p)));
+    if (selectedPlayers.size === 0 && allAvailablePlayers.length > 0) {
+      selectedPlayers = new Set(allAvailablePlayers);
+      isExplicitPlayerSelection = false;
+    }
   }
 
   renderMultiPlayerItems(allAvailablePlayers);
@@ -577,10 +581,14 @@ function populateMultiDeckFilter() {
   
   allAvailableDecks = [...new Set([...dataDecks, ...oppDecks, ...managerDecks])].sort((a, b) => a.localeCompare(b));
 
-  if (!isExplicitSelection) {
+  if (!isExplicitSelection || selectedDecks.size === 0) {
     selectedDecks = new Set(allAvailableDecks);
   } else {
     selectedDecks = new Set([...selectedDecks].filter(d => allAvailableDecks.includes(d)));
+    if (selectedDecks.size === 0 && allAvailableDecks.length > 0) {
+      selectedDecks = new Set(allAvailableDecks);
+      isExplicitSelection = false;
+    }
   }
 
   renderMultiDeckItems(allAvailableDecks);
@@ -958,12 +966,12 @@ function applyFilters() {
     const mDate        = (d.Data || '').slice(0, 10);
     const confVal      = d.Confiabilidade || 'Alta';
 
-    const matchPlayer  = selectedPlayers.has(pName);
+    const matchPlayer  = (selectedPlayers.size === 0 && !isExplicitPlayerSelection) || selectedPlayers.has(pName);
     const matchFormato = !formato || fName === formato;
     const matchLocal   = !local   || lName === local;
     const matchColecao = !colecao || cName === colecao;
     const dArchetype   = getMatchDeck(d);
-    const matchDeck    = selectedDecks.has(dArchetype) || selectedDecks.has(d.Deck);
+    const matchDeck    = (selectedDecks.size === 0 && !isExplicitSelection) || selectedDecks.has(dArchetype) || selectedDecks.has(d.Deck);
     const matchConf    = (confVal === 'Alta' && confAltaChecked) || (confVal === 'Baixa' && confBaixaChecked);
 
     let matchDate = true;

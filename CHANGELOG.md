@@ -3,6 +3,14 @@
 Todas as alteracoes notaveis neste projeto serao documentadas neste arquivo.
 O formato e baseado em Keep a Changelog e este projeto adere ao Versionamento Semantico.
 
+## [2.1.10] - 2026-08-20
+### Corrigido (Convergência Multi-Device, Auto-Push e Blindagem de Filtros)
+- **Auto-Upload de Partidas Pendentes:** Adicionada verificação no `pullFromCloud()` que detecta se a base local possui mais partidas que a nuvem (`localManual.length > cloudCount`) e dispara automaticamente o `pushToCloud()`, convergindo as 692 partidas na nuvem.
+- **Auto-Recuperação e Blindagem dos Filtros de Tela:** Adicionada auto-seleção em `populateMultiDeckFilter()` e `populateMultiPlayerFilter()` quando `selectedDecks` ou `selectedPlayers` iniciam vazios em aba anônima, e blindagem no `applyFilters()` para não descartar partidas na inicialização limpa.
+- **Fallback Multi-Namespace para Decks e Players:** Implementada cadeia de busca em `loadDecks()` e `loadPlayers()` em `js/storage.js` para recuperar coleções de decks existentes em outros namespaces no `localStorage`.
+
+---
+
 ## [2.1.9] - 2026-08-20
 ### Corrigido (Produção — Assets Estáticos, CSP, Aba Anônima & Multi-Device Sync)
 - **Cópia de Assets Estáticos na Raiz Pública:** Atualizado `scripts/build_bundle.cjs` para copiar recursivamente `rootDir/assets` e `logo.png` diretamente para `public/assets/` e `public/logo.png`. Corrige o erro 404 de `/assets/trainer-avatar.svg` e `auth_background.jpg` na Vercel.
