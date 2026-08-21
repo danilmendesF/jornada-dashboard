@@ -541,7 +541,6 @@ async function pushToCloud(attempt = 0, preservedIdempotencyKey = null) {
         if (typeof window !== 'undefined') window.syncLifecycleState = 'READY';
         setSyncStatus('success', 'Dados salvos na nuvem!');
         console.log(`[Jornada Sync] ⬆️ PUSH Sucesso: newRevision=${_currentCloudRevision}, partidas=${manual.length}`);
-        if (typeof showToast === 'function') showToast(`☁️ Dados salvos na nuvem (${manual.length} partidas)!`);
         return { success: true, revision: _currentCloudRevision };
       }
 

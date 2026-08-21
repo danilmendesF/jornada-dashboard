@@ -3,6 +3,12 @@
 Todas as alteracoes notaveis neste projeto serao documentadas neste arquivo.
 O formato e baseado em Keep a Changelog e este projeto adere ao Versionamento Semantico.
 
+## [2.1.23] - 2026-08-21
+### Silenciamento Total de Notificações em Segundo Plano
+- **Eliminação de Toast no Push Automático:** Removido o pop-up ("Dados salvos na nuvem") das sincronizações automáticas em segundo plano. O processo de salvamento na nuvem agora ocorre de forma 100% invisível e silenciosa para o usuário, mantendo as mensagens de confirmação restritas apenas aos cliques manuais em "Sincronizar Nuvem".
+
+---
+
 ## [2.1.22] - 2026-08-21
 ### Correção de Sobrescrita de Revisão no Retry OCC
 - **Eliminação de Sobrescrita de Revisão:** Removida a atribuição estática que sobrescrevia a revisão atualizada pelo `pullFromCloud` pós-409, garantindo que a tentativa de reconciliação utilize a revisão real mais recente da nuvem (`baseRevision = 21`) e complete o commit com sucesso.
