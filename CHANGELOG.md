@@ -3,6 +3,13 @@
 Todas as alteracoes notaveis neste projeto serao documentadas neste arquivo.
 O formato e baseado em Keep a Changelog e este projeto adere ao Versionamento Semantico.
 
+## [2.1.12] - 2026-08-21
+### Adicionado & Corrigido (Feedback Visual na UI e Botão Forçar Sincronização)
+- **Botão "Sincronizar Nuvem" na UI:** Adicionado item "🔄 Sincronizar Nuvem" diretamente no dropdown de perfil do usuário (`#profileDropdownContainer`), permitindo disparar a sincronização imediata (`forceSyncCloud()`) a qualquer momento com feedback visual explícito.
+- **Toasts Informativos no Push/Pull:** Implementados toasts de status na tela para confirmação visual de envio (`☁️ Dados salvos na nuvem (N partidas)!`), início de auto-sincronização (`🔄 Sincronizando N partidas locais com a nuvem...`) e avisos claros em caso de sessão deslogada/expirada.
+
+---
+
 ## [2.1.11] - 2026-08-21
 ### Corrigido (Causas Raiz — Sincronização Multi-Device e Aba Anônima)
 - **🔴 Campo `edits` vs `editedMatches` Mismatch (BUG CRÍTICO):** O `pushToCloud()` enviava o campo como `edits`, mas o Redis armazenava como `editedMatches`. O `pullFromCloud()` verificava `data.edits` que era sempre `undefined`. Resultado: edições de partidas nunca eram sincronizadas entre dispositivos. Corrigido em `js/sync_cloud.js` (push envia `editedMatches`, pull lê `data.editedMatches || data.edits`) e `api/sync.js` (Lua aceita ambos os nomes).

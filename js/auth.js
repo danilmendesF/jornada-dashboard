@@ -152,6 +152,7 @@ _rootAuth.updateAuthUI = function() {
               <small style="color:var(--text2);font-size:0.75rem;">${_rootAuth.currentUser.email}</small>
             </div>
             <a href="#" class="dropdown-item">👤 Meu Perfil</a>
+            <a href="#" class="dropdown-item" onclick="if(typeof forceSyncCloud==='function')forceSyncCloud();return false;">🔄 Sincronizar Nuvem</a>
             ${isDanil ? '<a href="#" class="dropdown-item" onclick="document.getElementById(\'btnOpenManager\').click()">📋 Gerenciar</a>' : ''}
             <div class="dropdown-divider"></div>
             <a href="#" class="dropdown-item text-red" onclick="logoutUser()">🚪 Sair</a>

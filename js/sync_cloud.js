@@ -356,6 +356,9 @@ async function pullFromCloud(quiet = false) {
           const cloudCount = Array.isArray(data.manualMatches) ? data.manualMatches.length : 0;
           const hasPending = _hasPendingSync || (typeof window !== 'undefined' && window._hasPendingSync) || (typeof localStorage !== 'undefined' && localStorage.getItem('jornada_sync_pending') === '1') || (localManual.length > cloudCount);
           if (hasPending) {
+            if (typeof showToast === 'function' && localManual.length > cloudCount) {
+              showToast(`🔄 Sincronizando ${localManual.length} partidas locais com a nuvem...`);
+            }
             triggerSyncPush();
           }
         } else {
@@ -488,6 +491,7 @@ async function pushToCloud(attempt = 0, preservedIdempotencyKey = null) {
         syncLifecycleState = 'READY';
         if (typeof window !== 'undefined') window.syncLifecycleState = 'READY';
         setSyncStatus('success', 'Dados salvos na nuvem!');
+        if (typeof showToast === 'function') showToast(`☁️ Dados salvos na nuvem (${manual.length} partidas)!`);
         return { success: true, revision: _currentCloudRevision };
       }
 
@@ -496,6 +500,7 @@ async function pushToCloud(attempt = 0, preservedIdempotencyKey = null) {
         _syncRetryCount = 0;
         if (typeof window !== 'undefined') window._syncRetryCount = 0;
         setSyncStatus('error', 'Sessão expirada. Faça login novamente.');
+        if (typeof showToast === 'function') showToast('⚠️ Sessão expirada ou não autenticada. Faça login para salvar na nuvem.');
         return { error: 'UNAUTHORIZED' };
       }
 
@@ -708,6 +713,30 @@ function importBackup(file) {
   reader.readAsText(file);
 }
 
+async function forceSyncCloud() {
+  if (typeof showToast === 'function') showToast('🔄 Conectando e sincronizando com a nuvem...');
+  syncLifecycleState = 'READY';
+  isCloudSyncReady = true;
+  if (typeof window !== 'undefined') {
+    window.syncLifecycleState = 'READY';
+    window.isCloudSyncReady = true;
+  }
+  try {
+    const res = await pushToCloud(0);
+    if (res && res.success) {
+      const manual = (typeof loadManual === 'function') ? loadManual() : [];
+      if (typeof showToast === 'function') showToast(`☁️ Sucesso! ${manual.length} partidas sincronizadas na nuvem.`);
+      await pullFromCloud(true);
+      return res;
+    } else if (res && res.error) {
+      if (typeof showToast === 'function') showToast(`⚠️ Sincronização: ${res.error}`);
+      return res;
+    }
+  } catch (e) {
+    if (typeof showToast === 'function') showToast(`❌ Falha na sincronização: ${e.message || e}`);
+  }
+}
+
 // Global Exports for Browser & JSDOM
 if (typeof window !== 'undefined') {
   window.MAX_RETRY_ATTEMPTS = MAX_RETRY_ATTEMPTS;
@@ -736,6 +765,7 @@ if (typeof window !== 'undefined') {
   window._currentCloudRevision = _currentCloudRevision;
   window._syncRetryCount = _syncRetryCount;
   window._lastOperationIdempotencyKey = _lastOperationIdempotencyKey;
+  window.forceSyncCloud = forceSyncCloud;
 }
 if (typeof globalThis !== 'undefined') {
   globalThis.MAX_RETRY_ATTEMPTS = MAX_RETRY_ATTEMPTS;
