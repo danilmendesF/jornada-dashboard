@@ -3,6 +3,17 @@
 Todas as alteracoes notaveis neste projeto serao documentadas neste arquivo.
 O formato e baseado em Keep a Changelog e este projeto adere ao Versionamento Semantico.
 
+## [2.2.0] - 2026-08-21
+### Modernização Completa da Área de Torneios Online (SPEC-009 / CHG-007)
+- **Novo Limiar de Elegibilidade (>100 Jogadores):** Reduzido o filtro mínimo de participantes de 150 para 100 jogadores em torneios Standard, capturando maior volume de dados competitivos relevantes.
+- **Top 15 Decks no Meta Share:** Expansão da amostragem do gráfico e dos cards de arquétipos do Top 6 para o Top 15, com cálculo consolidado dos demais arquétipos na categoria "Outros".
+- **Painel de Taxa de Vitória (Win Rate por Deck):** Nova visualização integrada combinando gráfico horizontal de Win Rate por arquétipo com tabela discriminada de registros (V-D-E), total de partidas disputadas e badges de desempenho (>55% Verde, 48-55% Ciano, <48% Coral).
+- **Matriz Interativa de Matchups (Deck vs Deck):** Tabela termográfica de confrontos diretos entre os principais arquétipos do meta, com destaque selecionável de deck, coloração por vantagem e tooltips ricos com contagem de jogos e porcentagens.
+- **Pódios dos Torneios do Dia Anterior (Top 3):** Exibição detalhada de cada campeonato elegível com o pódio dos 3 primeiros colocados (🥇 Campeão, 🥈 Vice, 🥉 3º), incluindo links diretos para o torneio no Limitless e para as decklists oficiais.
+- **Correção de Destruição de Canvas (Chart.js):** Implementada a destruição segura de instâncias prévias do Chart.js via `Chart.getChart(canvas)?.destroy()` e `window.destroyChart`, eliminando qualquer erro de canvas reutilizado ao clicar em "Atualizar Dados".
+
+---
+
 ## [2.1.23] - 2026-08-21
 ### Silenciamento Total de Notificações em Segundo Plano
 - **Eliminação de Toast no Push Automático:** Removido o pop-up ("Dados salvos na nuvem") das sincronizações automáticas em segundo plano. O processo de salvamento na nuvem agora ocorre de forma 100% invisível e silenciosa para o usuário, mantendo as mensagens de confirmação restritas apenas aos cliques manuais em "Sincronizar Nuvem".

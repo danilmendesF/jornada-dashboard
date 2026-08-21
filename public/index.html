@@ -19,7 +19,7 @@
     />
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
-    <link rel="stylesheet" href="dist/style.min.css?v=2.1.23" />
+    <link rel="stylesheet" href="dist/style.min.css?v=2.2.0" />
   </head>
   <body>
     <div id="authPageWall" class="auth-wall-container" style="display: flex">
@@ -203,7 +203,7 @@
               font-family: &quot;Outfit&quot;, sans-serif;
             "
           >
-            v<span id="appVersionAuth">2.1.23</span>
+            v<span id="appVersionAuth">2.2.0</span>
           </div>
         </div>
       </div>
@@ -1243,7 +1243,7 @@
                 🏆 Resumo do Meta — Torneios Online
               </h2>
               <p class="meta-header-subtitle">
-                Análise competitiva dos torneios Standard com mais de 150 jogadores realizados em
+                Análise competitiva dos torneios Standard com mais de 100 jogadores realizados em
                 <strong id="metaDisplayDateBadge" class="meta-date-highlight">—</strong>
               </p>
             </div>
@@ -1271,7 +1271,7 @@
           <div id="tournamentsMetaEmpty" class="meta-state-box empty" style="display: none;">
             <div class="meta-state-icon">📋</div>
             <h4>Nenhum torneio elegível encontrado</h4>
-            <p>Não foram registrados torneios Standard com mais de 150 participantes na data (<span id="tournamentsMetaEmptyDate">—</span>).</p>
+            <p>Não foram registrados torneios Standard com mais de 100 participantes na data (<span id="tournamentsMetaEmptyDate">—</span>).</p>
           </div>
 
           <!-- Content State -->
@@ -1282,7 +1282,7 @@
                 <div class="kpi-icon"><i class="fas fa-trophy"></i></div>
                 <div class="kpi-info">
                   <div class="kpi-value" id="kpiMetaTournaments">—</div>
-                  <div class="kpi-label">Torneios Elegíveis (+150p)</div>
+                  <div class="kpi-label">Torneios Elegíveis (+100p)</div>
                 </div>
               </div>
               <div class="kpi-card meta-kpi">
@@ -1308,13 +1308,13 @@
               </div>
             </div>
 
-            <!-- Meta Share & Top Decks Visual Split -->
+            <!-- Meta Share & Top 15 Decks Visual Split -->
             <div class="meta-main-split">
               <!-- Left: Gráfico de Distribuição -->
               <div class="meta-chart-box">
                 <div class="meta-box-header">
                   <h3 class="meta-box-title">📊 Distribuição do Meta Share</h3>
-                  <span class="meta-box-tag">Top Decks vs Outros</span>
+                  <span class="meta-box-tag">Top 15 Decks vs Outros</span>
                 </div>
                 <div class="meta-canvas-wrap">
                   <canvas id="chartMetaShareDistribution"></canvas>
@@ -1325,19 +1325,64 @@
               <div class="meta-decks-box">
                 <div class="meta-box-header">
                   <h3 class="meta-box-title">🃏 Principais Arquétipos</h3>
-                  <span class="meta-box-tag">Top 6 + Outros</span>
+                  <span class="meta-box-tag">Top 15 + Outros</span>
                 </div>
                 <div class="meta-top-decks-grid" id="metaTopDecksGrid"></div>
               </div>
             </div>
 
-            <!-- Seção de Campeões -->
+            <!-- Seção 2: Taxa de Vitória (Win Rate por Deck) -->
+            <div class="meta-winrate-section">
+              <div class="meta-box-header">
+                <h3 class="meta-box-title">📈 Taxa de Vitória (Win Rate por Deck)</h3>
+                <span class="meta-box-tag">Performance nos Torneios Elegíveis</span>
+              </div>
+              <div class="meta-winrate-split">
+                <div class="meta-winrate-chart-box">
+                  <div class="meta-canvas-wrap winrate-wrap">
+                    <canvas id="chartMetaWinRate"></canvas>
+                  </div>
+                </div>
+                <div class="meta-winrate-table-box" id="metaWinRateTableContainer">
+                  <!-- Injetado dinamicamente via JS -->
+                </div>
+              </div>
+            </div>
+
+            <!-- Seção 3: Matriz de Matchups (Deck vs Deck) -->
+            <div class="meta-matchups-section">
+              <div class="meta-box-header">
+                <div class="meta-box-header-title-group">
+                  <h3 class="meta-box-title">⚔️ Matriz de Matchups (Deck vs Deck)</h3>
+                  <span class="meta-box-tag">Confrontos Diretos entre os Principais Arquétipos</span>
+                </div>
+                <div class="meta-matchup-controls">
+                  <label for="metaMatchupHighlightSelect" class="meta-control-label">Foco:</label>
+                  <select id="metaMatchupHighlightSelect" class="meta-select-styled">
+                    <option value="">Todos os Decks (Visão Geral)</option>
+                  </select>
+                </div>
+              </div>
+              <div class="meta-matchups-legend">
+                <span class="legend-item favored"><span class="legend-dot favored"></span> Favorável (&gt;55%)</span>
+                <span class="legend-item even"><span class="legend-dot even"></span> Equilibrado (48% - 55%)</span>
+                <span class="legend-item unfavored"><span class="legend-dot unfavored"></span> Desfavorável (&lt;48%)</span>
+                <span class="legend-item neutral"><span class="legend-dot neutral"></span> Mirror / Sem Dados</span>
+              </div>
+              <div class="meta-matchups-matrix-wrap" id="metaMatchupsMatrixContainer">
+                <!-- Tabela termográfica injetada via JS -->
+              </div>
+            </div>
+
+            <!-- Seção 4: Campeonatos do Dia Anterior & Pódios (Top 3) -->
             <div class="meta-champions-section">
               <div class="meta-box-header">
-                <h3 class="meta-box-title">🏆 Hall dos Campeões do Dia</h3>
-                <span class="meta-box-tag">Vencedores dos Torneios Elegíveis</span>
+                <h3 class="meta-box-title">🏆 Campeonatos do Dia Anterior & Pódios</h3>
+                <span class="meta-box-tag">Top 3 e Listas dos Torneios Elegíveis (+100p)</span>
               </div>
-              <div class="meta-champions-grid" id="metaChampionsGrid"></div>
+              <div class="meta-podiums-grid" id="metaTournamentsPodiumGrid">
+                <!-- Cards de Torneios com Top 3 injetados via JS -->
+              </div>
             </div>
           </div>
         </section>
@@ -2293,7 +2338,7 @@
 
           <div class="footer-bottom">
             <p class="footer-copy">&copy; 2026 Jornada TCG. Todos os direitos reservados.</p>
-            <div class="footer-version-tag">v<span id="appVersion">2.1.23</span></div>
+            <div class="footer-version-tag">v<span id="appVersion">2.2.0</span></div>
           </div>
         </div>
       </footer>
@@ -2455,7 +2500,7 @@
         </div>
       </div>
     </div>
-    <script src="dist/app.min.js?v=2.1.23"></script>
+    <script src="dist/app.min.js?v=2.2.0"></script>
     <div id="versionReloadOverlay">
       <div class="version-reload-spinner">
         <i class="fas fa-sync-alt"></i>

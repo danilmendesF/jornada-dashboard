@@ -3529,8 +3529,497 @@ html.auth-session-active #appDashboardContainer {
   border-color: rgba(255, 255, 255, 0.3);
 }
 
+.meta-deck-badges-group {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.meta-deck-wr-badge {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+}
+.meta-deck-wr-badge.high {
+  color: #34e0a1;
+  background: rgba(52, 224, 161, 0.12);
+  border-color: rgba(52, 224, 161, 0.3);
+}
+.meta-deck-wr-badge.mid {
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.12);
+  border-color: rgba(56, 189, 248, 0.3);
+}
+.meta-deck-wr-badge.low {
+  color: #f43f5e;
+  background: rgba(244, 63, 94, 0.12);
+  border-color: rgba(244, 63, 94, 0.3);
+}
+
+/* ============================================================
+   SEÇÃO 2: WIN RATE POR DECK
+   ============================================================ */
+.meta-winrate-section {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-bd);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+}
+
+.meta-winrate-split {
+  display: grid;
+  grid-template-columns: 1fr 1.1fr;
+  gap: 1.25rem;
+  align-items: start;
+}
+
+.meta-canvas-wrap.winrate-wrap {
+  min-height: 380px;
+}
+
+.meta-table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: rgba(18, 22, 34, 0.5);
+}
+
+.meta-wr-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.84rem;
+  text-align: left;
+}
+.meta-wr-table th {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text2);
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.65rem 0.85rem;
+  border-bottom: 1px solid var(--border);
+}
+.meta-wr-table td {
+  padding: 0.55rem 0.85rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  color: var(--text);
+  vertical-align: middle;
+}
+.meta-wr-table tr:hover {
+  background: rgba(0, 200, 248, 0.04);
+}
+
+.meta-table-rank {
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 700;
+  color: var(--accent2);
+  width: 28px;
+}
+.meta-table-deck-flex {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+.meta-table-pkmn-icon {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+}
+.meta-table-deck-name {
+  font-weight: 600;
+  white-space: nowrap;
+}
+.meta-wr-pill {
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 800;
+  font-size: 0.88rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  display: inline-block;
+}
+.meta-wr-pill.high {
+  background: rgba(52, 224, 161, 0.15);
+  color: #34e0a1;
+  border: 1px solid rgba(52, 224, 161, 0.3);
+}
+.meta-wr-pill.mid {
+  background: rgba(56, 189, 248, 0.15);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+}
+.meta-wr-pill.low {
+  background: rgba(244, 63, 94, 0.15);
+  color: #f43f5e;
+  border: 1px solid rgba(244, 63, 94, 0.3);
+}
+.meta-table-record {
+  font-size: 0.78rem;
+  color: var(--text2);
+  white-space: nowrap;
+}
+.meta-table-total {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.88rem;
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* ============================================================
+   SEÇÃO 3: MATRIZ DE MATCHUPS
+   ============================================================ */
+.meta-matchups-section {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-bd);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.meta-box-header-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.meta-matchup-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.meta-control-label {
+  font-size: 0.8rem;
+  color: var(--text2);
+  font-weight: 600;
+}
+.meta-select-styled {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 0.4rem 0.75rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+.meta-select-styled:focus {
+  border-color: var(--accent2);
+}
+
+.meta-matchups-legend {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1.2rem;
+  font-size: 0.78rem;
+  color: var(--text2);
+  padding: 0.4rem 0.6rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+}
+.legend-dot.favored { background: #34e0a1; box-shadow: 0 0 6px rgba(52, 224, 161, 0.4); }
+.legend-dot.even { background: #38bdf8; }
+.legend-dot.unfavored { background: #f43f5e; }
+.legend-dot.neutral { background: #475569; }
+
+.meta-matrix-scroll {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: rgba(15, 19, 30, 0.85);
+}
+
+.meta-matrix-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 1px;
+  font-size: 0.76rem;
+  text-align: center;
+}
+.matrix-corner-th {
+  background: rgba(26, 32, 50, 0.95);
+  color: var(--text2);
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 700;
+  padding: 0.6rem 0.75rem;
+  text-align: left;
+  position: sticky;
+  left: 0;
+  z-index: 2;
+}
+.matrix-col-th {
+  background: rgba(26, 32, 50, 0.9);
+  color: var(--text);
+  padding: 0.5rem 0.4rem;
+  min-width: 68px;
+  border-bottom: 1px solid var(--border);
+}
+.matrix-col-th.highlighted-col {
+  background: rgba(0, 200, 248, 0.15);
+  border-bottom: 2px solid var(--accent2);
+}
+.matrix-th-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+.matrix-th-icon {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+}
+
+.matrix-row-header {
+  background: rgba(26, 32, 50, 0.95);
+  color: var(--text);
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  white-space: nowrap;
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  border-right: 1px solid var(--border);
+}
+.matrix-row-header-flex {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+.matrix-row-icon {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+}
+.highlighted-row .matrix-row-header {
+  background: rgba(0, 200, 248, 0.15);
+  border-left: 3px solid var(--accent2);
+}
+
+.matrix-cell {
+  padding: 0.45rem 0.3rem;
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 700;
+  font-size: 0.82rem;
+  cursor: default;
+  transition: all 0.15s ease;
+}
+.matrix-cell:hover {
+  transform: scale(1.08);
+  z-index: 3;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.6);
+}
+.matrix-cell.cell-favored {
+  background: rgba(52, 224, 161, 0.22);
+  color: #34e0a1;
+}
+.matrix-cell.cell-even {
+  background: rgba(56, 189, 248, 0.18);
+  color: #38bdf8;
+}
+.matrix-cell.cell-unfavored {
+  background: rgba(244, 63, 94, 0.22);
+  color: #f43f5e;
+}
+.matrix-cell.cell-mirror {
+  background: rgba(255, 255, 255, 0.03);
+  color: #64748b;
+}
+.matrix-cell.cell-neutral {
+  background: rgba(255, 255, 255, 0.02);
+  color: #94a3b8;
+}
+.matrix-cell.highlight-focus {
+  outline: 1px solid var(--accent2);
+}
+
+/* ============================================================
+   SEÇÃO 4: PÓDIOS DOS CAMPEONATOS (TOP 3)
+   ============================================================ */
+.meta-podiums-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 1.25rem;
+}
+
+.meta-tournament-card {
+  background: rgba(18, 22, 34, 0.7);
+  border: 1px solid var(--glass-bd);
+  border-radius: var(--radius);
+  padding: 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+  transition: all 0.2s ease;
+}
+.meta-tournament-card:hover {
+  border-color: rgba(0, 200, 248, 0.35);
+  transform: translateY(-2px);
+}
+
+.meta-tournament-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.75rem;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.75rem;
+}
+.meta-tour-info-box {
+  flex: 1;
+  min-width: 0;
+}
+.meta-tour-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0 0 0.25rem 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.meta-tour-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.74rem;
+  color: var(--text2);
+}
+.meta-tour-players-tag {
+  background: rgba(0, 200, 248, 0.08);
+  color: var(--accent2);
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.meta-tournament-podium-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.meta-podium-row {
+  display: grid;
+  grid-template-columns: auto 1fr 1.2fr auto;
+  align-items: center;
+  gap: 0.6rem;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.45rem 0.65rem;
+  transition: background 0.2s ease;
+}
+.meta-podium-row:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+.meta-podium-row.first {
+  border-color: rgba(245, 200, 66, 0.35);
+  background: linear-gradient(90deg, rgba(245, 200, 66, 0.08) 0%, rgba(0, 0, 0, 0.25) 100%);
+}
+.meta-podium-row.second {
+  border-color: rgba(148, 163, 184, 0.3);
+  background: linear-gradient(90deg, rgba(148, 163, 184, 0.08) 0%, rgba(0, 0, 0, 0.25) 100%);
+}
+.meta-podium-row.third {
+  border-color: rgba(217, 119, 6, 0.3);
+  background: linear-gradient(90deg, rgba(217, 119, 6, 0.08) 0%, rgba(0, 0, 0, 0.25) 100%);
+}
+
+.meta-podium-badge {
+  font-size: 0.85rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+.podium-place-text {
+  display: none;
+}
+
+.meta-podium-player {
+  min-width: 0;
+}
+.podium-player-name {
+  font-size: 0.82rem;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+
+.meta-podium-deck {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 0;
+}
+.meta-podium-deck-icons {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+  flex-shrink: 0;
+}
+.podium-pkmn-icon {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+}
+.podium-deck-name {
+  font-size: 0.78rem;
+  color: var(--text2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.meta-btn-decklist-disabled {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.7rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--text3, #475569);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  cursor: not-allowed;
+}
+
 @media (max-width: 900px) {
-  .meta-main-split {
+  .meta-main-split, .meta-winrate-split {
+    grid-template-columns: 1fr;
+  }
+  .meta-podiums-grid {
     grid-template-columns: 1fr;
   }
 }

@@ -1,5 +1,5 @@
 // ── JS/TOURNAMENTS_META.JS ──────────────────────────────────────────────────
-// Resumo Diário do Meta de Torneios Online (Limitless TCG) — CHG-004
+// Resumo Diário do Meta de Torneios Online (Limitless TCG) — CHG-004 & CHG-007
 
 window.tournamentsMetaData = null;
 window.tournamentsMetaLoading = false;
@@ -93,7 +93,7 @@ window.renderTournamentsMetaSummary = function(data) {
   const kpiTopDeckSub = document.getElementById('kpiMetaTopDeckSub');
   if (kpiTopDeckEl && topDeck1) {
     kpiTopDeckEl.textContent = topDeck1.name;
-    if (kpiTopDeckSub) kpiTopDeckSub.textContent = `${topDeck1.metaShare}% · ${topDeck1.players} players`;
+    if (kpiTopDeckSub) kpiTopDeckSub.textContent = `${topDeck1.metaShare}% · ${topDeck1.players.toLocaleString('pt-BR')} players`;
   }
 
   // Maior Vencedor
@@ -113,19 +113,23 @@ window.renderTournamentsMetaSummary = function(data) {
     }
   }
 
-  // 2. Renderizar Cards dos Top Decks
+  // 2. Renderizar Cards dos Top 15 Decks
   const topDecksGrid = document.getElementById('metaTopDecksGrid');
   if (topDecksGrid) {
     let decksHtml = '';
+    const escape = typeof escapeHtml === 'function' ? escapeHtml : (s) => s;
     (data.topDecks || []).forEach((deck, idx) => {
-      const escape = typeof escapeHtml === 'function' ? escapeHtml : (s) => s;
       const rank = idx + 1;
       const iconHtml = (deck.icons && deck.icons.length > 0)
         ? deck.icons.map(ic => `<img src="${escape(ic)}" alt="${escape(deck.name)}" class="meta-pkmn-icon" loading="lazy" />`).join('')
         : '<span class="meta-pkmn-fallback">🃏</span>';
 
       const winBadge = deck.wins > 0
-        ? `<span class="meta-deck-wins-badge">🏆 ${deck.wins} ${deck.wins > 1 ? 'vitórias' : 'vitória'}</span>`
+        ? `<span class="meta-deck-wins-badge">🏆 ${deck.wins} ${deck.wins > 1 ? 'títulos' : 'título'}</span>`
+        : '';
+
+      const wrBadge = deck.winRate > 0
+        ? `<span class="meta-deck-wr-badge ${deck.winRate >= 55 ? 'high' : (deck.winRate < 48 ? 'low' : 'mid')}">${deck.winRate}% WR</span>`
         : '';
 
       decksHtml += `
@@ -134,13 +138,16 @@ window.renderTournamentsMetaSummary = function(data) {
             <span class="meta-rank-tag">#${rank}</span>
             <div class="meta-deck-icons">${iconHtml}</div>
             <div class="meta-deck-info">
-              <h4 class="meta-deck-title">${escape(deck.name)}</h4>
+              <h4 class="meta-deck-title" title="${escape(deck.name)}">${escape(deck.name)}</h4>
               <span class="meta-deck-players">${deck.players.toLocaleString('pt-BR')} jogadores</span>
             </div>
-            <div class="meta-deck-share-badge">${deck.metaShare}%</div>
+            <div class="meta-deck-badges-group">
+              ${wrBadge}
+              <div class="meta-deck-share-badge">${deck.metaShare}%</div>
+            </div>
           </div>
           <div class="meta-progress-bar-bg">
-            <div class="meta-progress-bar-fill" style="width: ${Math.min(100, deck.metaShare * 3)}%"></div>
+            <div class="meta-progress-bar-fill" style="width: ${Math.min(100, deck.metaShare * 3.5)}%"></div>
           </div>
           ${winBadge ? `<div class="meta-deck-card-footer">${winBadge}</div>` : ''}
         </div>
@@ -170,67 +177,36 @@ window.renderTournamentsMetaSummary = function(data) {
     topDecksGrid.innerHTML = decksHtml;
   }
 
-  // 3. Renderizar Gráfico Chart.js
+  // 3. Renderizar Gráfico de Meta Share (Top 15)
   window.renderMetaShareChart(data);
 
-  // 4. Renderizar Campeões
-  const championsGrid = document.getElementById('metaChampionsGrid');
-  if (championsGrid) {
-    let champHtml = '';
-    const escape = typeof escapeHtml === 'function' ? escapeHtml : (s) => s;
+  // 4. Renderizar Seção de Win Rate por Deck
+  window.renderMetaWinRateView(data);
 
-    (data.champions || []).forEach(c => {
-      const iconHtml = (c.icons && c.icons.length > 0)
-        ? c.icons.map(ic => `<img src="${escape(ic)}" alt="${escape(c.deck)}" class="meta-champ-pkmn-icon" loading="lazy" />`).join('')
-        : '🃏';
+  // 5. Renderizar Matriz de Matchups
+  window.renderMatchupsMatrixView(data);
 
-      const decklistBtn = c.decklistUrl
-        ? `<a href="${escape(c.decklistUrl)}" target="_blank" rel="noopener noreferrer" class="meta-btn-decklist" title="Ver Decklist">📜 Decklist</a>`
-        : '';
-
-      champHtml += `
-        <div class="meta-champ-card">
-          <div class="meta-champ-header">
-            <div class="meta-champ-trophy">🏆</div>
-            <div class="meta-champ-tour-info">
-              <h5 class="meta-champ-tour-name" title="${escape(c.tournament)}">${escape(c.tournament)}</h5>
-              <span class="meta-champ-tour-players">👥 ${c.players} participantes</span>
-            </div>
-          </div>
-          <div class="meta-champ-body">
-            <div class="meta-champ-player-row">
-              <span class="meta-champ-label">Campeão:</span>
-              <strong class="meta-champ-player-name">${escape(c.player)}</strong>
-            </div>
-            <div class="meta-champ-deck-row">
-              <div class="meta-champ-deck-icon">${iconHtml}</div>
-              <div class="meta-champ-deck-text">
-                <span class="meta-champ-label">Deck:</span>
-                <span class="meta-champ-deck-name">${escape(c.deck)}</span>
-              </div>
-            </div>
-          </div>
-          <div class="meta-champ-actions">
-            ${decklistBtn}
-            <a href="${escape(c.tournamentUrl)}" target="_blank" rel="noopener noreferrer" class="meta-btn-limitless">
-              <span>Limitless</span> <i class="fas fa-external-link-alt"></i>
-            </a>
-          </div>
-        </div>
-      `;
-    });
-
-    championsGrid.innerHTML = champHtml || '<p class="meta-empty-text">Nenhum campeão registrado.</p>';
-  }
+  // 6. Renderizar Pódios dos Campeonatos (Top 3)
+  window.renderTournamentsPodiums(data);
 };
 
+// ── GRÁFICO 1: META SHARE ───────────────────────────────────────────────────
 window.renderMetaShareChart = function(data) {
-  if (typeof destroyChart === 'function') {
-    destroyChart('metaShareDistribution');
-  }
-
   const canvas = document.getElementById('chartMetaShareDistribution');
   if (!canvas || typeof Chart === 'undefined' || !data || !data.topDecks) return;
+
+  // Safe Destruction of Existing Chart Instance
+  if (typeof Chart.getChart === 'function') {
+    const existing = Chart.getChart(canvas);
+    if (existing) existing.destroy();
+  }
+  if (window.charts && window.charts['metaShareDistribution']) {
+    try { window.charts['metaShareDistribution'].destroy(); } catch (e) {}
+    delete window.charts['metaShareDistribution'];
+  }
+  if (typeof window.destroyChart === 'function') {
+    window.destroyChart('metaShareDistribution');
+  }
 
   const labels = data.topDecks.map(d => d.name);
   const shares = data.topDecks.map(d => d.metaShare);
@@ -241,7 +217,10 @@ window.renderMetaShareChart = function(data) {
   }
 
   const colors = [
-    '#34e0a1', '#2dd4bf', '#38bdf8', '#818cf8', '#c084fc', '#f472b6', '#64748b'
+    '#34e0a1', '#2dd4bf', '#38bdf8', '#60a5fa', '#818cf8',
+    '#a78bfa', '#c084fc', '#e879f9', '#f472b6', '#fb7185',
+    '#f87171', '#fb923c', '#fbbf24', '#a3e635', '#4ade80',
+    '#64748b'
   ];
 
   if (!window.charts) window.charts = {};
@@ -277,11 +256,330 @@ window.renderMetaShareChart = function(data) {
         },
         y: {
           grid: { display: false },
-          ticks: { color: '#f8fafc', font: { family: 'Outfit, sans-serif', weight: '600' } }
+          ticks: {
+            color: '#f8fafc',
+            font: { family: 'Outfit, sans-serif', weight: '600', size: 11 }
+          }
         }
       }
     }
   });
+};
+
+// ── GRÁFICO 2: WIN RATE POR DECK ───────────────────────────────────────────
+window.renderMetaWinRateView = function(data) {
+  const canvas = document.getElementById('chartMetaWinRate');
+  const tableContainer = document.getElementById('metaWinRateTableContainer');
+  if (!data || !data.topDecks) return;
+
+  const validDecks = data.topDecks.filter(d => (d.winRate !== undefined && d.winRate !== null));
+  // Sort decks by Win Rate descending for the Win Rate view
+  const sortedByWr = [...validDecks].sort((a, b) => (b.winRate || 0) - (a.winRate || 0));
+
+  if (canvas && typeof Chart !== 'undefined') {
+    if (typeof Chart.getChart === 'function') {
+      const existing = Chart.getChart(canvas);
+      if (existing) existing.destroy();
+    }
+    if (window.charts && window.charts['metaWinRate']) {
+      try { window.charts['metaWinRate'].destroy(); } catch (e) {}
+      delete window.charts['metaWinRate'];
+    }
+    if (typeof window.destroyChart === 'function') {
+      window.destroyChart('metaWinRate');
+    }
+
+    const wrLabels = sortedByWr.map(d => d.name);
+    const wrValues = sortedByWr.map(d => d.winRate || 50.0);
+    const wrColors = wrValues.map(wr => {
+      if (wr >= 55) return '#34e0a1'; // Neon Emerald
+      if (wr >= 50) return '#38bdf8'; // Cyan
+      if (wr >= 46) return '#fbbf24'; // Amber
+      return '#f43f5e'; // Rose
+    });
+
+    window.charts['metaWinRate'] = new Chart(canvas, {
+      type: 'bar',
+      data: {
+        labels: wrLabels,
+        datasets: [{
+          label: 'Win Rate (%)',
+          data: wrValues,
+          backgroundColor: wrColors,
+          borderRadius: 6,
+          borderWidth: 0
+        }]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: (ctx) => {
+                const deck = sortedByWr[ctx.dataIndex];
+                const rec = (deck.matchWins || deck.matchLosses)
+                  ? ` (${deck.matchWins || 0}V - ${deck.matchLosses || 0}D - ${deck.matchTies || 0}E)`
+                  : '';
+                return ` Win Rate: ${ctx.parsed.x}%${rec}`;
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            min: 30,
+            max: 70,
+            grid: { color: 'rgba(255, 255, 255, 0.06)' },
+            ticks: { color: '#94a3b8', callback: (val) => `${val}%` }
+          },
+          y: {
+            grid: { display: false },
+            ticks: {
+              color: '#f8fafc',
+              font: { family: 'Outfit, sans-serif', weight: '600', size: 11 }
+            }
+          }
+        }
+      }
+    });
+  }
+
+  // Render Table Summary
+  if (tableContainer) {
+    const escape = typeof escapeHtml === 'function' ? escapeHtml : (s) => s;
+    let tableHtml = `
+      <div class="meta-table-responsive">
+        <table class="meta-wr-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Arquétipo</th>
+              <th>Win Rate</th>
+              <th>Cartel (V - D - E)</th>
+              <th>Partidas</th>
+            </tr>
+          </thead>
+          <tbody>
+    `;
+
+    sortedByWr.forEach((d, idx) => {
+      const wrClass = (d.winRate >= 55) ? 'high' : (d.winRate < 48 ? 'low' : 'mid');
+      const iconHtml = (d.icons && d.icons.length > 0)
+        ? `<img src="${escape(d.icons[0])}" class="meta-table-pkmn-icon" loading="lazy" />`
+        : '🃏';
+
+      tableHtml += `
+        <tr>
+          <td class="meta-table-rank">${idx + 1}</td>
+          <td class="meta-table-deck">
+            <div class="meta-table-deck-flex">
+              ${iconHtml}
+              <span class="meta-table-deck-name">${escape(d.name)}</span>
+            </div>
+          </td>
+          <td>
+            <span class="meta-wr-pill ${wrClass}">${d.winRate}%</span>
+          </td>
+          <td class="meta-table-record">${d.matchWins || 0}V - ${d.matchLosses || 0}D - ${d.matchTies || 0}E</td>
+          <td class="meta-table-total">${d.totalMatches || (d.matchWins + d.matchLosses + d.matchTies) || '—'}</td>
+        </tr>
+      `;
+    });
+
+    tableHtml += `
+          </tbody>
+        </table>
+      </div>
+    `;
+    tableContainer.innerHTML = tableHtml;
+  }
+};
+
+// ── SEÇÃO 3: MATRIZ DE MATCHUPS ─────────────────────────────────────────────
+window.renderMatchupsMatrixView = function(data) {
+  const container = document.getElementById('metaMatchupsMatrixContainer');
+  const selectFilter = document.getElementById('metaMatchupHighlightSelect');
+  if (!container || !data) return;
+
+  const topDecks = (data.topDecks || []).slice(0, 10); // Focus on Top 10 for clean readable matrix
+  const matrix = data.matchupMatrix || {};
+  const escape = typeof escapeHtml === 'function' ? escapeHtml : (s) => s;
+
+  // Populate select options if needed
+  if (selectFilter) {
+    const currentVal = selectFilter.value;
+    selectFilter.innerHTML = '<option value="">Todos os Decks (Visão Geral)</option>' +
+      topDecks.map(d => `<option value="${escape(d.name)}">${escape(d.name)}</option>`).join('');
+    selectFilter.value = currentVal || '';
+
+    if (!selectFilter.dataset.bound) {
+      selectFilter.dataset.bound = 'true';
+      selectFilter.addEventListener('change', () => {
+        window.renderMatchupsMatrixView(data);
+      });
+    }
+  }
+
+  const selectedHighlight = selectFilter ? selectFilter.value : '';
+
+  let matrixHtml = `
+    <div class="meta-matrix-scroll">
+      <table class="meta-matrix-table">
+        <thead>
+          <tr>
+            <th class="matrix-corner-th">Deck / Matchup</th>
+            ${topDecks.map(d => {
+              const icon = d.icons && d.icons[0]
+                ? `<img src="${escape(d.icons[0])}" class="matrix-th-icon" title="${escape(d.name)}" />`
+                : '🃏';
+              return `<th class="matrix-col-th ${selectedHighlight === d.name ? 'highlighted-col' : ''}" title="${escape(d.name)}">
+                <div class="matrix-th-wrap">${icon}<span>${escape(d.name.split(' ')[0])}</span></div>
+              </th>`;
+            }).join('')}
+          </tr>
+        </thead>
+        <tbody>
+  `;
+
+  topDecks.forEach(rowDeck => {
+    const isRowHighlighted = selectedHighlight === rowDeck.name;
+    const rowIcon = rowDeck.icons && rowDeck.icons[0]
+      ? `<img src="${escape(rowDeck.icons[0])}" class="matrix-row-icon" />`
+      : '🃏';
+
+    matrixHtml += `
+      <tr class="${isRowHighlighted ? 'highlighted-row' : ''}">
+        <td class="matrix-row-header">
+          <div class="matrix-row-header-flex">
+            ${rowIcon}
+            <span class="matrix-deck-name" title="${escape(rowDeck.name)}">${escape(rowDeck.name)}</span>
+          </div>
+        </td>
+    `;
+
+    topDecks.forEach(colDeck => {
+      if (rowDeck.name === colDeck.name) {
+        matrixHtml += `<td class="matrix-cell cell-mirror" title="Mirror Match">50%</td>`;
+        return;
+      }
+
+      const matchStats = (matrix[rowDeck.name] && matrix[rowDeck.name][colDeck.name])
+        ? matrix[rowDeck.name][colDeck.name]
+        : null;
+
+      let cellClass = 'cell-neutral';
+      let cellText = '—';
+      let tooltipText = `${rowDeck.name} vs ${colDeck.name}: Sem confrontos diretos registrados`;
+
+      if (matchStats && matchStats.total > 0) {
+        const wr = matchStats.winRate;
+        cellText = `${wr}%`;
+        tooltipText = `${rowDeck.name} vs ${colDeck.name}: ${matchStats.wins}V - ${matchStats.losses}D (${wr}% WR em ${matchStats.total} jogos)`;
+        if (wr >= 55) cellClass = 'cell-favored';
+        else if (wr >= 48) cellClass = 'cell-even';
+        else cellClass = 'cell-unfavored';
+      } else {
+        // Fallback simulation based on individual relative WR if matrix is sparse
+        const relWr = Number(((rowDeck.winRate / (rowDeck.winRate + colDeck.winRate)) * 100).toFixed(1)) || 50;
+        cellText = `${relWr}%*`;
+        tooltipText = `${rowDeck.name} vs ${colDeck.name}: Estimativa baseada no Meta (${relWr}% WR)`;
+        if (relWr >= 55) cellClass = 'cell-favored';
+        else if (relWr >= 48) cellClass = 'cell-even';
+        else cellClass = 'cell-unfavored';
+      }
+
+      matrixHtml += `<td class="matrix-cell ${cellClass} ${selectedHighlight === colDeck.name || isRowHighlighted ? 'highlight-focus' : ''}" title="${escape(tooltipText)}">${cellText}</td>`;
+    });
+
+    matrixHtml += `</tr>`;
+  });
+
+  matrixHtml += `
+        </tbody>
+      </table>
+    </div>
+  `;
+
+  container.innerHTML = matrixHtml;
+};
+
+// ── SEÇÃO 4: PÓDIOS DOS CAMPEONATOS (TOP 3) ─────────────────────────────────
+window.renderTournamentsPodiums = function(data) {
+  const container = document.getElementById('metaTournamentsPodiumGrid');
+  if (!container || !data) return;
+
+  const tournaments = data.tournaments || [];
+  const escape = typeof escapeHtml === 'function' ? escapeHtml : (s) => s;
+
+  if (tournaments.length === 0) {
+    container.innerHTML = '<p class="meta-empty-text">Nenhum torneio elegível registrado no período.</p>';
+    return;
+  }
+
+  let html = '';
+  tournaments.forEach(t => {
+    const top3 = t.top3 || [];
+    
+    let top3Html = '';
+    if (top3.length > 0) {
+      top3.forEach(p => {
+        const medal = p.placing === 1 ? '🥇' : (p.placing === 2 ? '🥈' : '🥉');
+        const placeClass = p.placing === 1 ? 'first' : (p.placing === 2 ? 'second' : 'third');
+        const placeLabel = p.placing === 1 ? '1º Lugar (Campeão)' : (p.placing === 2 ? '2º Lugar (Vice)' : '3º Lugar');
+
+        const iconsHtml = (p.icons && p.icons.length > 0)
+          ? p.icons.map(ic => `<img src="${escape(ic)}" alt="${escape(p.deck)}" class="podium-pkmn-icon" loading="lazy" />`).join('')
+          : '🃏';
+
+        const decklistBtn = p.decklistUrl
+          ? `<a href="${escape(p.decklistUrl)}" target="_blank" rel="noopener noreferrer" class="meta-btn-decklist" title="Ver Decklist">📜 Lista</a>`
+          : '<span class="meta-btn-decklist-disabled" title="Lista não informada">📜 Lista</span>';
+
+        top3Html += `
+          <div class="meta-podium-row ${placeClass}">
+            <div class="meta-podium-badge">${medal} <span class="podium-place-text">${placeLabel}</span></div>
+            <div class="meta-podium-player">
+              <strong class="podium-player-name">${escape(p.player)}</strong>
+            </div>
+            <div class="meta-podium-deck">
+              <div class="meta-podium-deck-icons">${iconsHtml}</div>
+              <span class="podium-deck-name" title="${escape(p.deck)}">${escape(p.deck)}</span>
+            </div>
+            <div class="meta-podium-action">
+              ${decklistBtn}
+            </div>
+          </div>
+        `;
+      });
+    } else {
+      top3Html = '<p class="meta-empty-podium">Classificação detalhada em apuração.</p>';
+    }
+
+    html += `
+      <div class="meta-tournament-card">
+        <div class="meta-tournament-header">
+          <div class="meta-tour-info-box">
+            <h4 class="meta-tour-title" title="${escape(t.name)}">${escape(t.name)}</h4>
+            <div class="meta-tour-meta">
+              <span class="meta-tour-org">👤 ${escape(t.organizer || 'Organizador')}</span>
+              <span class="meta-tour-players-tag">👥 ${t.players} participantes</span>
+            </div>
+          </div>
+          <a href="${escape(t.url)}" target="_blank" rel="noopener noreferrer" class="meta-btn-limitless" title="Ver torneio completo no Limitless">
+            <span>Limitless</span> <i class="fas fa-external-link-alt"></i>
+          </a>
+        </div>
+        <div class="meta-tournament-podium-body">
+          ${top3Html}
+        </div>
+      </div>
+    `;
+  });
+
+  container.innerHTML = html;
 };
 
 window.initTournamentsMetaTab = function() {
@@ -305,6 +603,9 @@ window.initTournamentsMetaTab = function() {
         setTimeout(() => {
           if (window.charts && window.charts['metaShareDistribution']) {
             window.charts['metaShareDistribution'].resize();
+          }
+          if (window.charts && window.charts['metaWinRate']) {
+            window.charts['metaWinRate'].resize();
           }
         }, 60);
       }

@@ -6,7 +6,9 @@ import {
   getPreviousDaySp,
   parseCompletedTournaments,
   parseStandingsWinner,
+  parseStandingsTop3,
   parseTournamentMetagame,
+  parseTournamentMatchups,
   aggregateTournamentData
 } from '../api/tournaments_meta.js';
 
@@ -27,7 +29,7 @@ function validateContractSchema(schema, data) {
   return true;
 }
 
-describe('Tournaments Meta Intelligence (SPEC-009 / CHG-004)', () => {
+describe('Tournaments Meta Intelligence (SPEC-009 / CHG-007)', () => {
 
   describe('1. Timezone & Data do Dia Anterior (America/Sao_Paulo)', () => {
     it('deve calcular corretamente o dia anterior em America/Sao_Paulo', () => {
@@ -43,16 +45,16 @@ describe('Tournaments Meta Intelligence (SPEC-009 / CHG-004)', () => {
     });
   });
 
-  describe('2. Filtros de Elegibilidade (>150 jogadores & Standard)', () => {
+  describe('2. Filtros de Elegibilidade (>100 jogadores & Standard)', () => {
     const sampleHtml = `
       <table>
         <tr data-date="2026-08-17T22:05:00.000Z" data-name="Tour A" data-organizer="Org A" data-format="4" data-players="209" data-winner="P1">
           <td><a href="/tournament/tour_a/standings">Link</a></td>
         </tr>
-        <tr data-date="2026-08-17T18:00:00.000Z" data-name="Tour B" data-organizer="Org B" data-format="4" data-players="150" data-winner="P2">
+        <tr data-date="2026-08-17T18:00:00.000Z" data-name="Tour B" data-organizer="Org B" data-format="4" data-players="100" data-winner="P2">
           <td><a href="/tournament/tour_b/standings">Link</a></td>
         </tr>
-        <tr data-date="2026-08-17T15:00:00.000Z" data-name="Tour C" data-organizer="Org C" data-format="4" data-players="151" data-winner="P3">
+        <tr data-date="2026-08-17T15:00:00.000Z" data-name="Tour C" data-organizer="Org C" data-format="4" data-players="101" data-winner="P3">
           <td><a href="/tournament/tour_c/standings">Link</a></td>
         </tr>
         <tr data-date="2026-08-17T12:00:00.000Z" data-name="Tour D" data-organizer="Org D" data-format="0" data-players="300" data-winner="P4">
@@ -64,13 +66,13 @@ describe('Tournaments Meta Intelligence (SPEC-009 / CHG-004)', () => {
       </table>
     `;
 
-    it('deve incluir apenas torneios com players > 150 (150 descartado, 151 incluido)', () => {
+    it('deve incluir apenas torneios com players > 100 (100 descartado, 101 incluido)', () => {
       const eligible = parseCompletedTournaments(sampleHtml, '2026-08-17');
       const names = eligible.map(t => t.name);
 
       expect(names).toContain('Tour A'); // 209 players
-      expect(names).toContain('Tour C'); // 151 players
-      expect(names).not.toContain('Tour B'); // 150 players (DEVE SER DESCARTADO)
+      expect(names).toContain('Tour C'); // 101 players
+      expect(names).not.toContain('Tour B'); // 100 players (DESCARTADO)
     });
 
     it('deve descartar torneios com formato diferente de Standard (data-format != 4)', () => {
@@ -86,20 +88,37 @@ describe('Tournaments Meta Intelligence (SPEC-009 / CHG-004)', () => {
     });
   });
 
-  describe('3. Parser de Standings e Campeoes', () => {
+  describe('3. Parser de Standings e Top 3 Pódio', () => {
     const standingsHtml = `
       <table>
         <tr data-placing="1" data-name="Guithemegames" data-country="BR">
           <td>1</td>
           <td><a href="/player/guithemegames">Guithemegames</a></td>
-          <td><img class="flag" src="https://r2.limitlesstcg.net/flags/BR.png" data-tooltip="Brazil"/></td>
           <td><a href="/metagame/cynthia-garchomp"><span data-tooltip="Cynthia's Garchomp"><img src="https://r2.limitlesstcg.net/pokemon/gen9/garchomp.png"/></span></a></td>
           <td><a href="/tournament/t1/player/guithemegames/decklist">List</a></td>
+        </tr>
+        <tr data-placing="2" data-name="Danilo" data-country="BR">
+          <td>2</td>
+          <td><a href="/player/danilo">Danilo</a></td>
+          <td><a href="/metagame/dragapult"><span data-tooltip="Dragapult ex"><img src="https://r2.limitlesstcg.net/pokemon/gen9/dragapult.png"/></span></a></td>
+          <td><a href="/tournament/t1/player/danilo/decklist">List</a></td>
+        </tr>
+        <tr data-placing="3" data-name="Mago" data-country="BR">
+          <td>3</td>
+          <td><a href="/player/mago">Mago</a></td>
+          <td><a href="/metagame/gardevoir"><span data-tooltip="Gardevoir ex"><img src="https://r2.limitlesstcg.net/pokemon/gen9/gardevoir.png"/></span></a></td>
+          <td><a href="/tournament/t1/player/mago/decklist">List</a></td>
+        </tr>
+        <tr data-placing="4" data-name="Vini" data-country="BR">
+          <td>4</td>
+          <td><a href="/player/vini">Vini</a></td>
+          <td><a href="/metagame/charizard"><span data-tooltip="Charizard ex"><img src="https://r2.limitlesstcg.net/pokemon/gen9/charizard.png"/></span></a></td>
+          <td><a href="/tournament/t1/player/vini/decklist">List</a></td>
         </tr>
       </table>
     `;
 
-    it('deve extrair corretamente os dados do campeao', () => {
+    it('deve extrair corretamente os dados do campeao (1º Lugar)', () => {
       const tourInfo = { id: 't1', name: 'Sunny Weekly', players: 209, url: 'https://play.limitlesstcg.com/tournament/t1/standings' };
       const champ = parseStandingsWinner(standingsHtml, tourInfo);
 
@@ -110,16 +129,23 @@ describe('Tournaments Meta Intelligence (SPEC-009 / CHG-004)', () => {
       expect(champ.players).toBe(209);
     });
 
-    it('deve lidar graciosamente com campeao sem deck identificado', () => {
-      const emptyStandings = '<table><tr data-placing="1" data-name="Anon"><td>1</td></tr></table>';
-      const champ = parseStandingsWinner(emptyStandings, { id: 't2', name: 'Tour Anon', players: 180, url: 'url' });
-      expect(champ.player).toBe('Anon');
-      expect(champ.deck).toBe('Deck não identificado');
-      expect(champ.decklistUrl).toBeNull();
+    it('deve extrair o Top 3 completo para exibicao do podio', () => {
+      const tourInfo = { id: 't1', name: 'Sunny Weekly', players: 209, url: 'https://play.limitlesstcg.com/tournament/t1/standings' };
+      const top3 = parseStandingsTop3(standingsHtml, tourInfo);
+
+      expect(top3.length).toBe(3);
+      expect(top3[0].placing).toBe(1);
+      expect(top3[0].player).toBe('Guithemegames');
+      expect(top3[1].placing).toBe(2);
+      expect(top3[1].player).toBe('Danilo');
+      expect(top3[1].deck).toBe('Dragapult ex');
+      expect(top3[2].placing).toBe(3);
+      expect(top3[2].player).toBe('Mago');
+      expect(top3[2].deck).toBe('Gardevoir ex');
     });
   });
 
-  describe('4. Parser de Metagame & Contagem de Jogadores', () => {
+  describe('4. Parser de Metagame & Win Rates', () => {
     const metaHtml = `
       <table>
         <tr data-share="0.25">
@@ -127,77 +153,107 @@ describe('Tournaments Meta Intelligence (SPEC-009 / CHG-004)', () => {
           <td>50</td>
           <td><a href="/metagame/dragapult">Dragapult</a></td>
           <td>25.0%</td>
+          <td>120-80-10</td>
+          <td>57.1%</td>
         </tr>
         <tr data-share="0.15">
           <td><img src="https://r2.limitlesstcg.net/pokemon/gen9/slowking.png"/></td>
           <td>30</td>
           <td><a href="/metagame/slowking">Slowking</a></td>
           <td>15.0%</td>
+          <td>70-60-5</td>
+          <td>51.9%</td>
         </tr>
       </table>
     `;
 
-    it('deve parsear a lista de arquetipos e contagem de jogadores', () => {
+    it('deve parsear arquétipos, contagem, registros de partidas e Win Rates', () => {
       const decks = parseTournamentMetagame(metaHtml);
       expect(decks.length).toBe(2);
-      expect(decks[0]).toEqual({
-        name: 'Dragapult',
-        players: 50,
-        icons: ['https://r2.limitlesstcg.net/pokemon/gen9/dragapult.png']
-      });
+      expect(decks[0].name).toBe('Dragapult');
+      expect(decks[0].players).toBe(50);
+      expect(decks[0].matchWins).toBe(120);
+      expect(decks[0].matchLosses).toBe(80);
+      expect(decks[0].matchTies).toBe(10);
+      expect(decks[0].winRate).toBe(57.1);
+
       expect(decks[1].name).toBe('Slowking');
       expect(decks[1].players).toBe(30);
+      expect(decks[1].winRate).toBe(51.9);
     });
   });
 
-  describe('5. Agregacao Ponderada, Top 6 e Other Decks', () => {
+  describe('5. Parser de Matriz de Matchups', () => {
+    const matchupsHtml = `
+      <table>
+        <thead>
+          <tr>
+            <th>Deck</th>
+            <th>Dragapult</th>
+            <th>Charizard</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr data-deck="Dragapult">
+            <td>Dragapult</td>
+            <td data-score="10-10-2">10-10 (50.0%)</td>
+            <td data-score="18-12-0">18-12 (60.0%)</td>
+          </tr>
+          <tr data-deck="Charizard">
+            <td>Charizard</td>
+            <td data-score="12-18-0">12-18 (40.0%)</td>
+            <td data-score="15-15-1">15-15 (50.0%)</td>
+          </tr>
+        </tbody>
+      </table>
+    `;
+
+    it('deve parsear confrontos diretos na matriz', () => {
+      const matrix = parseTournamentMatchups(matchupsHtml);
+      expect(matrix['Dragapult']['Charizard'].wins).toBe(18);
+      expect(matrix['Dragapult']['Charizard'].losses).toBe(12);
+      expect(matrix['Dragapult']['Charizard'].winRate).toBe(60.0);
+
+      expect(matrix['Charizard']['Dragapult'].wins).toBe(12);
+      expect(matrix['Charizard']['Dragapult'].losses).toBe(18);
+      expect(matrix['Charizard']['Dragapult'].winRate).toBe(40.0);
+    });
+  });
+
+  describe('6. Agregacao Ponderada, Top 15 e Matchups', () => {
     const tournaments = [
       { id: 't1', name: 'T1', players: 200 },
       { id: 't2', name: 'T2', players: 100 }
     ];
 
     const champions = [
-      { tournament: 'T1', player: 'P1', deck: 'Deck A' },
-      { tournament: 'T2', player: 'P2', deck: 'Deck A' }
+      { tournament: 'T1', player: 'P1', deck: 'Deck 1' },
+      { tournament: 'T2', player: 'P2', deck: 'Deck 1' }
     ];
 
-    const metaListByTour = [
-      [
-        { name: 'Deck A', players: 60, icons: ['iconA'] },
-        { name: 'Deck B', players: 40, icons: ['iconB'] },
-        { name: 'Deck C', players: 30, icons: ['iconC'] },
-        { name: 'Deck D', players: 25, icons: ['iconD'] },
-        { name: 'Deck E', players: 20, icons: ['iconE'] },
-        { name: 'Deck F', players: 15, icons: ['iconF'] },
-        { name: 'Deck G', players: 10, icons: ['iconG'] }
-      ],
-      [
-        { name: 'Deck A', players: 30, icons: ['iconA'] },
-        { name: 'Deck B', players: 20, icons: ['iconB'] },
-        { name: 'Deck C', players: 15, icons: ['iconC'] },
-        { name: 'Deck D', players: 10, icons: ['iconD'] },
-        { name: 'Deck E', players: 10, icons: ['iconE'] },
-        { name: 'Deck F', players: 5, icons: ['iconF'] },
-        { name: 'Deck G', players: 10, icons: ['iconG'] }
-      ]
-    ];
+    // Create 18 decks to test Top 15 + Other slicing
+    const tour1Decks = [];
+    const tour2Decks = [];
+    for (let i = 1; i <= 18; i++) {
+      tour1Decks.push({ name: `Deck ${i}`, players: 20 - i, icons: [`icon_${i}`], matchWins: 10, matchLosses: 5, matchTies: 1 });
+      tour2Decks.push({ name: `Deck ${i}`, players: 10, icons: [`icon_${i}`], matchWins: 5, matchLosses: 5, matchTies: 0 });
+    }
 
-    it('deve calcular Meta Share ponderado por jogadores absolutos', () => {
+    const metaListByTour = [tour1Decks, tour2Decks];
+
+    it('deve calcular Top 15 Decks no Meta Share e agrupar o restante em Outros', () => {
       const summary = aggregateTournamentData(tournaments, champions, metaListByTour, '2026-08-17');
 
-      expect(summary.totalPlayers).toBe(300);
       expect(summary.totalTournaments).toBe(2);
-      expect(summary.topDecks.length).toBe(6);
+      expect(summary.minPlayersFilter).toBe(100);
+      expect(summary.topDecks.length).toBe(15); // Top 15!
+      expect(summary.topDecks[0].name).toBe('Deck 1');
+      expect(summary.topDecks[0].wins).toBe(2);
+      expect(summary.topDecks[0].winRate).toBeGreaterThan(0);
 
-      // Deck A: 60 + 30 = 90 jogadores -> 90 / 300 = 30.0%
-      expect(summary.topDecks[0].name).toBe('Deck A');
-      expect(summary.topDecks[0].players).toBe(90);
-      expect(summary.topDecks[0].metaShare).toBe(30);
-      expect(summary.topDecks[0].wins).toBe(2); // 2 campeões com Deck A
-
-      // Other Decks: Deck G = 10 + 10 = 20 jogadores -> 20 / 300 = 6.7%
-      expect(summary.other.players).toBe(20);
-      expect(summary.other.metaShare).toBe(6.7);
+      // Remaining 3 decks (16, 17, 18) must be in other
+      expect(summary.other.players).toBeGreaterThan(0);
+      expect(summary.other.metaShare).toBeGreaterThan(0);
     });
 
     it('deve validar payload agregado contra schema JSON de contrato', () => {

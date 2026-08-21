@@ -45,6 +45,11 @@
           "players": { "type": "integer", "minimum": 1 },
           "metaShare": { "type": "number", "minimum": 0, "maximum": 100 },
           "wins": { "type": "integer", "minimum": 0 },
+          "matchWins": { "type": "integer" },
+          "matchLosses": { "type": "integer" },
+          "matchTies": { "type": "integer" },
+          "totalMatches": { "type": "integer" },
+          "winRate": { "type": "number" },
           "icons": {
             "type": "array",
             "items": { "type": "string" }
@@ -59,6 +64,9 @@
         "players": { "type": "integer", "minimum": 0 },
         "metaShare": { "type": "number", "minimum": 0, "maximum": 100 }
       }
+    },
+    "matchupMatrix": {
+      "type": "object"
     },
     "champions": {
       "type": "array",
@@ -89,7 +97,8 @@
           "players": { "type": "integer" },
           "dateUtc": { "type": "string" },
           "dateSpDay": { "type": "string" },
-          "url": { "type": "string" }
+          "url": { "type": "string" },
+          "top3": { "type": "array" }
         }
       }
     },
