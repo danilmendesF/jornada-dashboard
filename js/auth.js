@@ -155,6 +155,7 @@ _rootAuth.updateAuthUI = function() {
             <a href="#" class="dropdown-item">👤 Meu Perfil</a>
             <a href="#" class="dropdown-item" onclick="if(typeof forceSyncCloud==='function')forceSyncCloud();return false;">🔄 Sincronizar Nuvem</a>
             ${isDanil ? '<a href="#" class="dropdown-item" onclick="document.getElementById(\'btnOpenManager\').click()">📋 Gerenciar</a>' : ''}
+            ${isDanil ? '<a href="#" class="dropdown-item" onclick="if(typeof restoreOfficialBackup===\'function\')restoreOfficialBackup();return false;">📥 Restaurar Base Oficial (511)</a>' : ''}
             <div class="dropdown-divider"></div>
             <a href="#" class="dropdown-item text-red" onclick="logoutUser()">🚪 Sair</a>
           </div>

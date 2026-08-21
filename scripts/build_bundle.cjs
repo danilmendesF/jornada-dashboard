@@ -116,6 +116,18 @@ async function build() {
     });
     console.log('✅ Assets copiados para dist/assets e public/assets com sucesso!');
   }
+  const dataDir = path.join(rootDir, 'data');
+  const distDataDir = path.join(distDir, 'data');
+  const publicDataDir = path.join(publicDir, 'data');
+  if (fs.existsSync(dataDir)) {
+    if (!fs.existsSync(distDataDir)) fs.mkdirSync(distDataDir, { recursive: true });
+    if (!fs.existsSync(publicDataDir)) fs.mkdirSync(publicDataDir, { recursive: true });
+    fs.readdirSync(dataDir).forEach(file => {
+      fs.copyFileSync(path.join(dataDir, file), path.join(distDataDir, file));
+      fs.copyFileSync(path.join(dataDir, file), path.join(publicDataDir, file));
+    });
+    console.log('✅ Arquivos de dados copiados para dist/data e public/data com sucesso!');
+  }
 
   // ── 5. GENERATE & INJECT VERSION DERIVED ARTIFACTS (CHG-003) ────────────────
   console.log('🔄 Gerando e injetando artefatos derivados de versão (CHG-003)...');
