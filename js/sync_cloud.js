@@ -254,7 +254,12 @@ async function pullFromCloud(quiet = false) {
       }
 
       if (data && typeof data === 'object') {
+        let hasDataChanged = false;
+
         if (typeof data.revision === 'number') {
+          if (_currentCloudRevision !== data.revision && _currentCloudRevision !== 0) {
+            hasDataChanged = true;
+          }
           _currentCloudRevision = data.revision;
           if (typeof window !== 'undefined') window._currentCloudRevision = _currentCloudRevision;
         }
@@ -268,15 +273,18 @@ async function pullFromCloud(quiet = false) {
           const cloudMatches = data.manualMatches;
 
           // ── EMPTY CLOUD GUARD: never overwrite local data with empty cloud ──
-          // If cloud returns [] but local has data, preserve local completely.
-          // Empty cloud does NOT imply the user deleted everything.
           if (cloudMatches.length === 0 && localManual.length > 0) {
             console.warn(`[Sync Pull] Cloud retornou 0 partidas mas local possui ${localManual.length}. Preservando local. Nenhuma escrita realizada.`);
           } else {
+            const rawBefore = (typeof localStorage !== 'undefined' ? localStorage.getItem(_kMatches) : '') || '';
             const mergedMatches = deterministicMergeMatches(localManual, cloudMatches, combinedDeleted);
             console.log(`[Sync Pull] localBefore=${localManual.length} cloud=${cloudMatches.length} merged=${mergedMatches.length} key=${_kMatches}`);
             const safeSet = (typeof window !== 'undefined' && typeof window.safeSetItem === 'function') ? window.safeSetItem : (typeof safeSetItem === 'function' ? safeSetItem : ((k, v) => { if (typeof localStorage !== 'undefined') localStorage.setItem(k, v); }));
             safeSet(_kMatches, JSON.stringify(mergedMatches));
+            const rawAfter = (typeof localStorage !== 'undefined' ? localStorage.getItem(_kMatches) : '') || '';
+            if (rawBefore !== rawAfter) {
+              hasDataChanged = true;
+            }
             if (mergedMatches.length > localManual.length && localManual.length > 0 && typeof showToast === 'function') {
               showToast(`✨ ${mergedMatches.length - localManual.length} nova(s) partida(s) da equipe sincronizada(s)!`);
             }
@@ -291,7 +299,12 @@ async function pullFromCloud(quiet = false) {
             if (key && !deckMap.has(key)) deckMap.set(key, d);
           });
           const mergedDecks = Array.from(deckMap.values());
-          if (mergedDecks.length > 0) safeSetItem(_kDecks, JSON.stringify(mergedDecks));
+          if (mergedDecks.length > 0) {
+            const rawBefore = (typeof localStorage !== 'undefined' ? localStorage.getItem(_kDecks) : '') || '';
+            safeSetItem(_kDecks, JSON.stringify(mergedDecks));
+            const rawAfter = (typeof localStorage !== 'undefined' ? localStorage.getItem(_kDecks) : '') || '';
+            if (rawBefore !== rawAfter) hasDataChanged = true;
+          }
         }
         if (Array.isArray(data.players) && typeof safeSetItem === 'function') {
           const localPlayers = (typeof window !== 'undefined' && typeof window.loadPlayers === 'function') ? window.loadPlayers() : (typeof loadPlayers === 'function' ? loadPlayers() : []);
@@ -303,7 +316,12 @@ async function pullFromCloud(quiet = false) {
             if (pStr && !playerMap.has(key)) playerMap.set(key, pStr);
           });
           const mergedPlayers = Array.from(playerMap.values());
-          if (mergedPlayers.length > 0) safeSetItem(_kPlayers, JSON.stringify(mergedPlayers));
+          if (mergedPlayers.length > 0) {
+            const rawBefore = (typeof localStorage !== 'undefined' ? localStorage.getItem(_kPlayers) : '') || '';
+            safeSetItem(_kPlayers, JSON.stringify(mergedPlayers));
+            const rawAfter = (typeof localStorage !== 'undefined' ? localStorage.getItem(_kPlayers) : '') || '';
+            if (rawBefore !== rawAfter) hasDataChanged = true;
+          }
         }
         if (Array.isArray(data.locais) && typeof safeSetItem === 'function') {
           const localLocais = (typeof window !== 'undefined' && typeof window.loadLocais === 'function') ? window.loadLocais() : (typeof loadLocais === 'function' ? loadLocais() : []);
@@ -315,7 +333,12 @@ async function pullFromCloud(quiet = false) {
             if (lStr && !localMap.has(key)) localMap.set(key, lStr);
           });
           const mergedLocais = Array.from(localMap.values());
-          if (mergedLocais.length > 0) safeSetItem(_kLocais, JSON.stringify(mergedLocais));
+          if (mergedLocais.length > 0) {
+            const rawBefore = (typeof localStorage !== 'undefined' ? localStorage.getItem(_kLocais) : '') || '';
+            safeSetItem(_kLocais, JSON.stringify(mergedLocais));
+            const rawAfter = (typeof localStorage !== 'undefined' ? localStorage.getItem(_kLocais) : '') || '';
+            if (rawBefore !== rawAfter) hasDataChanged = true;
+          }
         }
         if (Array.isArray(data.colecoes) && typeof safeSetItem === 'function') {
           const localColecoes = (typeof window !== 'undefined' && typeof window.loadColecoes === 'function') ? window.loadColecoes() : (typeof loadColecoes === 'function' ? loadColecoes() : []);
@@ -327,11 +350,19 @@ async function pullFromCloud(quiet = false) {
             if (cStr && !colMap.has(key)) colMap.set(key, cStr);
           });
           const mergedColecoes = Array.from(colMap.values());
-          if (mergedColecoes.length > 0) safeSetItem(_kColecoes, JSON.stringify(mergedColecoes));
+          if (mergedColecoes.length > 0) {
+            const rawBefore = (typeof localStorage !== 'undefined' ? localStorage.getItem(_kColecoes) : '') || '';
+            safeSetItem(_kColecoes, JSON.stringify(mergedColecoes));
+            const rawAfter = (typeof localStorage !== 'undefined' ? localStorage.getItem(_kColecoes) : '') || '';
+            if (rawBefore !== rawAfter) hasDataChanged = true;
+          }
         }
         const cloudEdits = data.editedMatches || data.edits;
         if (cloudEdits && typeof cloudEdits === 'object' && typeof safeSetItem === 'function') {
+          const rawBefore = (typeof localStorage !== 'undefined' ? localStorage.getItem(_kEdits) : '') || '';
           safeSetItem(_kEdits, JSON.stringify(cloudEdits));
+          const rawAfter = (typeof localStorage !== 'undefined' ? localStorage.getItem(_kEdits) : '') || '';
+          if (rawBefore !== rawAfter) hasDataChanged = true;
         }
         if (Array.isArray(data.deletedIds) && typeof safeSetItem === 'function') {
           safeSetItem(_kDeleted, JSON.stringify(Array.from(combinedDeleted)));
@@ -340,16 +371,19 @@ async function pullFromCloud(quiet = false) {
           safeSetItem(_kArch, JSON.stringify(data.archetypeUnifications));
         }
 
-        if (typeof initializeData === 'function') initializeData();
-        if (typeof populateFilters === 'function') populateFilters();
-        if (typeof populateDeckSelects === 'function') populateDeckSelects();
-        if (typeof populatePlayerSelects === 'function') populatePlayerSelects();
-        if (typeof populateQuickLogDropdowns === 'function') populateQuickLogDropdowns();
-        if (typeof renderDecksList === 'function') renderDecksList();
-        if (typeof renderPlayersList === 'function') renderPlayersList();
-        if (typeof renderLocaisList === 'function') renderLocaisList();
-        if (typeof renderColecoesList === 'function') renderColecoesList();
-        if (typeof applyFilters === 'function') applyFilters();
+        // ── ONLY RE-RENDER DOM & CHARTS IF DATA ACTUALLY CHANGED ──────────────
+        if (hasDataChanged || !quiet) {
+          if (typeof initializeData === 'function') initializeData();
+          if (typeof populateFilters === 'function') populateFilters();
+          if (typeof populateDeckSelects === 'function') populateDeckSelects();
+          if (typeof populatePlayerSelects === 'function') populatePlayerSelects();
+          if (typeof populateQuickLogDropdowns === 'function') populateQuickLogDropdowns();
+          if (typeof renderDecksList === 'function') renderDecksList();
+          if (typeof renderPlayersList === 'function') renderPlayersList();
+          if (typeof renderLocaisList === 'function') renderLocaisList();
+          if (typeof renderColecoesList === 'function') renderColecoesList();
+          if (typeof applyFilters === 'function') applyFilters();
+        }
 
         const activeState = (typeof window !== 'undefined' ? window.syncLifecycleState : syncLifecycleState);
         if (activeState !== 'CONFLICT_RETRYING') {
@@ -579,7 +613,7 @@ async function pushToCloud(attempt = 0, preservedIdempotencyKey = null) {
   return pushCycle;
 }
 
-const SYNC_POLL_INTERVAL_MS = 10000; // 10s auto-refresh for real-time multiplayer feel
+const SYNC_POLL_INTERVAL_MS = 25000; // 25s gentle background polling
 
 function startSyncInterval() {
   stopSyncInterval();

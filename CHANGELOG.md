@@ -3,6 +3,14 @@
 Todas as alteracoes notaveis neste projeto serao documentadas neste arquivo.
 O formato e baseado em Keep a Changelog e este projeto adere ao Versionamento Semantico.
 
+## [2.1.19] - 2026-08-21
+### Estabilidade Visual & Otimização de Renderização Silenciosa
+- **Renderização Condicional Baseada em Mudanças Reais:** O auto-sync em segundo plano agora verifica se houve alterações reais nos dados antes de acionar a re-renderização do DOM e dos gráficos. Em ciclos de polling sem dados novos, o app opera de forma 100% estática e silenciosa, eliminando qualquer tremor, piscada ou reanimação incômoda nos gráficos.
+- **Animação Inteligente de KPIs:** Os contadores numéricos dos cards de KPI não reiniciam mais do zero caso o valor final não tenha mudado.
+- **Intervalo de Polling Suave (25s):** Polling calibrado para 25 segundos em segundo plano, mantendo a sincronização instantânea ao focar na aba ou desbloquear o aparelho.
+
+---
+
 ## [2.1.18] - 2026-08-21
 ### Sincronização em Tempo Real Multi-Aparelho & Background Polling
 - **Auto-Sync Polling em Segundo Plano (10s):** Implementada a função `startSyncInterval()` com fallback resiliente para obtenção do token JWT e execução contínua a cada 10 segundos, garantindo que novas partidas registradas por outros membros do time apareçam automaticamente na tela sem necessidade de recarregar a página.

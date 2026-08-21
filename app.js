@@ -1004,12 +1004,20 @@ function renderKPIs() {
 function animCount(id, target) {
   const el = document.getElementById(id);
   if (!el) return;
-  let start = 0;
-  const step = Math.ceil(target / 20);
+  const current = parseInt(el.textContent.replace(/\D/g, ''), 10);
+  if (!isNaN(current) && current === target) return;
+
+  let start = isNaN(current) ? 0 : current;
+  const diff = target - start;
+  if (diff === 0) {
+    el.textContent = target;
+    return;
+  }
+  const step = Math.ceil(Math.abs(diff) / 15) * (diff > 0 ? 1 : -1);
   const tick = () => {
-    start = Math.min(start + step, target);
+    start = (diff > 0) ? Math.min(start + step, target) : Math.max(start + step, target);
     el.textContent = start;
-    if (start < target) requestAnimationFrame(tick);
+    if ((diff > 0 && start < target) || (diff < 0 && start > target)) requestAnimationFrame(tick);
   };
   tick();
 }
