@@ -3,6 +3,12 @@
 Todas as alteracoes notaveis neste projeto serao documentadas neste arquivo.
 O formato e baseado em Keep a Changelog e este projeto adere ao Versionamento Semantico.
 
+## [2.1.22] - 2026-08-21
+### Correção de Sobrescrita de Revisão no Retry OCC
+- **Eliminação de Sobrescrita de Revisão:** Removida a atribuição estática que sobrescrevia a revisão atualizada pelo `pullFromCloud` pós-409, garantindo que a tentativa de reconciliação utilize a revisão real mais recente da nuvem (`baseRevision = 21`) e complete o commit com sucesso.
+
+---
+
 ## [2.1.21] - 2026-08-21
 ### Correção de Alinhamento OCC 409 & Snapshot Autoritativo
 - **Alinhamento Imediato de Revisão em 409:** O cliente agora extrai diretamente a revisão real da nuvem enviada no corpo do erro 409 (`errJson.currentRevision`), realinhando a `baseRevision` imediatamente no retry e eliminando loops de conflito de revisão.
