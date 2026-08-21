@@ -2235,54 +2235,6 @@ window.exportBackup = function() {
   showToast('📥 Backup baixado com sucesso!');
 };
 
-window.restoreOfficialBackup = async function() {
-  if (!confirm('Deseja carregar e restaurar o backup oficial com 511 partidas? Seus dados serão recuperados e sincronizados com a nuvem.')) return;
-  try {
-    let data = (typeof window !== 'undefined' && window.OFFICIAL_BACKUP_DATA) ? window.OFFICIAL_BACKUP_DATA : null;
-    if (!data) {
-      const res = await fetch('data/backup_oficial_511.json');
-      if (res.ok) {
-        data = await res.json();
-      }
-    }
-    if (!data || !Array.isArray(data.manualMatches)) throw new Error('Formato de backup inválido.');
-
-    saveDecks(data.decks || []);
-    saveManual(data.manualMatches || []);
-    savePlayers(data.players || []);
-    saveLocais(data.locais || []);
-    saveDeleted(new Set(data.deletedIds || []));
-    saveDeletedDecks(new Set(data.deletedDecks || []));
-    saveDeletedPlayers(new Set(data.deletedPlayers || []));
-    saveDeletedLocais(new Set(data.deletedLocais || []));
-    saveEdits(data.editedMatches || {});
-
-    refreshManagerDatasets();
-
-    if (typeof resetAllFilters === 'function') resetAllFilters();
-    else {
-      if (typeof isExplicitPlayerSelection !== 'undefined') isExplicitPlayerSelection = false;
-      if (typeof isExplicitSelection !== 'undefined') isExplicitSelection = false;
-      if (typeof initializeData === 'function') initializeData();
-      if (typeof populateFilters === 'function') populateFilters();
-      if (typeof applyFilters === 'function') applyFilters();
-    }
-    if (typeof populatePlayerSelects === 'function') populatePlayerSelects();
-    if (typeof populateDeckSelects === 'function') populateDeckSelects();
-    if (typeof populateLocalSelects === 'function') populateLocalSelects();
-    if (typeof renderDecksList === 'function') renderDecksList();
-    if (typeof renderPlayersList === 'function') renderPlayersList();
-    if (typeof renderLocaisList === 'function') renderLocaisList();
-    if (typeof populateQuickLogDropdowns === 'function') populateQuickLogDropdowns();
-
-    triggerSyncPush();
-    showToast(`✅ Base oficial de ${data.manualMatches.length} partidas restaurada e sincronizada!`);
-  } catch (err) {
-    console.error('Erro ao restaurar base oficial:', err);
-    showToast('⚠️ Erro ao carregar backup: ' + err.message);
-  }
-};
-
 window.importBackup = function(file) {
   if (!file) return;
   const reader = new FileReader();

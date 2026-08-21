@@ -38,23 +38,11 @@ const jsOrder = [
   'js/auth.js',
   'js/router.js',
   'js/tournaments_meta.js',
-  'js/official_data.js',
   'app.js',
   'manager.js'
 ];
 
 async function build() {
-  // ── 0. GENERATE EMBEDDED OFFICIAL DATASET ──────────────────────────────────
-  const officialBackupPath = path.join(rootDir, 'data', 'backup_oficial_511.json');
-  if (fs.existsSync(officialBackupPath)) {
-    const rawData = fs.readFileSync(officialBackupPath, 'utf8');
-    const jsContent = `// Auto-generated official dataset\nif (typeof window !== 'undefined') {\n  window.OFFICIAL_BACKUP_DATA = ${rawData.trim()};\n}\n`;
-    fs.writeFileSync(path.join(rootDir, 'js', 'official_data.js'), jsContent, 'utf8');
-    console.log('✅ js/official_data.js gerado com sucesso para restauração instantânea!');
-  } else {
-    fs.writeFileSync(path.join(rootDir, 'js', 'official_data.js'), '// no official data\n', 'utf8');
-  }
-
   // ── 1. READ SINGLE SOURCE OF TRUTH (package.json) ──────────────────────────
   const pkgPath = path.join(rootDir, 'package.json');
   if (!fs.existsSync(pkgPath)) {

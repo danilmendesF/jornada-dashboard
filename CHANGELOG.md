@@ -4,9 +4,9 @@ Todas as alteracoes notaveis neste projeto serao documentadas neste arquivo.
 O formato e baseado em Keep a Changelog e este projeto adere ao Versionamento Semantico.
 
 ## [2.1.16] - 2026-08-21
-### Corrigido (Exclusão de Partidas & Restauração Instantânea Embutida)
+### Corrigido (Exclusão de Partidas & Limpeza de Interface)
 - **Correção de `ReferenceError: lastWriteTime is not defined`:** Removidas as atribuições à variável legada não declarada `lastWriteTime` em `deleteMatch`, `deleteDeck`, `deletePlayer`, `deleteLocal`, `deleteColecao` e `unifyArchetypes` no `manager.js`, restaurando o funcionamento imediato do botão de exclusão de partidas e itens.
-- **Restauração Instantânea Embutida no Bundle (`js/official_data.js`):** A base oficial de 511 partidas agora é compilada diretamente dentro do bundle JS (`window.OFFICIAL_BACKUP_DATA`), eliminando qualquer dependência de requisições `fetch` com risco de erro de SPA / 404 e permitindo restauração 100% confiável e instantânea.
+- **Limpeza de Interface:** Removido o botão temporário de restaurar base oficial do menu de perfil, mantendo a interface enxuta e o fluxo padrão de backup/importação.
 
 ---
 
