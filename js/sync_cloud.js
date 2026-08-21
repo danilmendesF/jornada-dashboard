@@ -399,10 +399,11 @@ async function pullFromCloud(quiet = false) {
 
           const localManual = (typeof window !== 'undefined' && typeof window.loadManual === 'function') ? window.loadManual() : (typeof loadManual === 'function' ? loadManual() : []);
           const cloudCount = Array.isArray(data.manualMatches) ? data.manualMatches.length : 0;
-          const hasPending = _hasPendingSync || (typeof window !== 'undefined' && window._hasPendingSync) || (typeof localStorage !== 'undefined' && localStorage.getItem('jornada_sync_pending') === '1') || (localManual.length > cloudCount);
+          const hasDuplicatesInCloud = (cloudCount > 0 && localManual.length > 0 && cloudCount !== localManual.length);
+          const hasPending = _hasPendingSync || (typeof window !== 'undefined' && window._hasPendingSync) || (typeof localStorage !== 'undefined' && localStorage.getItem('jornada_sync_pending') === '1') || hasDuplicatesInCloud;
           if (hasPending) {
-            if (typeof showToast === 'function' && localManual.length > cloudCount) {
-              showToast(`🔄 Sincronizando ${localManual.length} partidas locais com a nuvem...`);
+            if (hasDuplicatesInCloud) {
+              console.log(`[Jornada Sync] Sanitizando nuvem: substituindo ${cloudCount} partidas antigas por ${localManual.length} partidas canônicas.`);
             }
             triggerSyncPush();
           }

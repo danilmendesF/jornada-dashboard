@@ -3,6 +3,12 @@
 Todas as alteracoes notaveis neste projeto serao documentadas neste arquivo.
 O formato e baseado em Keep a Changelog e este projeto adere ao Versionamento Semantico.
 
+## [2.1.20] - 2026-08-21
+### Auto-Flush & Sanitização Automática do Redis Cloud
+- **Auto-Flush de Duplicatas na Nuvem:** Implementada a sanitização automática do banco de dados na nuvem. Sempre que o cliente detecta que o Redis possui partidas duplicadas legadas (`cloudCount !== localManual.length`), o sistema faz um push transparente e substitui o snapshot inflado pelas 485 partidas canônicas consolidadas, reduzindo o tamanho do payload e mantendo todos os dispositivos em perfeita sincronia.
+
+---
+
 ## [2.1.19] - 2026-08-21
 ### Estabilidade Visual & Otimização de Renderização Silenciosa
 - **Renderização Condicional Baseada em Mudanças Reais:** O auto-sync em segundo plano agora verifica se houve alterações reais nos dados antes de acionar a re-renderização do DOM e dos gráficos. Em ciclos de polling sem dados novos, o app opera de forma 100% estática e silenciosa, eliminando qualquer tremor, piscada ou reanimação incômoda nos gráficos.
