@@ -3,6 +3,12 @@
 Todas as alteracoes notaveis neste projeto serao documentadas neste arquivo.
 O formato e baseado em Keep a Changelog e este projeto adere ao Versionamento Semantico.
 
+## [2.1.17] - 2026-08-21
+### Bump de Versão & Atualização de Cache
+- **Bump de Versão para v2.1.17:** Força a invalidação de cache de navegadores e CDNs para carregar a interface limpa (sem o botão temporário de restauração) e com a correção de `deleteMatch` ativa.
+
+---
+
 ## [2.1.16] - 2026-08-21
 ### Corrigido (Exclusão de Partidas & Limpeza de Interface)
 - **Correção de `ReferenceError: lastWriteTime is not defined`:** Removidas as atribuições à variável legada não declarada `lastWriteTime` em `deleteMatch`, `deleteDeck`, `deletePlayer`, `deleteLocal`, `deleteColecao` e `unifyArchetypes` no `manager.js`, restaurando o funcionamento imediato do botão de exclusão de partidas e itens.
