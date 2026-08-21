@@ -3,6 +3,13 @@
 Todas as alteracoes notaveis neste projeto serao documentadas neste arquivo.
 O formato e baseado em Keep a Changelog e este projeto adere ao Versionamento Semantico.
 
+## [2.1.16] - 2026-08-21
+### Corrigido (Exclusão de Partidas & Restauração Instantânea Embutida)
+- **Correção de `ReferenceError: lastWriteTime is not defined`:** Removidas as atribuições à variável legada não declarada `lastWriteTime` em `deleteMatch`, `deleteDeck`, `deletePlayer`, `deleteLocal`, `deleteColecao` e `unifyArchetypes` no `manager.js`, restaurando o funcionamento imediato do botão de exclusão de partidas e itens.
+- **Restauração Instantânea Embutida no Bundle (`js/official_data.js`):** A base oficial de 511 partidas agora é compilada diretamente dentro do bundle JS (`window.OFFICIAL_BACKUP_DATA`), eliminando qualquer dependência de requisições `fetch` com risco de erro de SPA / 404 e permitindo restauração 100% confiável e instantânea.
+
+---
+
 ## [2.1.15] - 2026-08-21
 ### Corrigido (Deduplicação de Partidas Espelho & Auto-Recuperação de Cota LocalStorage)
 - **Eliminação de Loop de Duplicação de Partidas Espelho:** Removidas as funções legadas `window.buildMirrorMatch` e `window.syncAllTeamMirrorMatches` duplicadas no `manager.js`, que geravam IDs não determinísticos (`Date.now() + 1`) e não ignoravam partidas espelho, causando a duplicação exponencial de partidas (512 ➔ 1024 ➔ 1536).

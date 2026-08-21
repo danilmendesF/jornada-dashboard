@@ -607,7 +607,6 @@ window.openEditDeck = function(deckId) {
 
 window.deleteDeck = function(deckId) {
   if (!confirm('Tem certeza que deseja excluir este deck?')) return;
-  lastWriteTime = Date.now();
   const targetDeck = decks.find(d => d.id === deckId);
 
   const delDecks = loadDeletedDecks();
@@ -1373,7 +1372,6 @@ window.deleteMatch = function(matchId) {
   }
 
   if (!confirm('Deletar esta partida? Esta ação não pode ser desfeita.')) return;
-  lastWriteTime = Date.now();
   const mirrorId = targetMatch?._mirrorId;
   const mirroredFromId = targetMatch?._mirroredFrom;
 
@@ -1445,7 +1443,6 @@ function addPlayer() {
 
 window.deletePlayer = function(name) {
   if (!confirm(`Remover player "${name}"?`)) return;
-  lastWriteTime = Date.now();
 
   const delPlayers = loadDeletedPlayers();
   delPlayers.add(name);
@@ -1521,7 +1518,6 @@ function addLocal() {
 
 window.deleteLocal = function(name) {
   if (!confirm(`Remover local "${name}"?`)) return;
-  lastWriteTime = Date.now();
 
   const delLocais = loadDeletedLocais();
   delLocais.add(name);
@@ -1615,7 +1611,6 @@ function addColecao() {
 
 window.deleteColecao = function(name) {
   if (!confirm(`Remover coleção "${name}"?`)) return;
-  lastWriteTime = Date.now();
 
   const delColecoes = loadDeletedColecoes();
   delColecoes.add(name);
@@ -2243,9 +2238,13 @@ window.exportBackup = function() {
 window.restoreOfficialBackup = async function() {
   if (!confirm('Deseja carregar e restaurar o backup oficial com 511 partidas? Seus dados serão recuperados e sincronizados com a nuvem.')) return;
   try {
-    const res = await fetch('data/backup_oficial_511.json');
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
+    let data = (typeof window !== 'undefined' && window.OFFICIAL_BACKUP_DATA) ? window.OFFICIAL_BACKUP_DATA : null;
+    if (!data) {
+      const res = await fetch('data/backup_oficial_511.json');
+      if (res.ok) {
+        data = await res.json();
+      }
+    }
     if (!data || !Array.isArray(data.manualMatches)) throw new Error('Formato de backup inválido.');
 
     saveDecks(data.decks || []);
@@ -2280,7 +2279,7 @@ window.restoreOfficialBackup = async function() {
     showToast(`✅ Base oficial de ${data.manualMatches.length} partidas restaurada e sincronizada!`);
   } catch (err) {
     console.error('Erro ao restaurar base oficial:', err);
-    showToast('⚠️ Não foi possível carregar o arquivo de backup.');
+    showToast('⚠️ Erro ao carregar backup: ' + err.message);
   }
 };
 
@@ -2561,8 +2560,6 @@ window.submitUnifyArchetypes = function() {
   if (!confirm(`Tem certeza que deseja unificar todas as partidas e registros de "${fromDeck}" para o arquétipo "${targetArchetype}"?`)) {
     return;
   }
-
-  lastWriteTime = Date.now();
 
   const unifications = typeof loadArchetypeUnifications === 'function' ? loadArchetypeUnifications() : [];
   if (!unifications.some(u => u.fromDeck === fromDeck && u.targetArchetype === targetArchetype)) {
