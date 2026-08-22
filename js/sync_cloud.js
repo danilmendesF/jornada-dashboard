@@ -559,6 +559,11 @@ async function pushToCloud(attempt = 0, preservedIdempotencyKey = null) {
 
         console.warn(`[Jornada Sync] ⚠️ PUSH Conflito OCC 409 (tentativa ${attempt + 1}/${MAX_RETRY_ATTEMPTS}):`, errJson);
 
+        if (errJson && typeof errJson.currentRevision === 'number') {
+          _currentCloudRevision = errJson.currentRevision;
+          if (typeof window !== 'undefined') window._currentCloudRevision = errJson.currentRevision;
+        }
+
         if (attempt < MAX_RETRY_ATTEMPTS) {
           _syncRetryCount = attempt + 1;
           if (typeof window !== 'undefined') window._syncRetryCount = _syncRetryCount;
@@ -571,6 +576,11 @@ async function pushToCloud(attempt = 0, preservedIdempotencyKey = null) {
 
           // 2. Immediate silent pull to merge remote state & update _currentCloudRevision
           await pullFromCloud(true);
+
+          if (errJson && typeof errJson.currentRevision === 'number' && _currentCloudRevision !== errJson.currentRevision) {
+            _currentCloudRevision = errJson.currentRevision;
+            if (typeof window !== 'undefined') window._currentCloudRevision = errJson.currentRevision;
+          }
 
           // 3. Retry push with reconciled merged state & new idempotency key
           return await pushToCloud(attempt + 1, null);

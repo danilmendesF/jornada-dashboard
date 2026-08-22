@@ -113,7 +113,7 @@ if currentData and currentData.lastIdempotencyKey and idempotencyKey and current
 end
 
 -- 2. Validate Base Revision (OCC)
-if baseRevision ~= nil and baseRevision ~= currentRevision then
+if baseRevision ~= nil and currentRevision > 0 and baseRevision ~= currentRevision then
     return cjson.encode({
         status = 'REVISION_CONFLICT',
         currentRevision = currentRevision,
@@ -354,7 +354,7 @@ export function executeAtomicCommit(existingData, incomingBody, baseRevision, id
   }
 
   // 2. OCC Check
-  if (baseRevision !== undefined && baseRevision !== null && Number(baseRevision) !== currentRevision) {
+  if (baseRevision !== undefined && baseRevision !== null && currentRevision > 0 && Number(baseRevision) !== currentRevision) {
     return {
       status: 'REVISION_CONFLICT',
       currentRevision,

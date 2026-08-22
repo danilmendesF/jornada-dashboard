@@ -3,6 +3,13 @@
 Todas as alteracoes notaveis neste projeto serao documentadas neste arquivo.
 O formato e baseado em Keep a Changelog e este projeto adere ao Versionamento Semantico.
 
+## [2.2.3] - 2026-08-21
+### Resolução Definitiva de Conflitos OCC de Sincronização em Nuvem
+- **Tratamento de Revisão Inicial:** Atualizado o algoritmo do servidor para aceitar pushes canônicos quando `currentRevision === 0` (nuvem sem controle de versão prévio ou após sanitização de duplicatas), eliminando o loop de conflito 409 quando o cliente possuía revisões legadas não nulas.
+- **Atualização Imediata de Revisão no Cliente:** O cliente agora extrai e adota imediatamente o `currentRevision` retornado na resposta do erro 409 antes de executar o retry atômico, garantindo que o push subsequente seja validado e persistido com sucesso na nuvem.
+
+---
+
 ## [2.2.2] - 2026-08-21
 ### Reconciliação Bidirecional Perfeita na Matriz de Matchups
 - **Simetria Matemática Garantida:** Implementada a reconciliação bidirecional entre todos os pares de arquétipos na matriz (`Deck A vs Deck B` e `Deck B vs Deck A`), garantindo que se o Deck A tem $75\%$ de taxa de vitória contra o Deck B ($3\text{V} - 1\text{D}$), o Deck B apresentará rigorosamente $25\%$ contra o Deck A ($1\text{V} - 3\text{D}$), eliminando discrepâncias onde a célula inversa aparecia com $50\%$.
