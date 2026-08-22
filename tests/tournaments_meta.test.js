@@ -256,6 +256,27 @@ describe('Tournaments Meta Intelligence (SPEC-009 / CHG-007)', () => {
       expect(summary.other.metaShare).toBeGreaterThan(0);
     });
 
+    it('deve garantir reciprocidade matematica perfeita na matriz de matchups (A vs B + B vs A == 100%)', () => {
+      const tourMatchups = [
+        {
+          'Deck 1': {
+            'Deck 2': { wins: 3, losses: 1, ties: 0, total: 4, winRate: 75.0 }
+          }
+        }
+      ];
+
+      const summary = aggregateTournamentData(tournaments, champions, metaListByTour, '2026-08-17', tourMatchups);
+      const matrix = summary.matchupMatrix;
+
+      expect(matrix['Deck 1']['Deck 2'].winRate).toBe(75.0);
+      expect(matrix['Deck 2']['Deck 1'].winRate).toBe(25.0);
+      expect(matrix['Deck 1']['Deck 2'].wins).toBe(3);
+      expect(matrix['Deck 2']['Deck 1'].wins).toBe(1);
+      expect(matrix['Deck 1']['Deck 2'].losses).toBe(1);
+      expect(matrix['Deck 2']['Deck 1'].losses).toBe(3);
+      expect(matrix['Deck 1']['Deck 2'].winRate + matrix['Deck 2']['Deck 1'].winRate).toBe(100.0);
+    });
+
     it('deve validar payload agregado contra schema JSON de contrato', () => {
       const summary = aggregateTournamentData(tournaments, champions, metaListByTour, '2026-08-17');
       expect(validateContractSchema(schema, summary)).toBe(true);

@@ -3,6 +3,14 @@
 Todas as alteracoes notaveis neste projeto serao documentadas neste arquivo.
 O formato e baseado em Keep a Changelog e este projeto adere ao Versionamento Semantico.
 
+## [2.2.2] - 2026-08-21
+### Reconciliação Bidirecional Perfeita na Matriz de Matchups
+- **Simetria Matemática Garantida:** Implementada a reconciliação bidirecional entre todos os pares de arquétipos na matriz (`Deck A vs Deck B` e `Deck B vs Deck A`), garantindo que se o Deck A tem $75\%$ de taxa de vitória contra o Deck B ($3\text{V} - 1\text{D}$), o Deck B apresentará rigorosamente $25\%$ contra o Deck A ($1\text{V} - 3\text{D}$), eliminando discrepâncias onde a célula inversa aparecia com $50\%$.
+- **Ampla Amostragem de Confrontos:** Aumentada a profundidade de scraping para os 12 principais arquétipos por campeonato.
+- **Invalidação de Cache (`v4`):** Nova chave de cache no Redis (`tournaments-meta-v4`) para disponibilizar instantaneamente a matriz simétrica corrigida.
+
+---
+
 ## [2.2.1] - 2026-08-21
 ### Correção de Parser de Win Rates e Confrontos Diretos do Limitless TCG
 - **Extração Precisa de Taxa de Vitória (`data-winrate`):** Corrigido o seletor de atributos e expressões regulares do backend para extrair a taxa de vitória real calculada pelo Limitless a partir do atributo `data-winrate` nas linhas da tabela de metagame, bem como o cartel de partidas (`V - D - E`).

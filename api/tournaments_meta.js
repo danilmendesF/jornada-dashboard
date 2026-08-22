@@ -374,28 +374,117 @@ export function aggregateTournamentData(tournaments, championsList, metagameList
   const otherShare = totalPlayers > 0 ? Number(((otherPlayers / totalPlayers) * 100).toFixed(1)) : 0;
 
   // Aggregate Matchups Matrix across tournaments
-  const aggregatedMatrix = {};
+  const rawMatrix = {};
 
   matchupsListByTour.forEach(tourMatrix => {
     if (!tourMatrix) return;
     for (const [deckA, opps] of Object.entries(tourMatrix)) {
-      if (!aggregatedMatrix[deckA]) aggregatedMatrix[deckA] = {};
+      if (!rawMatrix[deckA]) rawMatrix[deckA] = {};
       for (const [deckB, stats] of Object.entries(opps)) {
-        if (!aggregatedMatrix[deckA][deckB]) {
-          aggregatedMatrix[deckA][deckB] = { wins: 0, losses: 0, ties: 0, total: 0, winRate: 0 };
+        if (!rawMatrix[deckA][deckB]) {
+          rawMatrix[deckA][deckB] = { wins: 0, losses: 0, ties: 0, total: 0 };
         }
-        aggregatedMatrix[deckA][deckB].wins += stats.wins || 0;
-        aggregatedMatrix[deckA][deckB].losses += stats.losses || 0;
-        aggregatedMatrix[deckA][deckB].ties += stats.ties || 0;
-        aggregatedMatrix[deckA][deckB].total += stats.total || 0;
+        rawMatrix[deckA][deckB].wins += stats.wins || 0;
+        rawMatrix[deckA][deckB].losses += stats.losses || 0;
+        rawMatrix[deckA][deckB].ties += stats.ties || 0;
+        rawMatrix[deckA][deckB].total += stats.total || 0;
       }
     }
   });
 
-  // Calculate final winRates in matrix
-  for (const [dA, opps] of Object.entries(aggregatedMatrix)) {
+  const topDeckNames = topDecks.map(d => d.name);
+  const cleanMatrix = {};
+
+  // 1. Initialize matrix structure for top decks
+  topDeckNames.forEach(dA => {
+    cleanMatrix[dA] = {};
+    topDeckNames.forEach(dB => {
+      if (dA === dB) {
+        cleanMatrix[dA][dB] = { wins: 0, losses: 0, ties: 0, total: 0, winRate: 50.0, isMirror: true, isDirect: false };
+      } else {
+        cleanMatrix[dA][dB] = { wins: 0, losses: 0, ties: 0, total: 0, winRate: null, isMirror: false, isDirect: false };
+      }
+    });
+  });
+
+  // 2. Populate raw data with normalized deck name matching
+  for (const [dA, opps] of Object.entries(rawMatrix)) {
+    const matchA = topDeckNames.find(n => n.toLowerCase() === dA.toLowerCase() || n.toLowerCase().includes(dA.toLowerCase()) || dA.toLowerCase().includes(n.toLowerCase()));
+    if (!matchA) continue;
+    
     for (const [dB, stats] of Object.entries(opps)) {
-      stats.winRate = stats.total > 0 ? Number(((stats.wins / stats.total) * 100).toFixed(1)) : 0;
+      const matchB = topDeckNames.find(n => n.toLowerCase() === dB.toLowerCase() || n.toLowerCase().includes(dB.toLowerCase()) || dB.toLowerCase().includes(n.toLowerCase()));
+      if (!matchB || matchA === matchB) continue;
+
+      cleanMatrix[matchA][matchB].wins += (stats.wins || 0);
+      cleanMatrix[matchA][matchB].losses += (stats.losses || 0);
+      cleanMatrix[matchA][matchB].ties += (stats.ties || 0);
+      cleanMatrix[matchA][matchB].total += (stats.total || (stats.wins || 0) + (stats.losses || 0) + (stats.ties || 0));
+    }
+  }
+
+  // 3. Bidirectional reconciliation (ensures 100% mathematical reciprocity between all pairs)
+  for (let i = 0; i < topDeckNames.length; i++) {
+    for (let j = i + 1; j < topDeckNames.length; j++) {
+      const dA = topDeckNames[i];
+      const dB = topDeckNames[j];
+
+      const aStats = cleanMatrix[dA][dB];
+      const bStats = cleanMatrix[dB][dA];
+
+      const totalWinsA = Math.max(aStats.wins, bStats.losses);
+      const totalWinsB = Math.max(aStats.losses, bStats.wins);
+      const totalTies = Math.max(aStats.ties, bStats.ties);
+      const totalGames = totalWinsA + totalWinsB + totalTies;
+
+      if (totalGames > 0) {
+        const wrA = Number(((totalWinsA / totalGames) * 100).toFixed(1));
+        const wrB = Number(((totalWinsB / totalGames) * 100).toFixed(1));
+
+        cleanMatrix[dA][dB] = {
+          wins: totalWinsA,
+          losses: totalWinsB,
+          ties: totalTies,
+          total: totalGames,
+          winRate: wrA,
+          isDirect: true
+        };
+
+        cleanMatrix[dB][dA] = {
+          wins: totalWinsB,
+          losses: totalWinsA,
+          ties: totalTies,
+          total: totalGames,
+          winRate: wrB,
+          isDirect: true
+        };
+      } else {
+        // Estimate based on overall tournament Win Rates if no direct games occurred
+        const deckAObj = topDecks.find(d => d.name === dA);
+        const deckBObj = topDecks.find(d => d.name === dB);
+        const wrA_val = (deckAObj && deckAObj.winRate > 0) ? deckAObj.winRate : 50.0;
+        const wrB_val = (deckBObj && deckBObj.winRate > 0) ? deckBObj.winRate : 50.0;
+        const relWrA = Number(((wrA_val / (wrA_val + wrB_val)) * 100).toFixed(1));
+        const relWrB = Number((100 - relWrA).toFixed(1));
+
+        cleanMatrix[dA][dB] = {
+          wins: 0,
+          losses: 0,
+          ties: 0,
+          total: 0,
+          winRate: relWrA,
+          isDirect: false
+        };
+
+        cleanMatrix[dB][dA] = {
+          wins: 0,
+          losses: 0,
+          ties: 0,
+          total: 0,
+          winRate: relWrB,
+          isDirect: false
+        };
+      }
     }
   }
 
@@ -423,7 +512,7 @@ export function aggregateTournamentData(tournaments, championsList, metagameList
       players: otherPlayers,
       metaShare: otherShare
     },
-    matchupMatrix: aggregatedMatrix,
+    matchupMatrix: cleanMatrix,
     champions: championsList,
     tournaments: tournamentsEnriched,
     generatedAt: new Date().toISOString()
@@ -444,7 +533,7 @@ export default async function handler(req, res) {
     ? requestedDate
     : getPreviousDaySp();
 
-  const cacheKey = `tournaments-meta-v3:${targetDateSp}`;
+  const cacheKey = `tournaments-meta-v4:${targetDateSp}`;
 
   // 1. Try Redis Cache
   let redisClient = null;
@@ -517,9 +606,9 @@ export default async function handler(req, res) {
         metagameList.push([]);
       }
 
-      // Fetch matchups for top decks in this tournament
+      // Fetch matchups for top decks in this tournament (up to 12 decks)
       const tourMatrix = {};
-      const topDecksInTour = parsedMeta.slice(0, 8);
+      const topDecksInTour = parsedMeta.slice(0, 12);
       for (const d of topDecksInTour) {
         if (d.slug) {
           try {

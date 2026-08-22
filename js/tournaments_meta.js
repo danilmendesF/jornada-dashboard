@@ -466,42 +466,25 @@ window.renderMatchupsMatrixView = function(data) {
         return;
       }
 
-      let matchStats = (matrix[rowDeck.name] && matrix[rowDeck.name][colDeck.name])
+      const matchStats = (matrix[rowDeck.name] && matrix[rowDeck.name][colDeck.name])
         ? matrix[rowDeck.name][colDeck.name]
         : null;
-
-      // Check reciprocal entry if direct is missing
-      if ((!matchStats || matchStats.total === 0) && matrix[colDeck.name] && matrix[colDeck.name][rowDeck.name]) {
-        const rev = matrix[colDeck.name][rowDeck.name];
-        if (rev && rev.total > 0) {
-          matchStats = {
-            wins: rev.losses || 0,
-            losses: rev.wins || 0,
-            ties: rev.ties || 0,
-            total: rev.total || 0,
-            winRate: rev.total > 0 ? Number((((rev.losses || 0) / rev.total) * 100).toFixed(1)) : 50.0
-          };
-        }
-      }
 
       let cellClass = 'cell-neutral';
       let cellText = '—';
       let tooltipText = `${rowDeck.name} vs ${colDeck.name}: Sem confrontos diretos registrados`;
 
-      if (matchStats && matchStats.total > 0) {
+      if (matchStats && matchStats.winRate !== null && matchStats.winRate !== undefined) {
         const wr = matchStats.winRate;
-        cellText = `${wr}%`;
-        tooltipText = `${rowDeck.name} vs ${colDeck.name}: ${matchStats.wins}V - ${matchStats.losses}D (${wr}% WR em ${matchStats.total} jogos)`;
+        if (matchStats.isDirect && matchStats.total > 0) {
+          cellText = `${wr}%`;
+          tooltipText = `${rowDeck.name} vs ${colDeck.name}: ${matchStats.wins}V - ${matchStats.losses}D (${wr}% WR em ${matchStats.total} jogos)`;
+        } else {
+          cellText = `${wr}%*`;
+          tooltipText = `${rowDeck.name} vs ${colDeck.name}: Estimativa baseada no Meta (${wr}% WR)`;
+        }
         if (wr >= 55) cellClass = 'cell-favored';
         else if (wr >= 48) cellClass = 'cell-even';
-        else cellClass = 'cell-unfavored';
-      } else if (rowDeck.winRate > 0 && colDeck.winRate > 0) {
-        // Fallback simulation based on individual relative WR if matrix is sparse
-        const relWr = Number(((rowDeck.winRate / (rowDeck.winRate + colDeck.winRate)) * 100).toFixed(1)) || 50;
-        cellText = `${relWr}%*`;
-        tooltipText = `${rowDeck.name} vs ${colDeck.name}: Estimativa baseada no Meta (${relWr}% WR)`;
-        if (relWr >= 55) cellClass = 'cell-favored';
-        else if (relWr >= 48) cellClass = 'cell-even';
         else cellClass = 'cell-unfavored';
       }
 
