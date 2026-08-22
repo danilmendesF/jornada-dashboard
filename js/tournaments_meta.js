@@ -466,9 +466,23 @@ window.renderMatchupsMatrixView = function(data) {
         return;
       }
 
-      const matchStats = (matrix[rowDeck.name] && matrix[rowDeck.name][colDeck.name])
+      let matchStats = (matrix[rowDeck.name] && matrix[rowDeck.name][colDeck.name])
         ? matrix[rowDeck.name][colDeck.name]
         : null;
+
+      // Check reciprocal entry if direct is missing
+      if ((!matchStats || matchStats.total === 0) && matrix[colDeck.name] && matrix[colDeck.name][rowDeck.name]) {
+        const rev = matrix[colDeck.name][rowDeck.name];
+        if (rev && rev.total > 0) {
+          matchStats = {
+            wins: rev.losses || 0,
+            losses: rev.wins || 0,
+            ties: rev.ties || 0,
+            total: rev.total || 0,
+            winRate: rev.total > 0 ? Number((((rev.losses || 0) / rev.total) * 100).toFixed(1)) : 50.0
+          };
+        }
+      }
 
       let cellClass = 'cell-neutral';
       let cellText = '—';
@@ -481,7 +495,7 @@ window.renderMatchupsMatrixView = function(data) {
         if (wr >= 55) cellClass = 'cell-favored';
         else if (wr >= 48) cellClass = 'cell-even';
         else cellClass = 'cell-unfavored';
-      } else {
+      } else if (rowDeck.winRate > 0 && colDeck.winRate > 0) {
         // Fallback simulation based on individual relative WR if matrix is sparse
         const relWr = Number(((rowDeck.winRate / (rowDeck.winRate + colDeck.winRate)) * 100).toFixed(1)) || 50;
         cellText = `${relWr}%*`;

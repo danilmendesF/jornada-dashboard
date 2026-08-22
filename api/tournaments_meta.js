@@ -105,7 +105,7 @@ export function parseStandingsTop3(standingsHtml, tourInfo) {
     const row = match[2];
     const nameM = match[0].match(/data-name="([^"]+)"/);
     const deckM = row.match(/<a\s+href="[^"]*metagame\/[^"]*"[^>]*>(?:<span\s+data-tooltip="([^"]+)")?/);
-    const icons = Array.from(row.matchAll(/src="(https:\/\/r2\.limitlesstcg\.net\/pokemon\/[^"]+)"/g)).map(m => m[1]);
+    const icons = Array.from(row.matchAll(/src="(https:\/\/[^"]+\.png)"/g)).map(m => m[1]);
     const decklistM = row.match(/href="(\/tournament\/[^"]+\/player\/[^"]+\/decklist|\/tournament\/[^"]+\/decklist)"/);
 
     topPlacements.push({
@@ -144,16 +144,20 @@ export function parseStandingsWinner(standingsHtml, tourInfo) {
 
 export function parseTournamentMetagame(metaHtml) {
   const decks = [];
-  const deckRows = Array.from(metaHtml.matchAll(/<tr\s+data-share="([^"]*)"[^>]*>([\s\S]*?)<\/tr>/g));
+  const deckRows = Array.from(metaHtml.matchAll(/<tr\s+([^>]*data-share="[^"]*"[^>]*)>([\s\S]*?)<\/tr>/g));
   
-  for (const [_, shareAttr, row] of deckRows) {
+  for (const [_, trAttrs, row] of deckRows) {
     const countM = row.match(/<td>(\d+)<\/td>/);
-    const nameM = row.match(/<a\s+href="[^"]*metagame\/[^"]*">([^<]+)<\/a>/);
-    const icons = Array.from(row.matchAll(/src="(https:\/\/r2\.limitlesstcg\.net\/pokemon\/[^"]+)"/g)).map(m => m[1]);
+    const nameM = row.match(/<a\s+href="[^"]*metagame\/([^"]+)">([^<]+)<\/a>/);
+    const icons = Array.from(row.matchAll(/src="(https:\/\/[^"]+\.png)"/g)).map(m => m[1]);
     
-    // Parse match record e.g. "120-80-15" or <td>120-80-15</td> or data-record
-    const recordM = row.match(/<td>(\d+)\s*[-–]\s*(\d+)(?:\s*[-–]\s*(\d+))?<\/td>/) || row.match(/data-record="(\d+)-(\d+)(?:-(\d+))?"/);
-    const allPercentages = Array.from(row.matchAll(/<td>(\d+(?:\.\d+)?)\s*%<\/td>/g));
+    // Parse data-winrate from tr tag if present (e.g. data-winrate="0.6226")
+    const trWrM = trAttrs.match(/data-winrate="([^"]+)"/);
+    let attrWr = trWrM ? (parseFloat(trWrM[1]) * 100) : null;
+
+    // Parse match record e.g. "66 - 37 - 3" or <td>66 - 37 - 3</td>
+    const recordM = row.match(/(\d+)\s*[-–]\s*(\d+)(?:\s*[-–]\s*(\d+))?/);
+    const allPercentages = Array.from(row.matchAll(/(\d+(?:\.\d+)?)\s*%/g));
 
     let wins = 0;
     let losses = 0;
@@ -165,7 +169,9 @@ export function parseTournamentMetagame(metaHtml) {
     }
     const totalGames = wins + losses + ties;
     let winRate = 0;
-    if (totalGames > 0) {
+    if (attrWr !== null && !isNaN(attrWr)) {
+      winRate = Number(attrWr.toFixed(1));
+    } else if (totalGames > 0) {
       winRate = Number(((wins / totalGames) * 100).toFixed(1));
     } else if (allPercentages.length >= 2) {
       winRate = parseFloat(allPercentages[1][1]);
@@ -175,7 +181,8 @@ export function parseTournamentMetagame(metaHtml) {
 
     if (countM && nameM) {
       decks.push({
-        name: nameM[1].trim(),
+        name: nameM[2].trim(),
+        slug: nameM[1].trim().replace(/\/matchups$/, ''),
         players: parseInt(countM[1], 10),
         icons,
         matchWins: wins,
@@ -188,6 +195,34 @@ export function parseTournamentMetagame(metaHtml) {
   }
   
   return decks;
+}
+
+export function parseDeckMatchupsPage(html, deckName) {
+  const oppMap = {};
+  if (!html || typeof html !== 'string') return oppMap;
+
+  const rows = Array.from(html.matchAll(/<tr\s+([^>]*data-name="[^"]*"[^>]*)>([\s\S]*?)<\/tr>/g));
+  for (const [_, trAttrs, row] of rows) {
+    const nameM = trAttrs.match(/data-name="([^"]+)"/);
+    const wrM = trAttrs.match(/data-winrate="([^"]+)"/);
+    const recM = row.match(/(\d+)\s*[-–]\s*(\d+)(?:\s*[-–]\s*(\d+))?/);
+    if (nameM) {
+      const oppName = nameM[1].trim();
+      let wins = 0, losses = 0, ties = 0;
+      if (recM) {
+        wins = parseInt(recM[1], 10);
+        losses = parseInt(recM[2], 10);
+        ties = recM[3] ? parseInt(recM[3], 10) : 0;
+      }
+      const total = wins + losses + ties;
+      const winRate = wrM
+        ? Number((parseFloat(wrM[1]) * 100).toFixed(1))
+        : (total > 0 ? Number(((wins / total) * 100).toFixed(1)) : 50.0);
+
+      oppMap[oppName] = { wins, losses, ties, total, winRate };
+    }
+  }
+  return oppMap;
 }
 
 export function parseTournamentMatchups(matchupsHtml) {
@@ -260,6 +295,7 @@ export function aggregateTournamentData(tournaments, championsList, metagameList
           matchLosses: 0,
           matchTies: 0,
           totalMatches: 0,
+          rawWinRates: [],
           icons: d.icons || []
         };
       }
@@ -268,6 +304,9 @@ export function aggregateTournamentData(tournaments, championsList, metagameList
       deckMap[d.name].matchLosses += (d.matchLosses || 0);
       deckMap[d.name].matchTies += (d.matchTies || 0);
       deckMap[d.name].totalMatches += (d.totalMatches || (d.matchWins || 0) + (d.matchLosses || 0) + (d.matchTies || 0));
+      if (d.winRate && d.winRate > 0) {
+        deckMap[d.name].rawWinRates.push({ wr: d.winRate, weight: d.players });
+      }
 
       if (d.icons && d.icons.length > 0 && deckMap[d.name].icons.length === 0) {
         deckMap[d.name].icons = d.icons;
@@ -293,6 +332,7 @@ export function aggregateTournamentData(tournaments, championsList, metagameList
             matchLosses: 0,
             matchTies: 0,
             totalMatches: 0,
+            rawWinRates: [],
             icons: c.icons || []
           };
         }
@@ -307,7 +347,14 @@ export function aggregateTournamentData(tournaments, championsList, metagameList
   // Top 15 Decks no Meta Share (SPEC-009 / CHG-007)
   const topDecks = sortedDecks.slice(0, 15).map(d => {
     const totalM = d.totalMatches || (d.matchWins + d.matchLosses + d.matchTies);
-    const wr = totalM > 0 ? Number(((d.matchWins / totalM) * 100).toFixed(1)) : 50.0;
+    let wr = 50.0;
+    if (totalM > 0) {
+      wr = Number(((d.matchWins / totalM) * 100).toFixed(1));
+    } else if (d.rawWinRates && d.rawWinRates.length > 0) {
+      const sumWeight = d.rawWinRates.reduce((a, r) => a + r.weight, 0);
+      const sumWr = d.rawWinRates.reduce((a, r) => a + (r.wr * r.weight), 0);
+      wr = sumWeight > 0 ? Number((sumWr / sumWeight).toFixed(1)) : 50.0;
+    }
     return {
       name: d.name,
       players: d.players,
@@ -328,7 +375,6 @@ export function aggregateTournamentData(tournaments, championsList, metagameList
 
   // Aggregate Matchups Matrix across tournaments
   const aggregatedMatrix = {};
-  const topDeckNames = topDecks.map(d => d.name);
 
   matchupsListByTour.forEach(tourMatrix => {
     if (!tourMatrix) return;
@@ -398,7 +444,7 @@ export default async function handler(req, res) {
     ? requestedDate
     : getPreviousDaySp();
 
-  const cacheKey = `tournaments-meta-v2:${targetDateSp}`;
+  const cacheKey = `tournaments-meta-v3:${targetDateSp}`;
 
   // 1. Try Redis Cache
   let redisClient = null;
@@ -462,19 +508,29 @@ export default async function handler(req, res) {
         });
       }
 
+      let parsedMeta = [];
       try {
         const metaHtml = await fetchUrl(`https://play.limitlesstcg.com/tournament/${t.id}/metagame`);
-        metagameList.push(parseTournamentMetagame(metaHtml));
+        parsedMeta = parseTournamentMetagame(metaHtml);
+        metagameList.push(parsedMeta);
       } catch (err) {
         metagameList.push([]);
       }
 
-      try {
-        const matchupsHtml = await fetchUrl(`https://play.limitlesstcg.com/tournament/${t.id}/matchups`);
-        matchupsList.push(parseTournamentMatchups(matchupsHtml));
-      } catch (err) {
-        matchupsList.push({});
+      // Fetch matchups for top decks in this tournament
+      const tourMatrix = {};
+      const topDecksInTour = parsedMeta.slice(0, 8);
+      for (const d of topDecksInTour) {
+        if (d.slug) {
+          try {
+            const dMatchupsHtml = await fetchUrl(`https://play.limitlesstcg.com/tournament/${t.id}/metagame/${d.slug}/matchups`, 6000);
+            tourMatrix[d.name] = parseDeckMatchupsPage(dMatchupsHtml, d.name);
+          } catch (mErr) {
+            // Ignore single deck matchup error
+          }
+        }
       }
+      matchupsList.push(tourMatrix);
     }
 
     const payload = aggregateTournamentData(eligibleTournaments, championsList, metagameList, targetDateSp, matchupsList, top3List);

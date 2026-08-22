@@ -3,6 +3,14 @@
 Todas as alteracoes notaveis neste projeto serao documentadas neste arquivo.
 O formato e baseado em Keep a Changelog e este projeto adere ao Versionamento Semantico.
 
+## [2.2.1] - 2026-08-21
+### Correção de Parser de Win Rates e Confrontos Diretos do Limitless TCG
+- **Extração Precisa de Taxa de Vitória (`data-winrate`):** Corrigido o seletor de atributos e expressões regulares do backend para extrair a taxa de vitória real calculada pelo Limitless a partir do atributo `data-winrate` nas linhas da tabela de metagame, bem como o cartel de partidas (`V - D - E`).
+- **Extração de Matchups por Deck:** Integrado o scraper das páginas dedicadas de confrontos de cada deck (`/metagame/{slug}/matchups`), alimentando a Matriz de Matchups com estatísticas de jogos reais e cálculo recíproco de vitórias/derrotas.
+- **Cache v3:** Atualizada a chave de cache do Redis (`tournaments-meta-v3`) para forçar o recarregamento imediato dos dados reais e eliminar valores estáticos de fallback (50%).
+
+---
+
 ## [2.2.0] - 2026-08-21
 ### Modernização Completa da Área de Torneios Online (SPEC-009 / CHG-007)
 - **Novo Limiar de Elegibilidade (>100 Jogadores):** Reduzido o filtro mínimo de participantes de 150 para 100 jogadores em torneios Standard, capturando maior volume de dados competitivos relevantes.
