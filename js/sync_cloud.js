@@ -94,10 +94,13 @@ function triggerSyncPush() {
 }
 
 function getSyncUrl(token) {
-  const syncToken = token || (typeof localStorage !== 'undefined' ? localStorage.getItem('jornada_sync_token') : null) || 'team_default_sync';
+  let syncToken = token || (typeof localStorage !== 'undefined' ? localStorage.getItem('jornada_sync_token') : null);
+  if (!syncToken || syncToken === 'team_' || syncToken.trim().length < 5) {
+    syncToken = 'team_default_sync';
+  }
   const cleanToken = syncToken.replace(/[^a-zA-Z0-9_-]/g, '');
   const ts = Date.now();
-  return `/api/sync?token=${encodeURIComponent(cleanToken)}&_t=${ts}`;
+  return `/api/sync?token=${encodeURIComponent(cleanToken || 'team_default_sync')}&_t=${ts}`;
 }
 
 function getSyncHeaders() {

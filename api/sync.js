@@ -519,7 +519,10 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
-  const activeToken = req.query.token || 'team_default_sync';
+  let activeToken = req.query?.token || 'team_default_sync';
+  if (!activeToken || activeToken === 'team_' || activeToken.trim().length < 5) {
+    activeToken = 'team_default_sync';
+  }
   const syncKey = `jornada_sync_${activeToken}`;
 
   // Enforce JWT Authentication for Mutations
@@ -576,7 +579,12 @@ export default async function handler(req, res) {
       }
     }
 
-    const body = req.body;
+    let body = req.body;
+    if (typeof body === 'string') {
+      try { body = JSON.parse(body); } catch (e) {}
+    }
+    req.body = body;
+
     if (!body || typeof body !== 'object' || (!Array.isArray(body.manualMatches) && !Array.isArray(body.decks))) {
       return res.status(400).json({ error: 'Estrutura de payload inválida para sincronização.' });
     }

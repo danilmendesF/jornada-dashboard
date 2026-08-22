@@ -3,6 +3,13 @@
 Todas as alteracoes notaveis neste projeto serao documentadas neste arquivo.
 O formato e baseado em Keep a Changelog e este projeto adere ao Versionamento Semantico.
 
+## [2.2.4] - 2026-08-21
+### Sanitização de Token de Namespace e Robustez de Payload no Sync
+- **Fallback Automático de Namespace:** Prevenção de envio de token de sincronização vazio/incompleto (`team_`) que resultava em HTTP 400/403, garantindo fallback confiável para `team_default_sync`.
+- **Parser de Body Resiliente:** Tratamento transparente de payloads serializados em string no runtime serverless antes da validação de integridade.
+
+---
+
 ## [2.2.3] - 2026-08-21
 ### Resolução Definitiva de Conflitos OCC de Sincronização em Nuvem
 - **Tratamento de Revisão Inicial:** Atualizado o algoritmo do servidor para aceitar pushes canônicos quando `currentRevision === 0` (nuvem sem controle de versão prévio ou após sanitização de duplicatas), eliminando o loop de conflito 409 quando o cliente possuía revisões legadas não nulas.
